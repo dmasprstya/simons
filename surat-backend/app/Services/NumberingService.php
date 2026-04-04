@@ -144,29 +144,30 @@ class NumberingService
             try {
                 return DB::transaction(function () use ($classificationId, $date, $sequenceId) {
                     // Query by primary key -- lebih reliable dari where('date',...) di SQLite
-                    $sequence = $this->withLock(
-                        DailySequence::where('id', $sequenceId)
+                    // Gunakan ::query()->where() agar withLock() menerima Builder yang eksplisit
+                    $seq = $this->withLock(
+                        DailySequence::query()->where('id', $sequenceId)
                     )->first();
 
-                    if (!$sequence) {
+                    if (!$seq) {
                         // Tidak seharusnya terjadi -- sequence sudah dibuat sebelum transaksi
                         throw new NumberingLockException("Sequence ID={$sequenceId} tidak dapat di-load.");
                     }
 
                     // Hitung nomor kandidat berikutnya berdasarkan last_number yang tersimpan
-                    $candidate = $sequence->next_start + $sequence->last_number;
+                    $candidate = $seq->next_start + $seq->last_number;
 
                     // Tentukan posisi dalam blok (setiap blok = gap_size aktif + gap_size cadangan)
-                    $blockSize  = $sequence->gap_size * 2;
-                    $posInBlock = ($candidate - $sequence->next_start) % $blockSize;
+                    $blockSize  = $seq->gap_size * 2;
+                    $posInBlock = ($candidate - $seq->next_start) % $blockSize;
 
                     // Jika candidate jatuh di zona gap, lompat ke aktif_start blok berikutnya
-                    if ($posInBlock >= $sequence->gap_size) {
-                        $currentBlock = (int) floor(($candidate - $sequence->next_start) / $blockSize);
-                        $nextBlock    = $this->calculateBlock($sequence->next_start, $sequence->gap_size, $currentBlock + 1);
+                    if ($posInBlock >= $seq->gap_size) {
+                        $currentBlock = (int) floor(($candidate - $seq->next_start) / $blockSize);
+                        $nextBlock    = $this->calculateBlock($seq->next_start, $seq->gap_size, $currentBlock + 1);
                         $candidate    = $nextBlock['aktifStart'];
                         // Sinkronkan last_number dengan posisi baru (sebelum increment)
-                        $sequence->last_number = $candidate - $sequence->next_start;
+                        $seq->last_number = $candidate - $seq->next_start;
                     }
 
                     // Verifikasi nomor belum dipakai (guard terhadap race condition residual)
@@ -180,8 +181,8 @@ class NumberingService
                     }
 
                     // Increment last_number: posisi relatif dari next_start + 1 (untuk nomor selanjutnya)
-                    $sequence->last_number = $candidate - $sequence->next_start + 1;
-                    $sequence->save();
+                    $seq->last_number = $candidate - $seq->next_start + 1;
+                    $seq->save();
 
                     return $candidate;
                 }); // satu attempt per DB::transaction
@@ -217,9 +218,13 @@ class NumberingService
     public function releaseGapNumber(GapRequest $gapRequest): LetterNumber
     {
         return DB::transaction(function () use ($gapRequest) {
-            $dateStr  = $gapRequest->gap_date->toDateString();
+            // Cast ke Carbon eksplisit agar IDE mengenali toDateString()
+            $gapDate  = Carbon::parse($gapRequest->gap_date);
+            $dateStr  = $gapDate->toDateString();
+            // Gunakan ::query()->where() agar withLock() menerima Builder yang eksplisit
             $sequence = $this->withLock(
-                DailySequence::where('date', $dateStr)
+                DailySequence::query()
+                    ->where('date', $dateStr)
                     ->where('classification_id', $gapRequest->classification_id)
             )->first();
 
