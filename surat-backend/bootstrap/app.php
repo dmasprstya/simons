@@ -14,7 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Alias middleware untuk kontrol akses berbasis role
+        $middleware->alias([
+            'role'   => \App\Http\Middleware\RoleMiddleware::class,
+            'active' => \App\Http\Middleware\EnsureUserIsActive::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Lock timeout / deadlock di NumberingService → 409 Conflict
