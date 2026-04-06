@@ -5,3 +5,6 @@ export { useGapRequests } from './useGapRequests';
 export { useAdminDashboard } from './useAdminDashboard';
 export { useAdminLetters } from './useAdminLetters';
 export { useAdminGapRequests } from './useAdminGapRequests';
+export { useUsers } from './useUsers';
+export { useClassifications } from './useClassifications';
+export { useAuditLogs } from './useAuditLogs';
