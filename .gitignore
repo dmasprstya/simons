@@ -22,3 +22,8 @@
 # ─── Build output ─────────────────────────────────────────────────────────────
 **/public/build/
 **/public/hot
+
+# ─── Frontend (React/Vite) ────────────────────────────────────────────────────
+surat-frontend/dist/
+surat-frontend/.env.local
+surat-frontend/.env.*.local
