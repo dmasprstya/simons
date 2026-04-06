@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Observers\GapRequestObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(GapRequestObserver::class)]
 class GapRequest extends Model
 {
     /**
@@ -12,6 +15,13 @@ class GapRequest extends Model
      * Tidak perlu updated_at karena record tidak diperbaharui secara generik.
      */
     const UPDATED_AT = null;
+
+    /**
+     * Flag static untuk menandakan bahwa perubahan status sedang diproses oleh
+     * GapRequestService — sehingga GapRequestObserver tidak menduplikasi log audit.
+     * Di-set true sebelum save() di GapRequestService, di-reset false sesudahnya.
+     */
+    public static bool $auditedByService = false;
 
     protected $fillable = [
         'requested_by',

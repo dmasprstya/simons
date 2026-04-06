@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Observers\LetterNumberObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(LetterNumberObserver::class)]
 class LetterNumber extends Model
 {
     /**
