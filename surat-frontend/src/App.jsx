@@ -5,6 +5,9 @@ import { useAuthStore } from './store/authStore';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
+// Layout
+import { UserLayout } from './components/layout';
+
 // Public pages
 import LoginPage from './pages/auth/LoginPage';
 
@@ -39,8 +42,8 @@ function RootRedirect() {
  * Struktur:
  * - / → redirect otomatis berdasarkan status auth
  * - /login → public
- * - /dashboard, /letters/*, /gap-requests → protected (semua role)
- * - /admin/* → protected + hanya role admin
+ * - /dashboard, /letters/*, /gap-requests → protected (semua role) + UserLayout
+ * - /admin/* → protected + hanya role admin + UserLayout
  */
 function App() {
   return (
@@ -52,23 +55,25 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected routes — membutuhkan autentikasi */}
+        {/* Protected routes — membutuhkan autentikasi, dibungkus UserLayout */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/letters/take" element={<TakeNumberPage />} />
-          <Route path="/letters" element={<MyLettersPage />} />
-          <Route path="/gap-requests" element={<GapRequestPage />} />
+          <Route element={<UserLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/letters/take" element={<TakeNumberPage />} />
+            <Route path="/letters" element={<MyLettersPage />} />
+            <Route path="/gap-requests" element={<GapRequestPage />} />
 
-          {/* Admin routes — membutuhkan role admin */}
-          <Route element={<AdminRoute />}>
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-            <Route path="/admin/letters" element={<AllLettersPage />} />
-            <Route path="/admin/gap-requests" element={<AdminGapRequestPage />} />
-            <Route path="/admin/sequences" element={<SequenceSettingsPage />} />
-            <Route path="/admin/users" element={<UsersPage />} />
-            <Route path="/admin/classifications" element={<ClassificationsPage />} />
-            <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
-            <Route path="/admin/reports" element={<ReportsPage />} />
+            {/* Admin routes — membutuhkan role admin */}
+            <Route element={<AdminRoute />}>
+              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+              <Route path="/admin/letters" element={<AllLettersPage />} />
+              <Route path="/admin/gap-requests" element={<AdminGapRequestPage />} />
+              <Route path="/admin/sequences" element={<SequenceSettingsPage />} />
+              <Route path="/admin/users" element={<UsersPage />} />
+              <Route path="/admin/classifications" element={<ClassificationsPage />} />
+              <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
+              <Route path="/admin/reports" element={<ReportsPage />} />
+            </Route>
           </Route>
         </Route>
 

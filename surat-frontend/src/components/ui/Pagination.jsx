@@ -35,18 +35,22 @@ function getPageNumbers(currentPage, lastPage) {
 }
 
 export default function Pagination({ meta, onPageChange }) {
-  if (!meta || meta.last_page <= 1) return null;
+  const current_page = meta?.current_page ?? 1;
+  const last_page = meta?.last_page ?? 1;
+  const total = meta?.total ?? 0;
+  const per_page = meta?.per_page ?? 10;
 
-  const { current_page, last_page, total, per_page } = meta;
-
-  // Hitung "Menampilkan X-Y dari Z data"
-  const from = (current_page - 1) * per_page + 1;
-  const to = Math.min(current_page * per_page, total);
-
+  // Hook harus dipanggil tanpa kondisi (Rules of Hooks)
   const pages = useMemo(
     () => getPageNumbers(current_page, last_page),
     [current_page, last_page]
   );
+
+  if (!meta || last_page <= 1) return null;
+
+  // Hitung "Menampilkan X-Y dari Z data"
+  const from = (current_page - 1) * per_page + 1;
+  const to = Math.min(current_page * per_page, total);
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-3">
