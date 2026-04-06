@@ -20,6 +20,7 @@ class LetterNumber extends Model
         'user_id',
         'classification_id',
         'number',
+        'formatted_number',
         'issued_date',
         'subject',
         'destination',
@@ -35,6 +36,22 @@ class LetterNumber extends Model
             'issued_date' => 'date',
             'voided_at'   => 'datetime',
         ];
+    }
+
+    // ─── Helper ──────────────────────────────────────────────────────────────
+
+    /**
+     * Bangun formatted_number dari prefix config, kode klasifikasi, dan nomor.
+     *
+     * Format: {prefix}{separator}{classificationCode}{separator}{number}
+     * Contoh: W7-TU.01.02-1001
+     */
+    public static function buildFormattedNumber(string $classificationCode, int $number): string
+    {
+        $prefix    = config('numbering.prefix');      // W7
+        $separator = config('numbering.separator');    // -
+
+        return "{$prefix}{$separator}{$classificationCode}{$separator}{$number}";
     }
 
     // ─── Relasi ──────────────────────────────────────────────────────────────

@@ -68,12 +68,19 @@ class LetterNumberTest extends TestCase
 
         $response->assertStatus(201)
                  ->assertJsonStructure([
-                     'data' => ['number'],
+                     'data' => ['number', 'formatted_number'],
                      'message',
                  ]);
 
         // default_start = 1000, nomor pertama harus >= 1000
         $this->assertGreaterThanOrEqual(1000, $response->json('data.number'));
+
+        // formatted_number harus mengikuti pola W7-{kode}-{angka}
+        $this->assertMatchesRegularExpression(
+            '/^W7-.+-.+$/',
+            $response->json('data.formatted_number'),
+            'formatted_number harus mengikuti pola W7-{kode}-{angka}'
+        );
     }
 
     /**
@@ -179,6 +186,7 @@ class LetterNumberTest extends TestCase
             'user_id'           => $user->id,
             'classification_id' => $classification->id,
             'number'            => 9999,
+            'formatted_number'  => LetterNumber::buildFormattedNumber($classification->code, 9999),
             'issued_date'       => Carbon::yesterday()->toDateString(),
             'subject'           => 'Surat Kemarin',
             'destination'       => 'Tujuan',

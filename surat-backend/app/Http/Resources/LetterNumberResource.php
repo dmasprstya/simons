@@ -19,7 +19,8 @@ class LetterNumberResource extends JsonResource
     {
         return [
             'id'          => $this->id,
-            'number'      => $this->number,
+            'number'           => $this->number,
+            'formatted_number' => $this->formatted_number,
             // issued_date di-cast sebagai Carbon date → format Y-m-d
             'issued_date' => $this->issued_date?->format('Y-m-d'),
             'subject'     => $this->subject,

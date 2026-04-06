@@ -87,10 +87,17 @@ class LetterNumberController extends Controller
             return response()->json(['message' => $e->getMessage()], 409);
         }
 
+        // Fetch kode klasifikasi untuk membangun formatted_number
+        $classification = \App\Models\LetterClassification::find($request->classification_id);
+
         $letter = LetterNumber::create([
             'user_id'           => Auth::id(),
             'classification_id' => $request->classification_id,
             'number'            => $number,
+            'formatted_number'  => LetterNumber::buildFormattedNumber(
+                                       $classification->code,
+                                       $number
+                                   ),
             'issued_date'       => today(),
             'subject'           => $request->subject,
             'destination'       => $request->destination,

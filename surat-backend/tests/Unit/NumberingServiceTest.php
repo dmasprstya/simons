@@ -212,4 +212,20 @@ class NumberingServiceTest extends TestCase
 
         $this->service->releaseGapNumber($gapRequest);
     }
+    /**
+     * Test 7: buildFormattedNumber menghasilkan format W7-{kode}-{nomor} yang benar.
+     *
+     * Input: classificationCode='TU.01.02', number=1001
+     * Expected: 'W7-TU.01.02-1001'
+     */
+    public function test_formatted_number_format_is_correct(): void
+    {
+        $result = LetterNumber::buildFormattedNumber('TU.01.02', 1001);
+
+        $this->assertEquals(
+            'W7-TU.01.02-1001',
+            $result,
+            'Format harus W7-TU.01.02-1001'
+        );
+    }
 }

@@ -252,10 +252,17 @@ class NumberingService
                 throw new GapAlreadyUsedException("Nomor gap {$gapRequest->number} sudah diterbitkan.");
             }
 
+            // Fetch kode klasifikasi untuk formatted_number
+            $classification = \App\Models\LetterClassification::find($gapRequest->classification_id);
+
             return LetterNumber::create([
                 'user_id'           => $gapRequest->requested_by,
                 'classification_id' => $gapRequest->classification_id,
                 'number'            => $gapRequest->number,
+                'formatted_number'  => LetterNumber::buildFormattedNumber(
+                                           $classification->code,
+                                           $gapRequest->number
+                                       ),
                 'issued_date'       => $gapRequest->gap_date,
                 'subject'           => 'Gap request #' . $gapRequest->id,
                 'destination'       => '-',
