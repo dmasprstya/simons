@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminLetters } from '../../hooks/useAdminLetters';
 import { exportReport } from '../../api/reports.api';
 import { useToast } from '../../hooks/useToast';
@@ -100,10 +101,10 @@ export default function AllLettersPage() {
   const columns = [
     {
       key: 'number',
-      label: 'Nomor',
-      render: (value) => (
-        <span className="font-medium text-gray-900">
-          {value}
+      label: 'Nomor Surat',
+      render: (_value, row) => (
+        <span className="font-medium text-gray-900 font-mono">
+          {displayLetterNumber(row)}
         </span>
       ),
     },

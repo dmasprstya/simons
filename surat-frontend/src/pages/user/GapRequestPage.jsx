@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useGapRequests } from '../../hooks/useGapRequests';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
@@ -175,10 +176,13 @@ export default function GapRequestPage() {
       render: (value, row) => {
         // Tampilkan nomor hanya jika status approved
         if (row.status === 'approved') {
-          const number = value || row.letter?.full_number || row.letter?.letter_number;
+          // Gunakan formatted_number dari letter jika tersedia
+          const displayNumber = row.letter
+            ? displayLetterNumber(row.letter)
+            : (value || '-');
           return (
-            <span className="font-medium text-indigo-600">
-              {number || '-'}
+            <span className="font-medium text-indigo-600 font-mono">
+              {displayNumber}
             </span>
           );
         }

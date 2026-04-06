@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { getRecentLetters } from '../../api/letters.api';
 import Table from '../../components/ui/Table';
@@ -162,9 +163,9 @@ export default function AdminDashboardPage() {
   const recentAllColumns = [
     {
       key: 'number',
-      label: 'Nomor',
-      render: (value) => (
-        <span className="font-semibold text-gray-900">{value}</span>
+      label: 'Nomor Surat',
+      render: (_value, row) => (
+        <span className="font-semibold text-gray-900 font-mono">{displayLetterNumber(row)}</span>
       ),
     },
     {

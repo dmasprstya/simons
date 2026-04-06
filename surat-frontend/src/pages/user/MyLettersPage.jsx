@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useLetters } from '../../hooks/useLetters';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
@@ -104,10 +105,10 @@ export default function MyLettersPage() {
   const columns = [
     {
       key: 'number',
-      label: 'Nomor',
-      render: (value) => (
-        <span className="font-medium text-gray-900">
-          {value}
+      label: 'Nomor Surat',
+      render: (_value, row) => (
+        <span className="font-medium text-gray-900 font-mono">
+          {displayLetterNumber(row)}
         </span>
       ),
     },
@@ -265,7 +266,7 @@ export default function MyLettersPage() {
         message={
           voidTarget
             ? `Apakah Anda yakin ingin membatalkan surat nomor "${
-                voidTarget.number
+                displayLetterNumber(voidTarget)
               }"? Aksi ini tidak dapat dibatalkan.`
             : ''
         }

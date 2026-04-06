@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { takeNumber } from '../../api/letters.api';
 import { useToast } from '../../hooks/useToast';
@@ -251,13 +252,13 @@ export default function TakeNumberPage() {
       >
         {resultData && (
           <div className="space-y-4">
-            {/* Detail nomor yang diterbitkan */}
+            {/* Detail nomor surat terformat (W7-{kode}-{nomor}) */}
             <div className="bg-indigo-50 rounded-lg p-4 text-center">
               <p className="text-xs text-indigo-600 font-medium uppercase tracking-wide">
                 Nomor Surat
               </p>
-              <p className="text-2xl font-bold text-indigo-900 mt-1">
-                {resultData.number}
+              <p className="text-2xl font-bold text-indigo-900 mt-1 font-mono tracking-wide">
+                {displayLetterNumber(resultData)}
               </p>
             </div>
 

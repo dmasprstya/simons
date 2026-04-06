@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminGapRequests } from '../../hooks/useAdminGapRequests';
 import { useToast } from '../../hooks/useToast';
 import Table from '../../components/ui/Table';
@@ -89,11 +90,11 @@ export default function AdminGapRequestPage() {
     try {
       const response = await approveRequest(approveTarget.id);
 
-      const issuedNumber =
-        response.data?.issued_number ||
-        response.data?.letter?.full_number ||
-        response.data?.letter?.letter_number ||
-        'N/A';
+      // Ambil nomor terformat dari response — gunakan displayLetterNumber jika letter tersedia
+      const letterData = response.data?.letter;
+      const issuedNumber = letterData
+        ? displayLetterNumber(letterData)
+        : (response.data?.issued_number || 'N/A');
 
       toast.success(
         `Gap request disetujui! Nomor diterbitkan: ${issuedNumber}`
@@ -203,14 +204,16 @@ export default function AdminGapRequestPage() {
     },
     {
       key: 'issued_number',
-      label: 'Nomor',
+      label: 'Nomor Diterbitkan',
       render: (value, row) => {
         if (row.status === 'approved') {
-          const number =
-            value || row.letter?.full_number || row.letter?.letter_number;
+          // Gunakan formatted_number dari letter jika tersedia
+          const displayNumber = row.letter
+            ? displayLetterNumber(row.letter)
+            : (value || '-');
           return (
-            <span className="font-medium text-indigo-600">
-              {number || '-'}
+            <span className="font-medium text-indigo-600 font-mono">
+              {displayNumber}
             </span>
           );
         }

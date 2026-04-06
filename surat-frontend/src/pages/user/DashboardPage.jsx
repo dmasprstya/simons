@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useSequenceStore } from '../../store/sequenceStore';
@@ -148,9 +149,9 @@ export default function DashboardPage() {
   const recentAllColumns = [
     {
       key: 'number',
-      label: 'Nomor',
-      render: (value) => (
-        <span className="font-semibold text-gray-900">{value}</span>
+      label: 'Nomor Surat',
+      render: (_value, row) => (
+        <span className="font-semibold text-gray-900 font-mono">{displayLetterNumber(row)}</span>
       ),
     },
     {
@@ -341,8 +342,8 @@ export default function DashboardPage() {
                   className="flex items-center justify-between py-3 gap-4"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {letter.number}
+                    <p className="text-sm font-medium text-gray-900 truncate font-mono">
+                      {displayLetterNumber(letter)}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
                       {letter.subject}
