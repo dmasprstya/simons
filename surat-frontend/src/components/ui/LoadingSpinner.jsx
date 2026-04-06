@@ -15,7 +15,7 @@ const sizeMap = {
 export default function LoadingSpinner({ size = 'md', className = '' }) {
   return (
     <div
-      className={`inline-block animate-spin rounded-full border-solid border-indigo-500 border-t-transparent ${sizeMap[size] || sizeMap.md} ${className}`}
+      className={`inline-block animate-spin rounded-full border-solid border-[#2A7FD4] border-t-transparent ${sizeMap[size] || sizeMap.md} ${className}`}
       role="status"
       aria-label="Loading"
     >

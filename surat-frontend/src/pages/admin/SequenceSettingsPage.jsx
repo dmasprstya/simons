@@ -34,21 +34,21 @@ function GapVisualizer({ gapSize }) {
   }
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+    <div className="bg-[#F7F9FC] rounded-lg p-4 space-y-3">
+      <p className="text-[10px] font-medium text-[#64748B] uppercase tracking-widest">
         Contoh Visual (default_start=1000, gap_size={gapSize})
       </p>
       <div className="space-y-2">
         {blocks.map((block) => (
-          <div key={block.n} className="flex items-center gap-3 text-sm">
-            <span className="text-xs text-gray-400 w-14 shrink-0">
+          <div key={block.n} className="flex items-center gap-3 text-xs">
+            <span className="text-[10px] text-[#94A3B8] w-12 shrink-0">
               Blok {block.n}
             </span>
             <div className="flex gap-1 flex-1">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-700 text-xs font-medium">
+              <span className="inline-flex items-center px-2 py-1 rounded bg-[#ECFDF5] text-[#065F46] text-xs font-medium">
                 Aktif: {block.activeStart}–{block.activeEnd}
               </span>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
+              <span className="inline-flex items-center px-2 py-1 rounded bg-amber-50 text-amber-700 text-xs font-medium">
                 Gap: {block.gapStart}–{block.gapEnd}
               </span>
             </div>
@@ -187,18 +187,22 @@ export default function SequenceSettingsPage() {
       render: (value) => {
         if (!value) return '-';
         const date = new Date(value + 'T00:00:00');
-        return date.toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
+        return (
+          <span className="text-xs text-[#64748B]">
+            {date.toLocaleDateString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
       },
     },
     {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="text-gray-600">
+        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
           {value?.full_code || value?.code || '-'}
         </span>
       ),
@@ -207,14 +211,14 @@ export default function SequenceSettingsPage() {
       key: 'last_number',
       label: 'Nomor Terakhir',
       render: (value) => (
-        <span className="font-medium text-gray-900">{value ?? '-'}</span>
+        <span className="font-semibold text-[#0B1F3A] font-mono">{value ?? '-'}</span>
       ),
     },
     {
       key: 'gap_size',
       label: 'Gap Size',
       render: (value) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#EBF4FD] text-[#185FA5]">
           {value ?? '-'}
         </span>
       ),
@@ -223,37 +227,40 @@ export default function SequenceSettingsPage() {
       key: 'next_start',
       label: 'Next Start',
       render: (value) => (
-        <span className="font-medium text-emerald-600">{value ?? '-'}</span>
+        <span className="font-semibold text-[#065F46] font-mono">{value ?? '-'}</span>
       ),
     },
   ];
 
   const inputBaseClass = `
-    block w-full rounded-lg border border-gray-300 bg-white
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
+    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
   `;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">⚙️ Pengaturan Sequence</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-base font-semibold text-[#0B1F3A]">Pengaturan Sequence</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">
           Atur gap size global dan lihat riwayat sequence per klasifikasi.
         </p>
       </div>
 
       {/* ==================== BAGIAN ATAS — Gap Size Setting ==================== */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-gray-900">Gap Size Global</h2>
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-5">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Gap Size Global</h2>
+        </div>
 
         {/* Input gap size */}
         <div className="max-w-xs">
           <label
             htmlFor="gap_size"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
           >
             Ukuran Gap (1 – 100)
           </label>
@@ -270,9 +277,9 @@ export default function SequenceSettingsPage() {
         </div>
 
         {/* Penjelasan */}
-        <div className="flex items-start gap-3 rounded-lg bg-blue-50 border border-blue-100 p-4">
+        <div className="flex items-start gap-3 rounded-lg bg-[#EBF4FD] border border-[#2A7FD4]/10 p-3">
           <svg
-            className="h-5 w-5 text-blue-500 shrink-0 mt-0.5"
+            className="h-4 w-4 text-[#2A7FD4] shrink-0 mt-0.5"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="1.5"
@@ -284,7 +291,7 @@ export default function SequenceSettingsPage() {
               d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
             />
           </svg>
-          <p className="text-sm text-blue-700">
+          <p className="text-xs text-[#185FA5]">
             Perubahan gap size berlaku mulai <strong>hari berikutnya</strong> untuk
             sequence baru. Sequence yang sudah dibuat hari ini tidak terpengaruh.
           </p>
@@ -300,9 +307,9 @@ export default function SequenceSettingsPage() {
 
         {/* Save success */}
         {saveSuccess && (
-          <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-lg border border-[#065F46]/10 bg-[#ECFDF5] px-4 py-3">
             <svg
-              className="h-5 w-5 text-emerald-500 shrink-0"
+              className="h-4 w-4 text-[#065F46] shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="1.5"
@@ -314,7 +321,7 @@ export default function SequenceSettingsPage() {
                 d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
               />
             </svg>
-            <p className="text-sm text-emerald-700">{saveSuccess}</p>
+            <p className="text-xs text-[#065F46]">{saveSuccess}</p>
           </div>
         )}
 
@@ -331,15 +338,18 @@ export default function SequenceSettingsPage() {
       </div>
 
       {/* ==================== BAGIAN BAWAH — Tabel Riwayat Sequence ==================== */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Riwayat Sequence</h2>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Riwayat Sequence</h2>
+        </div>
 
-        {/* Filter card */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        {/* Filter bar */}
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
             {/* Classification */}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+            <div className="w-full sm:w-auto sm:flex-1 sm:min-w-[200px]">
+              <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
                 Klasifikasi
               </label>
               <ClassificationPicker
@@ -349,8 +359,8 @@ export default function SequenceSettingsPage() {
             </div>
 
             {/* Date From */}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+            <div className="w-full sm:w-36">
+              <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
                 Dari Tanggal
               </label>
               <input
@@ -362,8 +372,8 @@ export default function SequenceSettingsPage() {
             </div>
 
             {/* Date To */}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+            <div className="w-full sm:w-36">
+              <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
                 Sampai Tanggal
               </label>
               <input
@@ -375,13 +385,19 @@ export default function SequenceSettingsPage() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex gap-2">
-              <Button variant="primary" size="md" onClick={handleFilter}>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleFilter}
+                className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors"
+              >
                 Filter
-              </Button>
-              <Button variant="secondary" size="md" onClick={handleResetFilter}>
+              </button>
+              <button
+                onClick={handleResetFilter}
+                className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
+              >
                 Reset
-              </Button>
+              </button>
             </div>
           </div>
         </div>

@@ -46,9 +46,9 @@ function TreeRow({
 
   return (
     <>
-      <tr className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+      <tr className="hover:bg-[#F7F9FC] transition-colors border-b border-[#E2E8F0]">
         {/* Kode — dengan expand/collapse toggle */}
-        <td className="py-3 text-sm text-gray-900 whitespace-nowrap" style={{ paddingLeft }}>
+        <td className="py-2 text-xs text-[#0B1F3A] whitespace-nowrap" style={{ paddingLeft }}>
           <div className="flex items-center gap-2">
             {/* Expand/collapse button */}
             {hasChildren || canAddChild ? (
@@ -56,8 +56,8 @@ function TreeRow({
                 type="button"
                 onClick={() => onToggleExpand(item.id)}
                 className={`
-                  flex items-center justify-center h-6 w-6 rounded-md text-gray-400
-                  hover:bg-gray-200 hover:text-gray-600 transition-all duration-200
+                  flex items-center justify-center h-6 w-6 rounded-md text-[#94A3B8]
+                  hover:bg-[#F7F9FC] hover:text-[#0B1F3A] transition-all duration-200
                   ${isExpanded ? 'rotate-90' : ''}
                 `}
                 aria-label={isExpanded ? 'Collapse' : 'Expand'}
@@ -74,52 +74,52 @@ function TreeRow({
             <span
               className={`inline-block h-2 w-2 rounded-full ${
                 level === 1
-                  ? 'bg-indigo-500'
+                  ? 'bg-[#0B1F3A]'
                   : level === 2
-                  ? 'bg-blue-400'
-                  : 'bg-gray-400'
+                  ? 'bg-[#2A7FD4]'
+                  : 'bg-[#94A3B8]'
               }`}
             />
 
-            <span className="font-mono font-semibold text-gray-800">
+            <span className="font-mono font-semibold text-[#0B1F3A]">
               {item.code}
             </span>
           </div>
         </td>
 
         {/* Nama */}
-        <td className="px-4 py-3 text-sm text-gray-700">
+        <td className="px-3 py-2 text-xs text-[#0B1F3A]">
           {item.name}
         </td>
 
         {/* Type */}
-        <td className="px-4 py-3 text-sm">
+        <td className="px-3 py-2 text-xs">
           <Badge variant={item.type === 'substantif' ? 'info' : 'warning'}>
             {item.type === 'substantif' ? 'Substantif' : 'Fasilitatif'}
           </Badge>
         </td>
 
         {/* Level */}
-        <td className="px-4 py-3 text-sm text-center">
-          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">
+        <td className="px-3 py-2 text-xs text-center">
+          <span className="inline-flex items-center justify-center h-5 w-5 rounded bg-[#F7F9FC] text-[#64748B] text-[10px] font-semibold">
             {item.level || level}
           </span>
         </td>
 
         {/* Status */}
-        <td className="px-4 py-3 text-sm">
+        <td className="px-3 py-2 text-xs">
           <Badge variant={item.is_active ? 'success' : 'danger'}>
             {item.is_active ? 'Aktif' : 'Nonaktif'}
           </Badge>
         </td>
 
         {/* Aksi */}
-        <td className="px-4 py-3 text-sm whitespace-nowrap">
-          <div className="flex items-center gap-2">
+        <td className="px-3 py-2 text-xs whitespace-nowrap">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => onEdit(item, parentId)}
-              className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors"
+              className="bg-[#EBF4FD] text-[#185FA5] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-[#D6EBFC] transition-colors"
             >
               Edit
             </button>
@@ -127,7 +127,7 @@ function TreeRow({
               <button
                 type="button"
                 onClick={() => onAddChild(item)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                className="bg-[#EBF4FD] text-[#185FA5] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-[#D6EBFC] transition-colors"
               >
                 + Child
               </button>
@@ -135,10 +135,10 @@ function TreeRow({
             <button
               type="button"
               onClick={() => onToggleActive(item, parentId)}
-              className={`text-sm font-medium transition-colors ${
+              className={`border-0 rounded px-2 py-1 text-xs font-medium transition-colors ${
                 item.is_active
-                  ? 'text-red-600 hover:text-red-800'
-                  : 'text-emerald-600 hover:text-emerald-800'
+                  ? 'bg-[#FEF2F2] text-[#991B1B] hover:bg-red-100'
+                  : 'bg-[#ECFDF5] text-[#065F46] hover:bg-emerald-100'
               }`}
             >
               {item.is_active ? 'Nonaktifkan' : 'Aktifkan'}
@@ -151,7 +151,7 @@ function TreeRow({
       {isExpanded && isLoadingChildren && (
         <tr>
           <td colSpan={6} style={{ paddingLeft: `${level * 32 + 16}px` }} className="py-3">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
               <LoadingSpinner size="sm" />
               <span>Memuat sub-klasifikasi...</span>
             </div>
@@ -182,7 +182,7 @@ function TreeRow({
       {isExpanded && !isLoadingChildren && children.length === 0 && hasChildren && (
         <tr>
           <td colSpan={6} style={{ paddingLeft: `${level * 32 + 16}px` }} className="py-3">
-            <span className="text-sm text-gray-400 italic">Tidak ada sub-klasifikasi.</span>
+            <span className="text-xs text-[#94A3B8] italic">Tidak ada sub-klasifikasi.</span>
           </td>
         </tr>
       )}
@@ -392,10 +392,10 @@ export default function ClassificationsPage() {
   };
 
   const inputBaseClass = `
-    block w-full rounded-lg border border-gray-300 bg-white
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
+    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
   `;
 
   // === Render form fields ===
@@ -403,7 +403,7 @@ export default function ClassificationsPage() {
     <div className="space-y-4">
       {/* Kode */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
           Kode <span className="text-red-500">*</span>
         </label>
         <input
@@ -412,7 +412,7 @@ export default function ClassificationsPage() {
           onChange={handleInputChange('code')}
           placeholder="Contoh: 100, 100.1, 100.1.1"
           className={formErrors.code
-            ? inputBaseClass.replace('border-gray-300', 'border-red-300').replace('bg-white', 'bg-red-50')
+            ? inputBaseClass.replace('border-[#E2E8F0]', 'border-red-300').replace('bg-[#F7F9FC]', 'bg-[#FEF2F2]')
             : inputBaseClass
           }
         />
@@ -423,7 +423,7 @@ export default function ClassificationsPage() {
 
       {/* Nama */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
           Nama <span className="text-red-500">*</span>
         </label>
         <input
@@ -432,7 +432,7 @@ export default function ClassificationsPage() {
           onChange={handleInputChange('name')}
           placeholder="Nama klasifikasi"
           className={formErrors.name
-            ? inputBaseClass.replace('border-gray-300', 'border-red-300').replace('bg-white', 'bg-red-50')
+            ? inputBaseClass.replace('border-[#E2E8F0]', 'border-red-300').replace('bg-[#F7F9FC]', 'bg-[#FEF2F2]')
             : inputBaseClass
           }
         />
@@ -443,7 +443,7 @@ export default function ClassificationsPage() {
 
       {/* Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
           Tipe
         </label>
         <select
@@ -458,9 +458,9 @@ export default function ClassificationsPage() {
 
       {/* Info parent jika tambah child */}
       {addingParent && showAddModal && (
-        <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
-          <p className="text-xs font-medium text-blue-600 mb-1">Parent</p>
-          <p className="text-sm text-blue-800 font-mono">
+        <div className="rounded-lg bg-[#EBF4FD] border border-[#2A7FD4]/10 px-3 py-2">
+          <p className="text-[10px] font-medium text-[#2A7FD4] uppercase tracking-wide mb-0.5">Parent</p>
+          <p className="text-xs text-[#0B1F3A] font-mono">
             {addingParent.code} — {addingParent.name}
           </p>
         </div>
@@ -472,12 +472,12 @@ export default function ClassificationsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">🗂️ Klasifikasi Surat</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-base font-semibold text-[#0B1F3A]">Klasifikasi Surat</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">
             Kelola hierarki klasifikasi surat dalam format tree (Level 1 → 2 → 3).
           </p>
         </div>
@@ -487,13 +487,12 @@ export default function ClassificationsPage() {
         </Button>
       </div>
 
-
-      {/* Filter card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+      {/* Filter bar */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
           {/* Type */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-40">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Tipe Klasifikasi
             </label>
             <select
@@ -508,8 +507,8 @@ export default function ClassificationsPage() {
           </div>
 
           {/* Status */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-32">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Status
             </label>
             <select
@@ -524,13 +523,13 @@ export default function ClassificationsPage() {
           </div>
 
           {/* Filter actions */}
-          <div className="flex gap-2">
-            <Button variant="primary" size="md" onClick={handleFilter}>
+          <div className="flex gap-2 pt-1">
+            <button onClick={handleFilter} className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors">
               Filter
-            </Button>
-            <Button variant="secondary" size="md" onClick={handleResetFilter}>
+            </button>
+            <button onClick={handleResetFilter} className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors">
               Reset
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -539,26 +538,26 @@ export default function ClassificationsPage() {
       {error && <ErrorMessage error={error} />}
 
       {/* Tree table */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white">
         <table className="min-w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-56">
+          <thead>
+            <tr className="bg-[#F7F9FC]">
+              <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase tracking-widest w-56">
                 Kode
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase tracking-widest">
                 Nama
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">
+              <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase tracking-widest w-28">
                 Tipe
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-16">
+              <th className="px-3 py-2 text-center text-[10px] font-semibold text-[#64748B] uppercase tracking-widest w-16">
                 Level
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
+              <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase tracking-widest w-24">
                 Status
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
+              <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase tracking-widest w-48">
                 Aksi
               </th>
             </tr>
@@ -570,7 +569,7 @@ export default function ClassificationsPage() {
                 <td colSpan={6} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <LoadingSpinner size="md" />
-                    <span className="text-sm text-gray-400">Memuat klasifikasi...</span>
+                    <span className="text-xs text-[#94A3B8]">Memuat klasifikasi...</span>
                   </div>
                 </td>
               </tr>
@@ -581,10 +580,10 @@ export default function ClassificationsPage() {
               <tr>
                 <td colSpan={6} className="px-6 py-16 text-center">
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-3">
-                    <span className="text-3xl">🗂️</span>
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-[#F7F9FC] mb-3">
+                    <span className="text-2xl">🗂️</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-xs text-[#64748B]">
                     Belum ada data klasifikasi. Klik '+ Tambah Root' untuk memulai.
                   </p>
                 </div>
@@ -614,17 +613,17 @@ export default function ClassificationsPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-6 text-xs text-gray-400">
+      <div className="flex items-center gap-6 text-[10px] text-[#94A3B8]">
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-indigo-500" />
+          <span className="inline-block h-2 w-2 rounded-full bg-[#0B1F3A]" />
           Level 1
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-blue-400" />
+          <span className="inline-block h-2 w-2 rounded-full bg-[#2A7FD4]" />
           Level 2
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-gray-400" />
+          <span className="inline-block h-2 w-2 rounded-full bg-[#94A3B8]" />
           Level 3
         </div>
       </div>
@@ -641,7 +640,7 @@ export default function ClassificationsPage() {
       >
         <form onSubmit={handleSubmitAdd}>
           {renderFormFields()}
-          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-[#E2E8F0]">
             <Button
               variant="secondary"
               size="md"
@@ -678,7 +677,7 @@ export default function ClassificationsPage() {
       >
         <form onSubmit={handleSubmitEdit}>
           {renderFormFields()}
-          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-[#E2E8F0]">
             <Button
               variant="secondary"
               size="md"

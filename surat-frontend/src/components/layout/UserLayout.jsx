@@ -1,23 +1,65 @@
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 /**
  * UserLayout — Wrapper layout utama untuk halaman user dan admin.
- * Struktur: Sidebar kiri (fixed 256px) + Navbar atas (fixed 64px) + konten.
+ * Struktur: Sidebar kiri (fixed 220px / 68px collapsed) + Navbar atas (fixed 52px) + konten.
+ *
+ * Responsif:
+ * - Mobile (< lg): sidebar hidden, toggle via hamburger → drawer overlay
+ * - Tablet (md - lg): sidebar collapsible (ikon saja, tanpa label teks)
+ * - Desktop (>= lg): sidebar full 220px
  */
 export default function UserLayout() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar — fixed di kiri */}
-      <Sidebar />
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
-      {/* Navbar — fixed di atas, offset kiri 256px */}
-      <Navbar />
+  // Detect tablet breakpoint for auto-collapse (md to lg)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px) and (max-width: 1023px)');
+    const handleChange = (e) => setCollapsed(e.matches);
+
+    handleChange(mediaQuery);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, []);
+
+  const handleToggleSidebar = () => {
+    // On mobile: toggle drawer
+    setMobileOpen((prev) => !prev);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F7F9FC]">
+      {/* Sidebar — fixed di kiri */}
+      <Sidebar
+        isOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        collapsed={collapsed}
+      />
+
+      {/* Navbar — fixed di atas */}
+      <Navbar
+        onToggleSidebar={handleToggleSidebar}
+        sidebarCollapsed={collapsed}
+      />
 
       {/* Konten utama — diberikan margin agar tidak tertutup */}
-      <main className="ml-64 pt-16">
-        <div className="p-6">
+      <main
+        className={`
+          pt-[52px] transition-all duration-300
+          ml-0
+          ${collapsed ? 'lg:ml-[68px]' : 'lg:ml-[220px]'}
+        `}
+      >
+        <div className="p-4 md:p-6">
           <Outlet />
         </div>
       </main>

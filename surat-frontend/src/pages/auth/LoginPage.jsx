@@ -78,21 +78,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-indigo-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-indigo-600 text-white font-bold text-2xl shadow-lg shadow-indigo-200 mb-4">
+          <div className="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-[#2A7FD4] text-white font-bold text-xl shadow-lg shadow-[#2A7FD4]/20 mb-4">
             S
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">SIMONS</h1>
-          <p className="text-sm text-gray-500 mt-1">Sistem Informasi Manajemen Penomoran Surat</p>
+          <h1 className="text-xl font-bold text-[#0B1F3A]">SIMONS</h1>
+          <p className="text-sm text-[#64748B] mt-1">Sistem Informasi Manajemen Penomoran Surat</p>
         </div>
 
         {/* Card Login */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Masuk ke akun Anda</h2>
-          <p className="text-sm text-gray-500 mb-6">Masukkan email dan password untuk melanjutkan.</p>
+        <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-8">
+          <h2 className="text-base font-semibold text-[#0B1F3A] mb-1">Masuk ke akun Anda</h2>
+          <p className="text-sm text-[#64748B] mb-6">Masukkan email dan password untuk melanjutkan.</p>
 
           {/* Error Message */}
           <ErrorMessage error={error} />
@@ -101,7 +101,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {/* Email */}
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="login-email" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1.5">
                 Email
               </label>
               <input
@@ -112,16 +112,16 @@ export default function LoginPage() {
                 placeholder="nama@contoh.com"
                 disabled={loading}
                 autoComplete="email"
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-900 placeholder-gray-400
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
-                  disabled:bg-gray-50 disabled:cursor-not-allowed
+                className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-[#0B1F3A] placeholder-[#94A3B8]
+                  focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20 focus:border-[#2A7FD4] focus:bg-white
+                  disabled:bg-[#F7F9FC] disabled:cursor-not-allowed
                   transition-all duration-200"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="login-password" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1.5">
                 Password
               </label>
               <input
@@ -132,9 +132,9 @@ export default function LoginPage() {
                 placeholder="Masukkan password"
                 disabled={loading}
                 autoComplete="current-password"
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-900 placeholder-gray-400
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
-                  disabled:bg-gray-50 disabled:cursor-not-allowed
+                className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-[#0B1F3A] placeholder-[#94A3B8]
+                  focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20 focus:border-[#2A7FD4] focus:bg-white
+                  disabled:bg-[#F7F9FC] disabled:cursor-not-allowed
                   transition-all duration-200"
               />
             </div>
@@ -154,7 +154,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-[10px] text-[#94A3B8] mt-6">
           &copy; {new Date().getFullYear()} SIMONS — Sistem Penomoran Surat
         </p>
       </div>

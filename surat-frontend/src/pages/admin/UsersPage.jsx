@@ -246,21 +246,21 @@ export default function UsersPage() {
       key: 'name',
       label: 'Nama',
       render: (value) => (
-        <span className="font-medium text-gray-900">{value || '-'}</span>
+        <span className="font-medium text-[#0B1F3A] text-xs">{value || '-'}</span>
       ),
     },
     {
       key: 'email',
       label: 'Email',
       render: (value) => (
-        <span className="text-gray-600">{value || '-'}</span>
+        <span className="text-xs text-[#64748B]">{value || '-'}</span>
       ),
     },
     {
       key: 'division',
       label: 'Divisi',
       render: (value) => (
-        <span className="text-gray-600">{value || '-'}</span>
+        <span className="text-xs text-[#64748B]">{value || '-'}</span>
       ),
     },
     {
@@ -285,21 +285,21 @@ export default function UsersPage() {
       key: 'actions',
       label: 'Aksi',
       render: (_, row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => openEditModal(row)}
-            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors"
+            className="bg-[#EBF4FD] text-[#185FA5] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-[#D6EBFC] transition-colors"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => openToggleConfirm(row)}
-            className={`text-sm font-medium transition-colors ${
+            className={`border-0 rounded px-2 py-1 text-xs font-medium transition-colors ${
               row.is_active
-                ? 'text-red-600 hover:text-red-800'
-                : 'text-emerald-600 hover:text-emerald-800'
+                ? 'bg-[#FEF2F2] text-[#991B1B] hover:bg-red-100'
+                : 'bg-[#ECFDF5] text-[#065F46] hover:bg-emerald-100'
             }`}
           >
             {row.is_active ? 'Nonaktifkan' : 'Aktifkan'}
@@ -310,17 +310,17 @@ export default function UsersPage() {
   ];
 
   const inputBaseClass = `
-    block w-full rounded-lg border border-gray-300 bg-white
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
+    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
   `;
 
   const inputErrorClass = `
-    block w-full rounded-lg border border-red-300 bg-red-50
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none
+    block w-full h-9 rounded-lg border border-red-300 bg-[#FEF2F2]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500/20
   `;
 
   // === Render form fields (shared antara add & edit) ===
@@ -328,7 +328,7 @@ export default function UsersPage() {
     <div className="space-y-4">
       {/* Nama */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
           Nama <span className="text-red-500">*</span>
         </label>
         <input
@@ -345,7 +345,7 @@ export default function UsersPage() {
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
           Email <span className="text-red-500">*</span>
         </label>
         <input
@@ -364,7 +364,7 @@ export default function UsersPage() {
       {!isEdit && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
               Password <span className="text-red-500">*</span>
             </label>
             <input
@@ -380,7 +380,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
               Konfirmasi Password <span className="text-red-500">*</span>
             </label>
             <input
@@ -399,7 +399,7 @@ export default function UsersPage() {
 
       {/* Divisi */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
           Divisi <span className="text-red-500">*</span>
         </label>
         <input
@@ -416,7 +416,7 @@ export default function UsersPage() {
 
       {/* Role */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
           Role
         </label>
         <select
@@ -435,12 +435,12 @@ export default function UsersPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">👥 Kelola User</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-base font-semibold text-[#0B1F3A]">Kelola User</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">
             Kelola akun user, ubah role, dan atur status aktif/nonaktif.
           </p>
         </div>
@@ -450,13 +450,12 @@ export default function UsersPage() {
         </Button>
       </div>
 
-
-      {/* Filter card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      {/* Filter bar */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
           {/* Search */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-auto sm:flex-1 sm:min-w-[180px]">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Cari Nama / Email
             </label>
             <input
@@ -469,8 +468,8 @@ export default function UsersPage() {
           </div>
 
           {/* Role */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-32">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Role
             </label>
             <select
@@ -485,8 +484,8 @@ export default function UsersPage() {
           </div>
 
           {/* Status */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-32">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Status
             </label>
             <select
@@ -501,13 +500,13 @@ export default function UsersPage() {
           </div>
 
           {/* Filter actions */}
-          <div className="flex gap-2">
-            <Button variant="primary" size="md" onClick={handleFilter}>
+          <div className="flex gap-2 pt-1">
+            <button onClick={handleFilter} className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors">
               Filter
-            </Button>
-            <Button variant="secondary" size="md" onClick={handleResetFilter}>
+            </button>
+            <button onClick={handleResetFilter} className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors">
               Reset
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -536,7 +535,7 @@ export default function UsersPage() {
       >
         <form onSubmit={handleSubmitAdd}>
           {renderFormFields(false)}
-          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-[#E2E8F0]">
             <Button
               variant="secondary"
               size="md"
@@ -569,7 +568,7 @@ export default function UsersPage() {
       >
         <form onSubmit={handleSubmitEdit}>
           {renderFormFields(true)}
-          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-[#E2E8F0]">
             <Button
               variant="secondary"
               size="md"

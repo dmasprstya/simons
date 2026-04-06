@@ -103,7 +103,7 @@ export default function AllLettersPage() {
       key: 'number',
       label: 'Nomor Surat',
       render: (_value, row) => (
-        <span className="font-medium text-gray-900 font-mono">
+        <span className="font-semibold text-[#0B1F3A] font-mono">
           {displayLetterNumber(row)}
         </span>
       ),
@@ -112,7 +112,7 @@ export default function AllLettersPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="text-gray-600">
+        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
           {value?.full_code || value?.code || '-'}
         </span>
       ),
@@ -121,7 +121,7 @@ export default function AllLettersPage() {
       key: 'user',
       label: 'User',
       render: (value) => (
-        <span className="font-medium text-gray-700">
+        <span className="font-medium text-[#0B1F3A] text-xs">
           {value?.name || '-'}
         </span>
       ),
@@ -130,7 +130,7 @@ export default function AllLettersPage() {
       key: 'division',
       label: 'Divisi',
       render: (value, row) => (
-        <span className="text-gray-600">
+        <span className="text-xs text-[#64748B]">
           {value || row.user?.division || '-'}
         </span>
       ),
@@ -139,7 +139,7 @@ export default function AllLettersPage() {
       key: 'subject',
       label: 'Perihal',
       render: (value) => (
-        <span className="max-w-[180px] truncate block" title={value}>
+        <span className="max-w-[180px] truncate block text-xs text-[#0B1F3A]" title={value}>
           {value || '-'}
         </span>
       ),
@@ -148,7 +148,7 @@ export default function AllLettersPage() {
       key: 'destination',
       label: 'Tujuan',
       render: (value) => (
-        <span className="max-w-[140px] truncate block" title={value}>
+        <span className="max-w-[140px] truncate block text-xs text-[#64748B]" title={value}>
           {value || '-'}
         </span>
       ),
@@ -159,11 +159,15 @@ export default function AllLettersPage() {
       render: (value) => {
         if (!value) return '-';
         const date = new Date(value + 'T00:00:00');
-        return date.toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
+        return (
+          <span className="text-xs text-[#64748B]">
+            {date.toLocaleDateString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
       },
     },
     {
@@ -174,19 +178,19 @@ export default function AllLettersPage() {
   ];
 
   const inputBaseClass = `
-    block w-full rounded-lg border border-gray-300 bg-white
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
+    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
   `;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">📋 Semua Surat</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-base font-semibold text-[#0B1F3A]">Semua Surat</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">
             Daftar seluruh surat dari semua user.
           </p>
         </div>
@@ -214,13 +218,12 @@ export default function AllLettersPage() {
         </div>
       </div>
 
-
-      {/* Filter card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-end">
+      {/* Filter bar */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
+        <div className="flex flex-col lg:flex-row flex-wrap gap-2 items-start lg:items-end">
           {/* Search */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full lg:w-auto lg:flex-1 lg:min-w-[180px]">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Cari User / Perihal
             </label>
             <input
@@ -232,20 +235,9 @@ export default function AllLettersPage() {
             />
           </div>
 
-          {/* Classification */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Klasifikasi
-            </label>
-            <ClassificationPicker
-              value={classificationId}
-              onChange={setClassificationId}
-            />
-          </div>
-
           {/* Date From */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-36">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Dari Tanggal
             </label>
             <input
@@ -257,8 +249,8 @@ export default function AllLettersPage() {
           </div>
 
           {/* Date To */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-36">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Sampai Tanggal
             </label>
             <input
@@ -270,8 +262,8 @@ export default function AllLettersPage() {
           </div>
 
           {/* Status */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-32">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Status
             </label>
             <select
@@ -286,8 +278,8 @@ export default function AllLettersPage() {
           </div>
 
           {/* Divisi */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-36">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Divisi
             </label>
             <input
@@ -298,16 +290,22 @@ export default function AllLettersPage() {
               className={inputBaseClass}
             />
           </div>
-        </div>
 
-        {/* Filter action buttons */}
-        <div className="flex gap-2 mt-4">
-          <Button variant="primary" size="md" onClick={handleFilter}>
-            Filter
-          </Button>
-          <Button variant="secondary" size="md" onClick={handleResetFilter}>
-            Reset
-          </Button>
+          {/* Filter action buttons */}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={handleFilter}
+              className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors"
+            >
+              Filter
+            </button>
+            <button
+              onClick={handleResetFilter}
+              className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </div>
 

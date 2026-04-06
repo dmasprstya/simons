@@ -41,71 +41,121 @@ const adminMenuItems = [
   { to: '/admin/reports', label: 'Laporan', icon: ChartBarIcon },
 ];
 
-function SidebarLink({ to, label, icon: Icon }) {
+function SidebarLink({ to, label, icon: Icon, collapsed }) {
   return (
     <NavLink
       to={to}
       end
       className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
+        `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 group
         ${
           isActive
-            ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-        }`
+            ? 'bg-[#2A7FD4] text-white font-medium shadow-sm shadow-[#2A7FD4]/30'
+            : 'text-white/55 hover:bg-white/10 hover:text-white'
+        }
+        ${collapsed ? 'justify-center' : ''}`
       }
+      title={collapsed ? label : undefined}
     >
-      <Icon className="h-5 w-5 shrink-0 transition-colors duration-200" />
-      <span>{label}</span>
+      <Icon className="h-5 w-5 shrink-0" />
+      {!collapsed && <span className="truncate">{label}</span>}
     </NavLink>
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose, collapsed = false }) {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-200 flex flex-col z-30">
-      {/* Logo / Branding */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-100">
-        <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-indigo-600 text-white font-bold text-sm shadow-sm">
-          S
-        </div>
-        <div>
-          <h1 className="text-base font-bold text-gray-900 leading-tight">SIMONS</h1>
-          <p className="text-[11px] text-gray-400 leading-tight">Penomoran Surat</p>
-        </div>
-      </div>
+    <>
+      {/* Mobile overlay backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Menu Navigasi */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {/* Menu User */}
-        <p className="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-          Menu Utama
-        </p>
-        {userMenuItems.map((item) => (
-          <SidebarLink key={item.to} {...item} />
-        ))}
+      <aside
+        className={`
+          fixed left-0 top-0 bottom-0 bg-[#0B1F3A] flex flex-col z-50
+          transition-all duration-300 ease-in-out
+          ${collapsed ? 'lg:w-[68px]' : 'lg:w-[220px]'}
+          ${isOpen ? 'w-[220px] translate-x-0' : 'w-[220px] -translate-x-full'}
+          lg:translate-x-0
+        `}
+      >
+        {/* Logo / Branding */}
+        <div className={`flex items-center gap-3 px-4 py-5 border-b border-white/10 ${collapsed ? 'lg:justify-center lg:px-2' : ''}`}>
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#2A7FD4] text-white font-bold text-sm shrink-0">
+            S
+          </div>
+          {!collapsed && (
+            <div className="lg:block">
+              <h1 className="text-sm font-bold text-white leading-tight">SIMONS</h1>
+              <p className="text-[10px] text-white/40 leading-tight">Penomoran Surat</p>
+            </div>
+          )}
+          {/* Visible only in collapsed state on lg, hide completely */}
+          {collapsed && (
+            <div className="block lg:hidden">
+              <h1 className="text-sm font-bold text-white leading-tight">SIMONS</h1>
+              <p className="text-[10px] text-white/40 leading-tight">Penomoran Surat</p>
+            </div>
+          )}
+        </div>
 
-        {/* Menu Admin — tampilkan hanya jika role admin */}
-        {isAdmin && (
-          <>
-            <div className="my-4 border-t border-gray-200" />
-            <p className="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-              Administrasi
+        {/* Menu Navigasi */}
+        <nav className="flex-1 overflow-y-auto sidebar-scroll px-3 py-4 space-y-1">
+          {/* Menu User */}
+          {!collapsed && (
+            <p className="px-3 mb-2 text-[10px] font-semibold text-white/30 uppercase tracking-widest">
+              Menu Utama
             </p>
-            {adminMenuItems.map((item) => (
-              <SidebarLink key={item.to} {...item} />
-            ))}
-          </>
-        )}
-      </nav>
+          )}
+          {userMenuItems.map((item) => (
+            <SidebarLink key={item.to} {...item} collapsed={collapsed} />
+          ))}
 
-      {/* Footer — versi */}
-      <div className="px-5 py-3 border-t border-gray-100">
-        <p className="text-[10px] text-gray-400 text-center">SIMONS v1.0.0</p>
-      </div>
-    </aside>
+          {/* Menu Admin — tampilkan hanya jika role admin */}
+          {isAdmin && (
+            <>
+              <div className="my-3 border-t border-white/10" />
+              {!collapsed && (
+                <p className="px-3 mb-2 text-[10px] font-semibold text-white/30 uppercase tracking-widest">
+                  Administrasi
+                </p>
+              )}
+              {adminMenuItems.map((item) => (
+                <SidebarLink key={item.to} {...item} collapsed={collapsed} />
+              ))}
+            </>
+          )}
+        </nav>
+
+        {/* Footer — User info */}
+        <div className={`px-3 py-3 border-t border-white/10 ${collapsed ? 'lg:flex lg:justify-center' : ''}`}>
+          <div className={`flex items-center gap-2 ${collapsed ? 'lg:justify-center' : ''}`}>
+            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#2A7FD4] text-white text-xs font-semibold shrink-0">
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+            {!collapsed && (
+              <div className="min-w-0 lg:block">
+                <p className="text-xs font-medium text-white truncate">{user?.name || 'User'}</p>
+                <p className="text-[10px] text-white/40 truncate">{user?.division?.name || user?.role || '-'}</p>
+              </div>
+            )}
+            {collapsed && (
+              <div className="min-w-0 block lg:hidden">
+                <p className="text-xs font-medium text-white truncate">{user?.name || 'User'}</p>
+                <p className="text-[10px] text-white/40 truncate">{user?.division?.name || user?.role || '-'}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

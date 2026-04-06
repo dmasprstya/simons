@@ -6,19 +6,19 @@ import { Link } from 'react-router-dom';
  */
 function NotFoundPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F7F9FC] px-4">
       <div className="max-w-md w-full text-center">
         {/* Ilustrasi 404 */}
         <div className="mb-6">
-          <span className="text-8xl font-extrabold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
+          <span className="text-8xl font-extrabold text-[#0B1F3A]">
             404
           </span>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <h1 className="text-xl font-semibold text-[#0B1F3A] mb-2">
           Halaman Tidak Ditemukan
         </h1>
-        <p className="text-gray-600 mb-8">
+        <p className="text-sm text-[#64748B] mb-8">
           Maaf, halaman yang Anda cari tidak ada atau telah dipindahkan.
           Pastikan URL sudah benar, atau kembali ke dashboard.
         </p>
@@ -26,7 +26,7 @@ function NotFoundPage() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => window.history.back()}
-            className="inline-flex items-center justify-center px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center justify-center px-5 py-2.5 border border-[#E2E8F0] rounded-lg text-sm font-medium text-[#64748B] bg-white hover:bg-[#F7F9FC] hover:text-[#0B1F3A] transition-colors"
           >
             <svg
               className="h-4 w-4 mr-2"
@@ -45,7 +45,7 @@ function NotFoundPage() {
           </button>
           <Link
             to="/dashboard"
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-[#0B1F3A] hover:bg-[#1A3558] transition-colors"
           >
             <svg
               className="h-4 w-4 mr-2"

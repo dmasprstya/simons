@@ -53,12 +53,12 @@ export default function Pagination({ meta, onPageChange }) {
   const to = Math.min(current_page * per_page, total);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-3">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-3">
       {/* Info data */}
-      <p className="text-sm text-gray-500">
-        Menampilkan <span className="font-medium text-gray-700">{from}</span>–
-        <span className="font-medium text-gray-700">{to}</span> dari{' '}
-        <span className="font-medium text-gray-700">{total}</span> data
+      <p className="text-xs text-[#64748B]">
+        Menampilkan <span className="font-medium text-[#0B1F3A]">{from}</span>–
+        <span className="font-medium text-[#0B1F3A]">{to}</span> dari{' '}
+        <span className="font-medium text-[#0B1F3A]">{total}</span> data
       </p>
 
       {/* Navigasi halaman */}
@@ -68,10 +68,10 @@ export default function Pagination({ meta, onPageChange }) {
           type="button"
           onClick={() => onPageChange(current_page - 1)}
           disabled={current_page <= 1}
-          className="inline-flex items-center justify-center h-9 w-9 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-[#64748B] hover:bg-[#F7F9FC] hover:text-[#0B1F3A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           aria-label="Halaman sebelumnya"
         >
-          <ChevronLeftIcon className="h-5 w-5" />
+          <ChevronLeftIcon className="h-4 w-4" />
         </button>
 
         {/* Angka halaman */}
@@ -82,11 +82,11 @@ export default function Pagination({ meta, onPageChange }) {
             onClick={() => onPageChange(page)}
             disabled={page === current_page}
             className={`
-              inline-flex items-center justify-center h-9 w-9 rounded-lg text-sm font-medium transition-colors
+              inline-flex items-center justify-center h-8 w-8 rounded-lg text-xs font-medium transition-colors
               ${
                 page === current_page
-                  ? 'bg-indigo-600 text-white shadow-sm cursor-default'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-[#0B1F3A] text-white cursor-default'
+                  : 'text-[#64748B] hover:bg-[#F7F9FC] hover:text-[#0B1F3A]'
               }
             `}
             aria-current={page === current_page ? 'page' : undefined}
@@ -100,10 +100,10 @@ export default function Pagination({ meta, onPageChange }) {
           type="button"
           onClick={() => onPageChange(current_page + 1)}
           disabled={current_page >= last_page}
-          className="inline-flex items-center justify-center h-9 w-9 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-[#64748B] hover:bg-[#F7F9FC] hover:text-[#0B1F3A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           aria-label="Halaman berikutnya"
         >
-          <ChevronRightIcon className="h-5 w-5" />
+          <ChevronRightIcon className="h-4 w-4" />
         </button>
       </nav>
     </div>

@@ -46,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop — klik untuk tutup */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-[#0B1F3A]/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -55,7 +55,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
       <div
         className={`
           relative w-full ${sizeClasses[size] || sizeClasses.md}
-          bg-white rounded-xl shadow-2xl
+          bg-white rounded-xl shadow-2xl border border-[#E2E8F0]
           transform transition-all
           animate-in fade-in zoom-in-95 duration-200
         `}
@@ -64,14 +64,14 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         aria-labelledby="modal-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 id="modal-title" className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0]">
+          <h3 id="modal-title" className="text-base font-semibold text-[#0B1F3A]">
             {title}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="rounded-lg p-1.5 text-[#94A3B8] hover:text-[#0B1F3A] hover:bg-[#F7F9FC] transition-colors"
             aria-label="Tutup modal"
           >
             <XMarkIcon className="h-5 w-5" />

@@ -4,8 +4,8 @@ import { useAuthStore } from '../../store/authStore';
 import { logout as logoutApi } from '../../api/auth.api';
 import {
   ArrowRightOnRectangleIcon,
-  UserCircleIcon,
   ChevronRightIcon,
+  Bars3Icon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -33,7 +33,7 @@ const routeMap = {
  * Logout: panggil API → clear store → redirect /login.
  * Auto-update document.title berdasarkan halaman aktif.
  */
-export default function Navbar() {
+export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
@@ -91,64 +91,77 @@ export default function Navbar() {
   const breadcrumbs = buildBreadcrumbs();
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-20">
-      {/* Kiri — Breadcrumb */}
-      <nav className="flex items-center gap-1 text-sm" aria-label="Breadcrumb">
-        {breadcrumbs.map((crumb, index) => (
-          <div key={index} className="flex items-center gap-1">
-            {index > 0 && (
-              <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 shrink-0" />
-            )}
-            {crumb.to ? (
-              <Link
-                to={crumb.to}
-                className="text-gray-500 hover:text-indigo-600 transition-colors font-medium"
-              >
-                {crumb.label}
-              </Link>
-            ) : (
-              <span
-                className={`${
-                  crumb.active
-                    ? 'text-gray-900 font-semibold'
-                    : 'text-gray-400 font-medium'
-                }`}
-              >
-                {crumb.label}
-              </span>
-            )}
-          </div>
-        ))}
-      </nav>
+    <header
+      className={`
+        fixed top-0 right-0 h-[52px] bg-white border-b border-[#E2E8F0]
+        flex items-center justify-between px-4 md:px-6 z-20
+        transition-all duration-300
+        left-0
+        ${sidebarCollapsed ? 'lg:left-[68px]' : 'lg:left-[220px]'}
+      `}
+    >
+      {/* Kiri — Hamburger + Breadcrumb */}
+      <div className="flex items-center gap-3">
+        {/* Hamburger for mobile */}
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="lg:hidden p-1.5 rounded-lg text-[#64748B] hover:bg-[#F7F9FC] hover:text-[#0B1F3A] transition-colors"
+          aria-label="Toggle menu"
+        >
+          <Bars3Icon className="h-5 w-5" />
+        </button>
 
-      {/* Kanan — Info user & logout */}
-      <div className="flex items-center gap-4">
-        {/* Info User */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-9 w-9 rounded-full bg-indigo-100 text-indigo-600">
-            <UserCircleIcon className="h-6 w-6" />
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-semibold text-gray-800 leading-tight">
-              {user?.name || 'User'}
-            </p>
-            <p className="text-xs text-gray-400 leading-tight">
-              {user?.division?.name || user?.role || '-'}
-            </p>
-          </div>
+        <nav className="flex items-center gap-1 text-sm" aria-label="Breadcrumb">
+          {breadcrumbs.map((crumb, index) => (
+            <div key={index} className="flex items-center gap-1">
+              {index > 0 && (
+                <ChevronRightIcon className="h-3.5 w-3.5 text-[#94A3B8] shrink-0" />
+              )}
+              {crumb.to ? (
+                <Link
+                  to={crumb.to}
+                  className="text-[#64748B] hover:text-[#2A7FD4] transition-colors"
+                >
+                  {crumb.label}
+                </Link>
+              ) : (
+                <span
+                  className={`${
+                    crumb.active
+                      ? 'text-[#0B1F3A] font-medium'
+                      : 'text-[#94A3B8]'
+                  }`}
+                >
+                  {crumb.label}
+                </span>
+              )}
+            </div>
+          ))}
+        </nav>
+      </div>
+
+      {/* Kanan — Status + nama user + tombol keluar */}
+      <div className="flex items-center gap-3">
+        {/* Online status dot + name */}
+        <div className="hidden sm:flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="text-sm text-[#0B1F3A] font-medium">
+            {user?.name || 'User'}
+          </span>
         </div>
 
-        {/* Divider vertikal */}
-        <div className="w-px h-8 bg-gray-200" />
-
-        {/* Tombol Logout */}
+        {/* Tombol Logout — border tipis, compact */}
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#64748B] border border-[#E2E8F0] rounded-lg hover:bg-[#FEF2F2] hover:text-[#991B1B] hover:border-[#FECACA] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Keluar"
         >
-          <ArrowRightOnRectangleIcon className="h-5 w-5" />
+          <ArrowRightOnRectangleIcon className="h-4 w-4" />
           <span className="hidden sm:inline">{loggingOut ? 'Keluar...' : 'Keluar'}</span>
         </button>
       </div>

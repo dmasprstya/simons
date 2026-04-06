@@ -107,7 +107,7 @@ export default function MyLettersPage() {
       key: 'number',
       label: 'Nomor Surat',
       render: (_value, row) => (
-        <span className="font-medium text-gray-900 font-mono">
+        <span className="font-semibold text-[#0B1F3A] font-mono">
           {displayLetterNumber(row)}
         </span>
       ),
@@ -116,7 +116,7 @@ export default function MyLettersPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="text-gray-600">
+        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
           {value?.full_code || value?.code || '-'}
         </span>
       ),
@@ -125,7 +125,7 @@ export default function MyLettersPage() {
       key: 'subject',
       label: 'Perihal',
       render: (value) => (
-        <span className="max-w-[200px] truncate block" title={value}>
+        <span className="max-w-[200px] truncate block text-xs text-[#0B1F3A]" title={value}>
           {value}
         </span>
       ),
@@ -134,7 +134,7 @@ export default function MyLettersPage() {
       key: 'destination',
       label: 'Tujuan',
       render: (value) => (
-        <span className="max-w-[150px] truncate block" title={value}>
+        <span className="max-w-[150px] truncate block text-xs text-[#64748B]" title={value}>
           {value}
         </span>
       ),
@@ -154,73 +154,64 @@ export default function MyLettersPage() {
       render: (_value, row) => {
         if (!canVoid(row)) return null;
         return (
-          <Button
-            variant="danger"
-            size="sm"
+          <button
+            className="bg-[#FEF2F2] text-[#991B1B] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-red-100 transition-colors"
             onClick={() => {
               setVoidError(null);
               setVoidTarget(row);
             }}
           >
             Batalkan
-          </Button>
+          </button>
         );
       },
     },
   ];
 
   const inputBaseClass = `
-    block w-full rounded-lg border border-gray-300 bg-white
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
+    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
   `;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📝 Riwayat Surat</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-base font-semibold text-[#0B1F3A]">Riwayat Surat</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">
           Daftar seluruh surat yang pernah Anda ambil.
         </p>
       </div>
 
-
-      {/* Filter card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      {/* Filter bar */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-center">
           {/* Date From */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Dari Tanggal
-            </label>
+          <div className="w-full sm:w-36">
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
+              placeholder="Dari Tanggal"
               className={inputBaseClass}
             />
           </div>
 
           {/* Date To */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Sampai Tanggal
-            </label>
+          <div className="w-full sm:w-36">
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
+              placeholder="Sampai Tanggal"
               className={inputBaseClass}
             />
           </div>
 
           {/* Classification */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Klasifikasi
-            </label>
+          <div className="w-full sm:w-auto sm:flex-1 sm:min-w-[200px]">
             <ClassificationPicker
               value={classificationId}
               onChange={setClassificationId}
@@ -228,13 +219,19 @@ export default function MyLettersPage() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 sm:col-span-2 lg:col-span-1">
-            <Button variant="primary" size="md" onClick={handleFilter}>
+          <div className="flex gap-2">
+            <button
+              onClick={handleFilter}
+              className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors"
+            >
               Filter
-            </Button>
-            <Button variant="secondary" size="md" onClick={handleResetFilter}>
+            </button>
+            <button
+              onClick={handleResetFilter}
+              className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
+            >
               Reset
-            </Button>
+            </button>
           </div>
         </div>
       </div>

@@ -25,7 +25,7 @@ function JsonDiff({ oldData, newData }) {
   // Jika keduanya kosong / null
   if (!oldData && !newData) {
     return (
-      <p className="text-sm text-gray-400 italic">Tidak ada data perubahan.</p>
+      <p className="text-xs text-[#94A3B8] italic">Tidak ada data perubahan.</p>
     );
   }
 
@@ -37,27 +37,27 @@ function JsonDiff({ oldData, newData }) {
 
   if (allKeys.length === 0) {
     return (
-      <p className="text-sm text-gray-400 italic">Tidak ada data perubahan.</p>
+      <p className="text-xs text-[#94A3B8] italic">Tidak ada data perubahan.</p>
     );
   }
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
+      <table className="min-w-full text-xs">
         <thead>
-          <tr className="border-b border-gray-200">
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase w-32">
+          <tr className="border-b border-[#E2E8F0]">
+            <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase w-32">
               Field
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-red-500 uppercase">
+            <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#991B1B] uppercase">
               Sebelum
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-600 uppercase">
+            <th className="px-3 py-2 text-left text-[10px] font-semibold text-[#065F46] uppercase">
               Sesudah
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-[#E2E8F0]">
           {allKeys.map((key) => {
             const oldVal = formatValue(oldObj[key]);
             const newVal = formatValue(newObj[key]);
@@ -68,14 +68,14 @@ function JsonDiff({ oldData, newData }) {
                 key={key}
                 className={isChanged ? 'bg-amber-50/50' : ''}
               >
-                <td className="px-3 py-2 font-mono text-xs text-gray-600 font-medium">
+                <td className="px-3 py-2 font-mono text-xs text-[#64748B] font-medium">
                   {key}
                 </td>
-                <td className={`px-3 py-2 font-mono text-xs break-all ${isChanged ? 'text-red-600 line-through' : 'text-gray-500'}`}>
-                  {oldVal || <span className="text-gray-300">—</span>}
+                <td className={`px-3 py-2 font-mono text-xs break-all ${isChanged ? 'text-[#991B1B] line-through' : 'text-[#94A3B8]'}`}>
+                  {oldVal || <span className="text-[#E2E8F0]">—</span>}
                 </td>
-                <td className={`px-3 py-2 font-mono text-xs break-all ${isChanged ? 'text-emerald-700 font-medium' : 'text-gray-500'}`}>
-                  {newVal || <span className="text-gray-300">—</span>}
+                <td className={`px-3 py-2 font-mono text-xs break-all ${isChanged ? 'text-[#065F46] font-medium' : 'text-[#94A3B8]'}`}>
+                  {newVal || <span className="text-[#E2E8F0]">—</span>}
                 </td>
               </tr>
             );
@@ -147,11 +147,11 @@ function formatAction(action) {
  * Helper: warna badge untuk aksi
  */
 function getActionColor(action) {
-  if (action?.includes('created') || action?.includes('approved')) return 'text-emerald-700 bg-emerald-50';
-  if (action?.includes('voided') || action?.includes('rejected')) return 'text-red-700 bg-red-50';
-  if (action?.includes('updated') || action?.includes('toggled')) return 'text-blue-700 bg-blue-50';
+  if (action?.includes('created') || action?.includes('approved')) return 'text-[#065F46] bg-[#ECFDF5]';
+  if (action?.includes('voided') || action?.includes('rejected')) return 'text-[#991B1B] bg-[#FEF2F2]';
+  if (action?.includes('updated') || action?.includes('toggled')) return 'text-[#185FA5] bg-[#EBF4FD]';
   if (action?.includes('requested')) return 'text-amber-700 bg-amber-50';
-  return 'text-gray-700 bg-gray-50';
+  return 'text-[#64748B] bg-[#F7F9FC]';
 }
 
 export default function AuditLogsPage() {
@@ -237,7 +237,7 @@ export default function AuditLogsPage() {
       key: 'created_at',
       label: 'Waktu',
       render: (value) => (
-        <span className="text-gray-600 text-xs whitespace-nowrap">
+        <span className="text-[#64748B] text-xs whitespace-nowrap">
           {formatDateTime(value)}
         </span>
       ),
@@ -246,7 +246,7 @@ export default function AuditLogsPage() {
       key: 'user',
       label: 'User',
       render: (value) => (
-        <span className="font-medium text-gray-900">
+        <span className="font-medium text-[#0B1F3A] text-xs">
           {value?.name || '-'}
         </span>
       ),
@@ -255,7 +255,7 @@ export default function AuditLogsPage() {
       key: 'action',
       label: 'Aksi',
       render: (value) => (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getActionColor(value)}`}>
+        <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${getActionColor(value)}`}>
           {formatAction(value)}
         </span>
       ),
@@ -264,7 +264,7 @@ export default function AuditLogsPage() {
       key: 'auditable_type',
       label: 'Tabel',
       render: (value) => (
-        <span className="font-mono text-xs text-gray-500">
+        <span className="font-mono text-xs text-[#64748B]">
           {value ? value.replace('App\\Models\\', '') : '-'}
         </span>
       ),
@@ -273,7 +273,7 @@ export default function AuditLogsPage() {
       key: 'auditable_id',
       label: 'Record ID',
       render: (value) => (
-        <span className="font-mono text-xs text-gray-500">
+        <span className="font-mono text-xs text-[#64748B]">
           {value || '-'}
         </span>
       ),
@@ -282,7 +282,7 @@ export default function AuditLogsPage() {
       key: 'ip_address',
       label: 'IP',
       render: (value) => (
-        <span className="font-mono text-xs text-gray-400">
+        <span className="font-mono text-xs text-[#94A3B8]">
           {value || '-'}
         </span>
       ),
@@ -290,28 +290,28 @@ export default function AuditLogsPage() {
   ];
 
   const inputBaseClass = `
-    block w-full rounded-lg border border-gray-300 bg-white
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
+    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
   `;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📝 Audit Log</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-base font-semibold text-[#0B1F3A]">Audit Log</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">
           Riwayat semua aksi penting yang dilakukan di sistem.
         </p>
       </div>
 
-      {/* Filter card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
+      {/* Filter bar */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
           {/* Search user */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-auto sm:flex-1 sm:min-w-[150px]">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Cari User
             </label>
             <input
@@ -324,8 +324,8 @@ export default function AuditLogsPage() {
           </div>
 
           {/* Aksi */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-40">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Aksi
             </label>
             <select
@@ -342,8 +342,8 @@ export default function AuditLogsPage() {
           </div>
 
           {/* Tabel */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-36">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Tabel
             </label>
             <input
@@ -356,8 +356,8 @@ export default function AuditLogsPage() {
           </div>
 
           {/* Date From */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-36">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Dari Tanggal
             </label>
             <input
@@ -369,8 +369,8 @@ export default function AuditLogsPage() {
           </div>
 
           {/* Date To */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="w-full sm:w-36">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Sampai Tanggal
             </label>
             <input
@@ -383,13 +383,13 @@ export default function AuditLogsPage() {
         </div>
 
         {/* Filter action buttons */}
-        <div className="flex gap-2 mt-4">
-          <Button variant="primary" size="md" onClick={handleFilter}>
+        <div className="flex gap-2 mt-3">
+          <button onClick={handleFilter} className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors">
             Filter
-          </Button>
-          <Button variant="secondary" size="md" onClick={handleResetFilter}>
+          </button>
+          <button onClick={handleResetFilter} className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors">
             Reset
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -397,29 +397,29 @@ export default function AuditLogsPage() {
       {error && <ErrorMessage error={error} />}
 
       {/* Tabel audit log — dengan klik baris */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
+      <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-[#F7F9FC]">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                  className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase tracking-widest"
                 >
                   {col.label}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {/* Loading state */}
             {loading &&
               [0, 1, 2].map((i) => (
                 <tr key={`skeleton-${i}`} className="animate-pulse">
                   {columns.map((col) => (
-                    <td key={col.key} className="px-6 py-4">
-                      <div className="h-4 bg-gray-200 rounded-md w-3/4" />
+                    <td key={col.key} className="px-3 py-2">
+                      <div className="h-3 bg-[#E2E8F0] rounded w-3/4" />
                     </td>
                   ))}
                 </tr>
@@ -430,13 +430,13 @@ export default function AuditLogsPage() {
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-6 py-16 text-center"
+                  className="px-3 py-12 text-center"
                 >
                   <div className="flex flex-col items-center">
-                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-3">
-                      <span className="text-3xl">📝</span>
+                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-[#F7F9FC] mb-3">
+                      <span className="text-2xl">📝</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-500">
+                    <p className="text-xs text-[#64748B]">
                       Belum ada aktivitas yang tercatat.
                     </p>
                   </div>
@@ -450,12 +450,12 @@ export default function AuditLogsPage() {
                 <tr
                   key={log.id}
                   onClick={() => handleRowClick(log)}
-                  className="hover:bg-indigo-50/50 transition-colors cursor-pointer"
+                  className="hover:bg-[#F7F9FC] transition-colors cursor-pointer border-b border-[#E2E8F0] last:border-b-0"
                 >
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
+                      className="px-3 py-2 text-xs text-[#0B1F3A] whitespace-nowrap"
                     >
                       {col.render
                         ? col.render(log[col.key], log)
@@ -481,60 +481,60 @@ export default function AuditLogsPage() {
         {detailLoading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <LoadingSpinner size="md" />
-            <span className="text-sm text-gray-400">Memuat detail...</span>
+            <span className="text-xs text-[#94A3B8]">Memuat detail...</span>
           </div>
         ) : selectedLog ? (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Info grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase mb-0.5">Waktu</p>
-                <p className="text-sm text-gray-900">{formatDateTime(selectedLog.created_at)}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] font-medium text-[#64748B] uppercase">Waktu</p>
+                <p className="text-xs text-[#0B1F3A] mt-0.5">{formatDateTime(selectedLog.created_at)}</p>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase mb-0.5">User</p>
-                <p className="text-sm text-gray-900 font-medium">{selectedLog.user?.name || '-'}</p>
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] font-medium text-[#64748B] uppercase">User</p>
+                <p className="text-xs text-[#0B1F3A] font-medium mt-0.5">{selectedLog.user?.name || '-'}</p>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase mb-0.5">Aksi</p>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getActionColor(selectedLog.action)}`}>
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] font-medium text-[#64748B] uppercase">Aksi</p>
+                <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium mt-0.5 ${getActionColor(selectedLog.action)}`}>
                   {formatAction(selectedLog.action)}
                 </span>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase mb-0.5">Tabel</p>
-                <p className="text-sm font-mono text-gray-600">
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] font-medium text-[#64748B] uppercase">Tabel</p>
+                <p className="text-xs font-mono text-[#0B1F3A] mt-0.5">
                   {selectedLog.auditable_type ? selectedLog.auditable_type.replace('App\\Models\\', '') : '-'}
                 </p>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase mb-0.5">Record ID</p>
-                <p className="text-sm font-mono text-gray-600">{selectedLog.auditable_id || '-'}</p>
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] font-medium text-[#64748B] uppercase">Record ID</p>
+                <p className="text-xs font-mono text-[#0B1F3A] mt-0.5">{selectedLog.auditable_id || '-'}</p>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase mb-0.5">IP Address</p>
-                <p className="text-sm font-mono text-gray-600">{selectedLog.ip_address || '-'}</p>
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] font-medium text-[#64748B] uppercase">IP Address</p>
+                <p className="text-xs font-mono text-[#0B1F3A] mt-0.5">{selectedLog.ip_address || '-'}</p>
               </div>
               {selectedLog.user_agent && (
-                <div className="col-span-2">
-                  <p className="text-xs font-medium text-gray-400 uppercase mb-0.5">User Agent</p>
-                  <p className="text-xs font-mono text-gray-500 break-all">{selectedLog.user_agent}</p>
+                <div className="col-span-2 bg-[#F7F9FC] rounded-lg p-3">
+                  <p className="text-[10px] font-medium text-[#64748B] uppercase">User Agent</p>
+                  <p className="text-[10px] font-mono text-[#64748B] break-all mt-0.5">{selectedLog.user_agent}</p>
                 </div>
               )}
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-[#E2E8F0]" />
 
             {/* Old Data vs New Data diff */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <h4 className="text-xs font-semibold text-[#0B1F3A] mb-3 flex items-center gap-2">
+                <svg className="h-4 w-4 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                 </svg>
                 Perubahan Data
               </h4>
-              <div className="rounded-lg border border-gray-200 overflow-hidden">
+              <div className="rounded-lg border border-[#E2E8F0] overflow-hidden">
                 <JsonDiff
                   oldData={selectedLog.old_data}
                   newData={selectedLog.new_data}
@@ -543,14 +543,14 @@ export default function AuditLogsPage() {
             </div>
 
             {/* Tombol tutup */}
-            <div className="flex justify-end pt-2 border-t border-gray-100">
+            <div className="flex justify-end pt-2 border-t border-[#E2E8F0]">
               <Button variant="secondary" size="md" onClick={handleCloseDetail}>
                 Tutup
               </Button>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-400 text-center py-8">
+          <p className="text-xs text-[#94A3B8] text-center py-8">
             Tidak dapat memuat detail audit log.
           </p>
         )}

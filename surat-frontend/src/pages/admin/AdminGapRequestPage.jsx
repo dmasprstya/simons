@@ -150,18 +150,22 @@ export default function AdminGapRequestPage() {
       render: (value) => {
         if (!value) return '-';
         const date = new Date(value);
-        return date.toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
+        return (
+          <span className="text-xs text-[#64748B]">
+            {date.toLocaleDateString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
       },
     },
     {
       key: 'user',
       label: 'User',
       render: (value) => (
-        <span className="font-medium text-gray-800">
+        <span className="font-medium text-[#0B1F3A] text-xs">
           {value?.name || '-'}
         </span>
       ),
@@ -170,7 +174,7 @@ export default function AdminGapRequestPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="text-gray-600">
+        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
           {value?.full_code || value?.code || '-'}
         </span>
       ),
@@ -181,18 +185,22 @@ export default function AdminGapRequestPage() {
       render: (value) => {
         if (!value) return '-';
         const date = new Date(value + 'T00:00:00');
-        return date.toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
+        return (
+          <span className="text-xs text-[#64748B]">
+            {date.toLocaleDateString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
       },
     },
     {
       key: 'reason',
       label: 'Alasan',
       render: (value) => (
-        <span className="max-w-[200px] truncate block" title={value}>
+        <span className="max-w-[200px] truncate block text-xs text-[#64748B]" title={value}>
           {value || '-'}
         </span>
       ),
@@ -212,12 +220,12 @@ export default function AdminGapRequestPage() {
             ? displayLetterNumber(row.letter)
             : (value || '-');
           return (
-            <span className="font-medium text-indigo-600 font-mono">
+            <span className="font-semibold text-[#2A7FD4] font-mono text-xs">
               {displayNumber}
             </span>
           );
         }
-        return <span className="text-gray-400">-</span>;
+        return <span className="text-[#94A3B8] text-xs">-</span>;
       },
     },
     {
@@ -228,20 +236,18 @@ export default function AdminGapRequestPage() {
         if (row.status !== 'pending') return null;
 
         return (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              size="sm"
+          <div className="flex items-center gap-1.5">
+            <button
+              className="bg-[#ECFDF5] text-[#065F46] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-emerald-100 transition-colors"
               onClick={() => {
                 setApproveError(null);
                 setApproveTarget(row);
               }}
             >
               Setujui
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
+            </button>
+            <button
+              className="bg-[#FEF2F2] text-[#991B1B] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-red-100 transition-colors"
               onClick={() => {
                 setRejectError(null);
                 setRejectReason('');
@@ -249,34 +255,26 @@ export default function AdminGapRequestPage() {
               }}
             >
               Tolak
-            </Button>
+            </button>
           </div>
         );
       },
     },
   ];
 
-  const inputBaseClass = `
-    block w-full rounded-lg border px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
-    disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-  `;
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📋 Kelola Gap Request</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-base font-semibold text-[#0B1F3A]">Kelola Gap Request</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">
           Setujui atau tolak permintaan nomor surat dari zona gap.
         </p>
       </div>
 
-
       {/* Tab navigation — bekerja tanpa reload halaman */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex gap-6" aria-label="Tabs">
+      <div className="border-b border-[#E2E8F0]">
+        <nav className="-mb-px flex gap-0" aria-label="Tabs">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
@@ -285,11 +283,11 @@ export default function AdminGapRequestPage() {
                 type="button"
                 onClick={() => handleTabChange(tab.key)}
                 className={`
-                  whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors
+                  whitespace-nowrap border-b-2 py-2.5 px-4 text-xs font-medium transition-colors
                   ${
                     isActive
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      ? 'border-[#2A7FD4] text-[#2A7FD4]'
+                      : 'border-transparent text-[#64748B] hover:border-[#E2E8F0] hover:text-[#0B1F3A]'
                   }
                 `}
                 aria-current={isActive ? 'page' : undefined}
@@ -352,13 +350,13 @@ export default function AdminGapRequestPage() {
       >
         <div className="space-y-4">
           {/* Info request yang ditolak */}
-          <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
+          <div className="bg-[#F7F9FC] rounded-lg p-3 text-xs text-[#64748B]">
             <p>
-              <span className="font-medium">User:</span>{' '}
+              <span className="font-medium text-[#0B1F3A]">User:</span>{' '}
               {rejectTarget?.user?.name || '-'}
             </p>
             <p>
-              <span className="font-medium">Klasifikasi:</span>{' '}
+              <span className="font-medium text-[#0B1F3A]">Klasifikasi:</span>{' '}
               {rejectTarget?.classification?.full_code ||
                 rejectTarget?.classification?.code ||
                 '-'}
@@ -369,7 +367,7 @@ export default function AdminGapRequestPage() {
           <div>
             <label
               htmlFor="reject_reason"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
             >
               Alasan Penolakan <span className="text-red-500">*</span>
             </label>
@@ -380,10 +378,13 @@ export default function AdminGapRequestPage() {
               disabled={rejectLoading}
               rows={3}
               placeholder="Jelaskan alasan penolakan..."
-              className={`${inputBaseClass} resize-y ${
+              className={`block w-full min-h-[80px] resize-none rounded-lg border bg-[#F7F9FC] px-3 py-2 text-sm text-[#0B1F3A]
+                transition-all duration-200
+                focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed ${
                 rejectError
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-gray-300'
+                  : 'border-[#E2E8F0]'
               }`}
             />
           </div>
@@ -392,7 +393,7 @@ export default function AdminGapRequestPage() {
           {rejectError && <ErrorMessage error={rejectError} />}
 
           {/* Tombol aksi */}
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-2 border-t border-[#E2E8F0]">
             <Button
               variant="secondary"
               size="md"

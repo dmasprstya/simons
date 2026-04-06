@@ -120,28 +120,29 @@ export default function TakeNumberPage() {
   };
 
   const inputBaseClass = `
-    block w-full rounded-lg border px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
-    disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+    block w-full h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed
   `;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-5">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">🔢 Ambil Nomor Surat</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-base font-semibold text-[#0B1F3A]">Ambil Nomor Surat</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">
           Isi formulir di bawah untuk mengambil nomor surat baru.
         </p>
+        <div className="border-b border-[#E2E8F0] mt-4 mb-5" />
       </div>
 
       {/* Form card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* ClassificationPicker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
               Klasifikasi Surat <span className="text-red-500">*</span>
             </label>
             <ClassificationPicker
@@ -160,7 +161,7 @@ export default function TakeNumberPage() {
           <div>
             <label
               htmlFor="subject"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
             >
               Perihal <span className="text-red-500">*</span>
             </label>
@@ -175,7 +176,7 @@ export default function TakeNumberPage() {
               className={`${inputBaseClass} ${
                 validationErrors.subject
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-gray-300'
+                  : 'border-[#E2E8F0]'
               }`}
             />
             <div className="flex items-center justify-between mt-1">
@@ -184,7 +185,7 @@ export default function TakeNumberPage() {
               ) : (
                 <span />
               )}
-              <span className="text-xs text-gray-400">
+              <span className="text-[10px] text-[#94A3B8]">
                 {subject.length}/255
               </span>
             </div>
@@ -194,7 +195,7 @@ export default function TakeNumberPage() {
           <div>
             <label
               htmlFor="destination"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
             >
               Tujuan <span className="text-red-500">*</span>
             </label>
@@ -209,7 +210,7 @@ export default function TakeNumberPage() {
               className={`${inputBaseClass} ${
                 validationErrors.destination
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-gray-300'
+                  : 'border-[#E2E8F0]'
               }`}
             />
             <div className="flex items-center justify-between mt-1">
@@ -218,7 +219,7 @@ export default function TakeNumberPage() {
               ) : (
                 <span />
               )}
-              <span className="text-xs text-gray-400">
+              <span className="text-[10px] text-[#94A3B8]">
                 {destination.length}/255
               </span>
             </div>
@@ -253,44 +254,44 @@ export default function TakeNumberPage() {
         {resultData && (
           <div className="space-y-4">
             {/* Detail nomor surat terformat (W7-{kode}-{nomor}) */}
-            <div className="bg-indigo-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-indigo-600 font-medium uppercase tracking-wide">
+            <div className="bg-[#EBF4FD] rounded-lg p-4 text-center">
+              <p className="text-[10px] text-[#2A7FD4] font-medium uppercase tracking-widest">
                 Nomor Surat
               </p>
-              <p className="text-2xl font-bold text-indigo-900 mt-1 font-mono tracking-wide">
+              <p className="text-2xl font-bold text-[#0B1F3A] mt-1 font-mono tracking-wide">
                 {displayLetterNumber(resultData)}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 font-medium">Tanggal</p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5">
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] text-[#64748B] font-medium uppercase">Tanggal</p>
+                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
                   {resultData.issued_date}
                 </p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 font-medium">Klasifikasi</p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">
+              <div className="bg-[#F7F9FC] rounded-lg p-3">
+                <p className="text-[10px] text-[#64748B] font-medium uppercase">Klasifikasi</p>
+                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5 truncate">
                   {resultData.classification?.full_code || resultData.classification?.code || '-'}
                 </p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 col-span-2">
-                <p className="text-xs text-gray-500 font-medium">Perihal</p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5">
+              <div className="bg-[#F7F9FC] rounded-lg p-3 col-span-2">
+                <p className="text-[10px] text-[#64748B] font-medium uppercase">Perihal</p>
+                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
                   {resultData.subject}
                 </p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 col-span-2">
-                <p className="text-xs text-gray-500 font-medium">Tujuan</p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5">
+              <div className="bg-[#F7F9FC] rounded-lg p-3 col-span-2">
+                <p className="text-[10px] text-[#64748B] font-medium uppercase">Tujuan</p>
+                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
                   {resultData.destination}
                 </p>
               </div>
             </div>
 
             {/* Tombol aksi */}
-            <div className="flex gap-3 pt-2 border-t border-gray-100">
+            <div className="flex gap-3 pt-2 border-t border-[#E2E8F0]">
               <Button
                 variant="primary"
                 size="md"

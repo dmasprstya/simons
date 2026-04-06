@@ -18,8 +18,8 @@ function SkeletonRow({ colCount }) {
   return (
     <tr className="animate-pulse">
       {Array.from({ length: colCount }).map((_, i) => (
-        <td key={i} className="px-6 py-4">
-          <div className="h-4 bg-gray-200 rounded-md w-3/4" />
+        <td key={i} className="px-3 py-2">
+          <div className="h-3 bg-[#E2E8F0] rounded w-3/4" />
         </td>
       ))}
     </tr>
@@ -35,16 +35,16 @@ export default function Table({
   emptyAction,
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-gray-200">
+    <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white">
+      <table className="min-w-full min-w-[600px]">
         {/* Head */}
-        <thead className="bg-gray-50">
-          <tr>
+        <thead>
+          <tr className="bg-[#F7F9FC]">
             {columns.map((col) => (
               <th
                 key={col.key}
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                className="px-3 py-2 text-left text-[10px] font-semibold text-[#64748B] uppercase tracking-widest"
               >
                 {col.label}
               </th>
@@ -53,7 +53,7 @@ export default function Table({
         </thead>
 
         {/* Body */}
-        <tbody className="divide-y divide-gray-100">
+        <tbody>
           {/* Loading state — 3 baris skeleton placeholder */}
           {loading &&
             [0, 1, 2].map((i) => (
@@ -65,19 +65,19 @@ export default function Table({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-6 py-16 text-center"
+                className="px-3 py-12 text-center"
               >
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-3">
-                    <span className="text-3xl">{emptyIcon}</span>
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-[#F7F9FC] mb-3">
+                    <span className="text-2xl">{emptyIcon}</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-xs text-[#64748B]">
                     {emptyText}
                   </p>
                   {emptyAction && (
                     <button
                       onClick={emptyAction.onClick}
-                      className="mt-3 inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                      className="mt-3 inline-flex items-center px-3 py-1.5 text-xs font-medium text-[#2A7FD4] bg-[#EBF4FD] rounded-lg hover:bg-[#D6EBFC] transition-colors"
                     >
                       {emptyAction.label}
                     </button>
@@ -92,12 +92,12 @@ export default function Table({
             data.map((row, rowIndex) => (
               <tr
                 key={row.id ?? rowIndex}
-                className="hover:bg-gray-50 transition-colors"
+                className="hover:bg-[#F7F9FC] transition-colors border-b border-[#E2E8F0] last:border-b-0"
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
+                    className="px-3 py-2 text-xs text-[#0B1F3A] whitespace-nowrap"
                   >
                     {col.render
                       ? col.render(row[col.key], row)

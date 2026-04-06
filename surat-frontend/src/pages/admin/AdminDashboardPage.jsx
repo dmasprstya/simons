@@ -20,13 +20,10 @@ import StatusChip from '../../components/ui/StatusChip';
  */
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 animate-pulse">
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-xl bg-gray-200" />
-        <div className="flex-1 space-y-2">
-          <div className="h-3 bg-gray-200 rounded w-2/3" />
-          <div className="h-6 bg-gray-200 rounded w-1/3" />
-        </div>
+    <div className="bg-[#F7F9FC] rounded-lg p-3 animate-pulse">
+      <div className="space-y-2">
+        <div className="h-3 bg-[#E2E8F0] rounded w-2/3" />
+        <div className="h-6 bg-[#E2E8F0] rounded w-1/3" />
       </div>
     </div>
   );
@@ -35,51 +32,20 @@ function SkeletonCard() {
 /**
  * SummaryCard — card ringkasan dengan ikon, label, dan nilai
  */
-function SummaryCard({ icon, label, value, color, subtext }) {
-  const colorSchemes = {
-    indigo: {
-      bg: 'bg-indigo-50',
-      icon: 'text-indigo-600',
-      value: 'text-indigo-900',
-      border: 'border-indigo-100',
-    },
-    amber: {
-      bg: 'bg-amber-50',
-      icon: 'text-amber-600',
-      value: 'text-amber-900',
-      border: 'border-amber-100',
-    },
-    emerald: {
-      bg: 'bg-emerald-50',
-      icon: 'text-emerald-600',
-      value: 'text-emerald-900',
-      border: 'border-emerald-100',
-    },
-    purple: {
-      bg: 'bg-purple-50',
-      icon: 'text-purple-600',
-      value: 'text-purple-900',
-      border: 'border-purple-100',
-    },
-  };
-
-  const scheme = colorSchemes[color] || colorSchemes.indigo;
-
+function SummaryCard({ icon, label, value, subtext }) {
   return (
-    <div className={`bg-white rounded-xl border ${scheme.border} shadow-sm p-6 transition-all hover:shadow-md`}>
-      <div className="flex items-center gap-4">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${scheme.bg}`}>
-          <span className={`text-2xl ${scheme.icon}`}>{icon}</span>
-        </div>
+    <div className="bg-[#F7F9FC] rounded-lg p-3 transition-all hover:bg-[#EBF4FD]/50">
+      <div className="flex items-start gap-3">
+        <span className="text-lg mt-0.5">{icon}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <p className="text-xs text-[#64748B] uppercase tracking-wide">
             {label}
           </p>
-          <p className={`text-2xl font-bold ${scheme.value} mt-0.5`}>
+          <p className="text-xl font-semibold text-[#0B1F3A] mt-0.5">
             {value ?? '-'}
           </p>
           {subtext && (
-            <p className="text-xs text-gray-400 mt-0.5 truncate">{subtext}</p>
+            <p className="text-[10px] text-[#94A3B8] mt-0.5 truncate">{subtext}</p>
           )}
         </div>
       </div>
@@ -165,7 +131,7 @@ export default function AdminDashboardPage() {
       key: 'number',
       label: 'Nomor Surat',
       render: (_value, row) => (
-        <span className="font-semibold text-gray-900 font-mono">{displayLetterNumber(row)}</span>
+        <span className="font-semibold text-[#0B1F3A] font-mono">{displayLetterNumber(row)}</span>
       ),
     },
     {
@@ -173,10 +139,10 @@ export default function AdminDashboardPage() {
       label: 'Pengambil',
       render: (value) => (
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-xs font-medium text-[#0B1F3A] truncate">
             {value?.name || '-'}
           </p>
-          <p className="text-xs text-gray-400 truncate">
+          <p className="text-[10px] text-[#94A3B8] truncate">
             {value?.division || '-'}
           </p>
         </div>
@@ -186,7 +152,7 @@ export default function AdminDashboardPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="text-gray-600 text-sm">
+        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
           {value?.code || '-'}
         </span>
       ),
@@ -195,7 +161,7 @@ export default function AdminDashboardPage() {
       key: 'subject',
       label: 'Perihal',
       render: (value) => (
-        <span className="max-w-[180px] truncate block text-sm text-gray-600" title={value}>
+        <span className="max-w-[180px] truncate block text-xs text-[#64748B]" title={value}>
           {value || '-'}
         </span>
       ),
@@ -207,7 +173,7 @@ export default function AdminDashboardPage() {
         if (!value) return '-';
         const date = new Date(value + 'T00:00:00');
         return (
-          <span className="text-sm text-gray-500">
+          <span className="text-xs text-[#64748B]">
             {date.toLocaleDateString('id-ID', {
               day: '2-digit',
               month: 'short',
@@ -232,20 +198,24 @@ export default function AdminDashboardPage() {
       render: (value) => {
         if (!value) return '-';
         const date = new Date(value);
-        return date.toLocaleString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
+        return (
+          <span className="text-xs text-[#64748B]">
+            {date.toLocaleString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        );
       },
     },
     {
       key: 'user',
       label: 'User',
       render: (value) => (
-        <span className="font-medium text-gray-900">
+        <span className="font-medium text-[#0B1F3A] text-xs">
           {value?.name || '-'}
         </span>
       ),
@@ -256,21 +226,21 @@ export default function AdminDashboardPage() {
       render: (value) => {
         // Mapping aksi ke badge warna
         const actionColors = {
-          create: 'bg-emerald-100 text-emerald-700',
-          update: 'bg-blue-100 text-blue-700',
-          delete: 'bg-red-100 text-red-700',
-          void: 'bg-red-100 text-red-700',
-          approve: 'bg-emerald-100 text-emerald-700',
-          reject: 'bg-amber-100 text-amber-700',
-          login: 'bg-indigo-100 text-indigo-700',
-          logout: 'bg-gray-100 text-gray-700',
+          create: 'bg-[#ECFDF5] text-[#065F46]',
+          update: 'bg-[#EBF4FD] text-[#185FA5]',
+          delete: 'bg-[#FEF2F2] text-[#991B1B]',
+          void: 'bg-[#FEF2F2] text-[#991B1B]',
+          approve: 'bg-[#ECFDF5] text-[#065F46]',
+          reject: 'bg-amber-50 text-amber-700',
+          login: 'bg-[#EBF4FD] text-[#185FA5]',
+          logout: 'bg-[#F7F9FC] text-[#64748B]',
         };
 
-        const colorClass = actionColors[value] || 'bg-gray-100 text-gray-700';
+        const colorClass = actionColors[value] || 'bg-[#F7F9FC] text-[#64748B]';
 
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
+            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClass}`}
           >
             {value || '-'}
           </span>
@@ -281,7 +251,7 @@ export default function AdminDashboardPage() {
       key: 'description',
       label: 'Detail',
       render: (value) => (
-        <span className="max-w-[300px] truncate block text-gray-500" title={value}>
+        <span className="max-w-[300px] truncate block text-xs text-[#64748B]" title={value}>
           {value || '-'}
         </span>
       ),
@@ -289,18 +259,22 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
-        <h1 className="text-2xl font-bold">🛡️ Admin Dashboard</h1>
-        <p className="mt-1 text-indigo-100 text-sm">{today}</p>
+    <div className="space-y-5">
+      {/* Welcome banner */}
+      <div className="bg-[#0B1F3A] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-semibold text-white">
+            🛡️ Admin Dashboard
+          </h1>
+          <p className="text-white/50 text-sm mt-0.5">{today}</p>
+        </div>
       </div>
 
       {/* Cards error */}
       {cardsError && <ErrorMessage error={cardsError} />}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {cardsLoading ? (
           <>
             <SkeletonCard />
@@ -314,28 +288,24 @@ export default function AdminDashboardPage() {
               icon="📄"
               label="Surat Hari Ini"
               value={letterCount}
-              color="indigo"
               subtext="Total nomor surat yang diambil hari ini"
             />
             <SummaryCard
               icon="⏳"
               label="Gap Request Pending"
               value={pendingGaps ?? 0}
-              color="amber"
               subtext="Request yang menunggu persetujuan"
             />
             <SummaryCard
               icon="🔢"
               label="Sequence Aktif"
               value={todayLetters?.active_sequences ?? '-'}
-              color="emerald"
               subtext="Sequence aktif hari ini"
             />
             <SummaryCard
               icon="👥"
               label="User Aktif"
               value={activeUsers ?? 0}
-              color="purple"
               subtext="Total pengguna sistem yang aktif"
             />
           </>
@@ -343,16 +313,17 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tabel Riwayat Pengambilan Nomor dari SEMUA User */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              🕘 Riwayat Pengambilan Nomor Terbaru
+      <div className="space-y-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">
+              Riwayat Pengambilan Nomor Terbaru
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              10 pengambilan nomor surat terakhir dari seluruh pengguna.
-            </p>
           </div>
+          <p className="text-xs text-[#94A3B8] ml-4">
+            10 pengambilan nomor surat terakhir dari seluruh pengguna.
+          </p>
         </div>
 
         {allRecentError && <ErrorMessage error={allRecentError} />}
@@ -367,12 +338,15 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tabel Aktivitas Terbaru (Audit Logs) */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            📋 Aktivitas Terbaru
-          </h2>
-          <span className="text-xs text-gray-400">10 log terakhir</span>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">
+              Aktivitas Terbaru
+            </h2>
+          </div>
+          <span className="text-[10px] text-[#94A3B8]">10 log terakhir</span>
         </div>
 
         {logsError && <ErrorMessage error={logsError} />}

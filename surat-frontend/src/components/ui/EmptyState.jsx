@@ -18,16 +18,16 @@ export default function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6">
       {/* Ilustrasi lingkaran dengan ikon */}
-      <div className="flex items-center justify-center h-20 w-20 rounded-full bg-gray-100 mb-4">
-        <span className="text-4xl">{icon}</span>
+      <div className="flex items-center justify-center h-16 w-16 rounded-full bg-[#F7F9FC] mb-4">
+        <span className="text-3xl">{icon}</span>
       </div>
 
-      <h3 className="text-base font-semibold text-gray-700 text-center">
+      <h3 className="text-sm font-semibold text-[#0B1F3A] text-center">
         {title}
       </h3>
 
       {description && (
-        <p className="mt-1 text-sm text-gray-400 text-center max-w-sm">
+        <p className="mt-1 text-xs text-[#94A3B8] text-center max-w-sm">
           {description}
         </p>
       )}

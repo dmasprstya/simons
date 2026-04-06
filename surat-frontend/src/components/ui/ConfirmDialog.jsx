@@ -26,7 +26,7 @@ export default function ConfirmDialog({
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       {/* Ikon peringatan & pesan */}
       <div className="flex flex-col items-center text-center gap-3 py-2">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FEF2F2]">
           <svg
             className="h-6 w-6 text-red-600"
             fill="none"
@@ -41,11 +41,11 @@ export default function ConfirmDialog({
             />
           </svg>
         </div>
-        <p className="text-sm text-gray-600 leading-relaxed">{message}</p>
+        <p className="text-sm text-[#64748B] leading-relaxed">{message}</p>
       </div>
 
       {/* Tombol aksi */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-2">
+      <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0] mt-2">
         <Button variant="secondary" size="md" onClick={onClose} disabled={loading}>
           Batal
         </Button>

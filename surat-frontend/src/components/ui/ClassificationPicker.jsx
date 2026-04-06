@@ -109,19 +109,19 @@ export default function ClassificationPicker({ value, onChange, disabled = false
   const level3Options = level2Id ? childrenMap[level2Id] || [] : [];
 
   const selectBaseClass = `
-    block w-full rounded-lg border border-gray-300 bg-white
-    px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
-    disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
+    px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed
   `;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
       {/* Level 1 — Klasifikasi Utama */}
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">
-          Klasifikasi Level 1
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+          Level 1
         </label>
         <select
           value={level1Id}
@@ -142,8 +142,8 @@ export default function ClassificationPicker({ value, onChange, disabled = false
 
       {/* Level 2 — Sub-klasifikasi */}
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">
-          Klasifikasi Level 2
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+          Level 2
         </label>
         <select
           value={level2Id}
@@ -164,8 +164,8 @@ export default function ClassificationPicker({ value, onChange, disabled = false
 
       {/* Level 3 — Detail (is_leaf) */}
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">
-          Klasifikasi Level 3
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+          Level 3
         </label>
         <select
           value={level3Id}

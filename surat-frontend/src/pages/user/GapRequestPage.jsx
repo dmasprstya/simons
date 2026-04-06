@@ -138,7 +138,7 @@ export default function GapRequestPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="text-gray-600">
+        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
           {value?.full_code || value?.code || '-'}
         </span>
       ),
@@ -160,7 +160,7 @@ export default function GapRequestPage() {
       key: 'reason',
       label: 'Alasan',
       render: (value) => (
-        <span className="max-w-[200px] truncate block" title={value}>
+        <span className="max-w-[200px] truncate block text-xs text-[#64748B]" title={value}>
           {value || '-'}
         </span>
       ),
@@ -181,43 +181,46 @@ export default function GapRequestPage() {
             ? displayLetterNumber(row.letter)
             : (value || '-');
           return (
-            <span className="font-medium text-indigo-600 font-mono">
+            <span className="font-semibold text-[#2A7FD4] font-mono">
               {displayNumber}
             </span>
           );
         }
-        return <span className="text-gray-400">-</span>;
+        return <span className="text-[#94A3B8]">-</span>;
       },
     },
   ];
 
   // === Styling helper ===
   const inputBaseClass = `
-    block w-full rounded-lg border px-3 py-2 text-sm text-gray-900
-    shadow-sm transition-colors
-    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
-    disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+    block w-full h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm text-[#0B1F3A]
+    transition-all duration-200
+    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed
   `;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📋 Gap Request</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-base font-semibold text-[#0B1F3A]">Gap Request</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">
           Ajukan permintaan nomor surat dari zona gap dan lihat riwayat request Anda.
         </p>
+        <div className="border-b border-[#E2E8F0] mt-4 mb-5" />
       </div>
 
-
       {/* ==================== BAGIAN ATAS — Form Request Baru ==================== */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Buat Request Baru</h2>
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 max-w-2xl mx-auto">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Buat Request Baru</h2>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* ClassificationPicker — wajib, is_leaf=true */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
               Klasifikasi Surat <span className="text-red-500">*</span>
             </label>
             <ClassificationPicker
@@ -236,7 +239,7 @@ export default function GapRequestPage() {
           <div>
             <label
               htmlFor="gap_date"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
             >
               Tanggal Gap <span className="text-red-500">*</span>
             </label>
@@ -250,7 +253,7 @@ export default function GapRequestPage() {
               className={`${inputBaseClass} ${
                 validationErrors.gapDate
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-gray-300'
+                  : 'border-[#E2E8F0]'
               }`}
             />
             {validationErrors.gapDate && (
@@ -264,7 +267,7 @@ export default function GapRequestPage() {
           <div>
             <label
               htmlFor="reason"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
             >
               Alasan <span className="text-red-500">*</span>
             </label>
@@ -273,13 +276,16 @@ export default function GapRequestPage() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={submitting}
-              rows={4}
+              rows={3}
               maxLength={REASON_MAX}
               placeholder="Jelaskan alasan Anda membutuhkan nomor dari zona gap (minimal 10 karakter)"
-              className={`${inputBaseClass} resize-y ${
+              className={`block w-full min-h-[80px] resize-none rounded-lg border bg-[#F7F9FC] px-3 py-2 text-sm text-[#0B1F3A]
+                transition-all duration-200
+                focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed ${
                 validationErrors.reason
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-gray-300'
+                  : 'border-[#E2E8F0]'
               }`}
             />
             <div className="flex items-center justify-between mt-1">
@@ -289,12 +295,12 @@ export default function GapRequestPage() {
                 <span />
               )}
               <span
-                className={`text-xs ${
+                className={`text-[10px] ${
                   reason.length >= REASON_MAX
                     ? 'text-red-500 font-medium'
                     : reason.length >= REASON_MAX * 0.9
                     ? 'text-amber-500'
-                    : 'text-gray-400'
+                    : 'text-[#94A3B8]'
                 }`}
               >
                 {reason.length}/{REASON_MAX}
@@ -319,8 +325,11 @@ export default function GapRequestPage() {
       </div>
 
       {/* ==================== BAGIAN BAWAH — Tabel Riwayat Request ==================== */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Riwayat Request</h2>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Riwayat Request</h2>
+        </div>
 
         {/* Error state tabel */}
         {error && <ErrorMessage error={error} />}

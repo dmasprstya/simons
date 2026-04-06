@@ -151,7 +151,7 @@ export default function DashboardPage() {
       key: 'number',
       label: 'Nomor Surat',
       render: (_value, row) => (
-        <span className="font-semibold text-gray-900 font-mono">{displayLetterNumber(row)}</span>
+        <span className="font-semibold text-[#0B1F3A] font-mono">{displayLetterNumber(row)}</span>
       ),
     },
     {
@@ -159,10 +159,10 @@ export default function DashboardPage() {
       label: 'Pengambil',
       render: (value) => (
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-xs font-medium text-[#0B1F3A] truncate">
             {value?.name || '-'}
           </p>
-          <p className="text-xs text-gray-400 truncate">
+          <p className="text-[10px] text-[#94A3B8] truncate">
             {value?.division || '-'}
           </p>
         </div>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="text-gray-600 text-sm">
+        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
           {value?.code || '-'}
         </span>
       ),
@@ -181,7 +181,7 @@ export default function DashboardPage() {
       key: 'subject',
       label: 'Perihal',
       render: (value) => (
-        <span className="max-w-[180px] truncate block text-sm text-gray-600" title={value}>
+        <span className="max-w-[180px] truncate block text-xs text-[#64748B]" title={value}>
           {value || '-'}
         </span>
       ),
@@ -193,7 +193,7 @@ export default function DashboardPage() {
         if (!value) return '-';
         const date = new Date(value + 'T00:00:00');
         return (
-          <span className="text-sm text-gray-500">
+          <span className="text-xs text-[#64748B]">
             {date.toLocaleDateString('id-ID', {
               day: '2-digit',
               month: 'short',
@@ -211,27 +211,55 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Greeting */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
-        <h1 className="text-2xl font-bold">
-          Selamat datang, {user?.name || 'User'} 👋
-        </h1>
-        <p className="mt-1 text-indigo-100 text-sm">{today}</p>
+    <div className="space-y-5">
+      {/* Welcome banner */}
+      <div className="bg-[#0B1F3A] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-semibold text-white">
+            Selamat datang, {user?.name || 'User'} 👋
+          </h1>
+          <p className="text-white/50 text-sm mt-0.5">{today}</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Stat cards — 3 kolom placeholder (jika ada sequenceData) */}
+      {sequenceData && !sequenceLoading && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-[#F7F9FC] rounded-lg p-3">
+            <p className="text-xs text-[#64748B] uppercase tracking-wide">Nomor Terakhir</p>
+            <p className="text-xl font-semibold text-[#0B1F3A] mt-1 font-mono">
+              {sequenceData.last_number ?? '-'}
+            </p>
+          </div>
+          <div className="bg-[#F7F9FC] rounded-lg p-3">
+            <p className="text-xs text-[#64748B] uppercase tracking-wide">Zona Aktif</p>
+            <p className="text-sm font-semibold text-[#0B1F3A] mt-1 font-mono">
+              {sequenceData.active_start ?? '-'} – {sequenceData.active_end ?? '-'}
+            </p>
+          </div>
+          <div className="bg-[#F7F9FC] rounded-lg p-3">
+            <p className="text-xs text-[#64748B] uppercase tracking-wide">Zona Gap</p>
+            <p className="text-sm font-semibold text-[#0B1F3A] mt-1 font-mono">
+              {sequenceData.gap_start ?? '-'} – {sequenceData.gap_end ?? '-'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Grid 2 kolom: Info Sequence | Surat Terbaru */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Card info sequence hari ini */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              📊 Info Sequence Hari Ini
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">
+              Info Sequence Hari Ini
             </h2>
           </div>
 
           {/* ClassificationPicker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
               Pilih Klasifikasi
             </label>
             <ClassificationPicker
@@ -243,48 +271,18 @@ export default function DashboardPage() {
           {/* Loading skeleton */}
           {sequenceLoading && (
             <div className="space-y-3 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-4 bg-gray-200 rounded w-1/2" />
-              <div className="h-4 bg-gray-200 rounded w-2/3" />
+              <div className="h-3 bg-[#E2E8F0] rounded w-3/4" />
+              <div className="h-3 bg-[#E2E8F0] rounded w-1/2" />
+              <div className="h-3 bg-[#E2E8F0] rounded w-2/3" />
             </div>
           )}
 
           {/* Error state */}
           {sequenceError && <ErrorMessage error={sequenceError} />}
 
-          {/* Data sequence */}
-          {sequenceData && !sequenceLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-indigo-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-indigo-600 font-medium uppercase tracking-wide">
-                  Nomor Terakhir
-                </p>
-                <p className="text-2xl font-bold text-indigo-900 mt-1">
-                  {sequenceData.last_number ?? '-'}
-                </p>
-              </div>
-              <div className="bg-emerald-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-emerald-600 font-medium uppercase tracking-wide">
-                  Zona Aktif
-                </p>
-                <p className="text-sm font-semibold text-emerald-900 mt-1">
-                  {sequenceData.active_start ?? '-'} – {sequenceData.active_end ?? '-'}
-                </p>
-              </div>
-              <div className="bg-amber-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-amber-600 font-medium uppercase tracking-wide">
-                  Zona Gap
-                </p>
-                <p className="text-sm font-semibold text-amber-900 mt-1">
-                  {sequenceData.gap_start ?? '-'} – {sequenceData.gap_end ?? '-'}
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Placeholder jika belum pilih klasifikasi */}
           {!selectedClassification && !sequenceLoading && (
-            <p className="text-sm text-gray-400 text-center py-4">
+            <p className="text-xs text-[#94A3B8] text-center py-4">
               Pilih klasifikasi di atas untuk melihat info sequence hari ini.
             </p>
           )}
@@ -303,11 +301,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Card riwayat singkat milik user */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              📝 Surat Saya Terbaru
-            </h2>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+              <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">
+                Surat Saya Terbaru
+              </h2>
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -321,10 +322,10 @@ export default function DashboardPage() {
           {recentLoading && (
             <div className="space-y-3">
               {[0, 1, 2, 3, 4].map((i) => (
-                <div key={i} className="animate-pulse flex items-center gap-4 py-3">
-                  <div className="h-4 bg-gray-200 rounded w-20" />
-                  <div className="h-4 bg-gray-200 rounded flex-1" />
-                  <div className="h-5 bg-gray-200 rounded w-16" />
+                <div key={i} className="animate-pulse flex items-center gap-4 py-2">
+                  <div className="h-3 bg-[#E2E8F0] rounded w-20" />
+                  <div className="h-3 bg-[#E2E8F0] rounded flex-1" />
+                  <div className="h-4 bg-[#E2E8F0] rounded w-14" />
                 </div>
               ))}
             </div>
@@ -335,22 +336,22 @@ export default function DashboardPage() {
 
           {/* Daftar surat terbaru */}
           {!recentLoading && !recentError && recentLetters.length > 0 && (
-            <div className="divide-y divide-gray-100">
+            <div>
               {recentLetters.map((letter) => (
                 <div
                   key={letter.id}
-                  className="flex items-center justify-between py-3 gap-4"
+                  className="flex items-center justify-between py-2 gap-4 border-b border-[#E2E8F0] last:border-b-0"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate font-mono">
+                    <p className="text-xs font-semibold text-[#0B1F3A] truncate font-mono">
                       {displayLetterNumber(letter)}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-[10px] text-[#94A3B8] truncate">
                       {letter.subject}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs text-gray-400">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] text-[#94A3B8]">
                       {letter.issued_date}
                     </span>
                     <StatusChip status={letter.status} />
@@ -362,8 +363,8 @@ export default function DashboardPage() {
 
           {/* Empty state */}
           {!recentLoading && !recentError && recentLetters.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-sm text-gray-400">
+            <div className="text-center py-6">
+              <p className="text-xs text-[#94A3B8]">
                 Belum ada surat yang diambil.
               </p>
               <Button
@@ -380,13 +381,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Tabel riwayat pengambilan nomor dari SEMUA user */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              🕘 Riwayat Pengambilan Nomor Terbaru
-            </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+              <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">
+                Riwayat Pengambilan Nomor Terbaru
+              </h2>
+            </div>
+            <p className="text-xs text-[#94A3B8] ml-4">
               10 pengambilan nomor surat terakhir dari seluruh pengguna.
             </p>
           </div>
