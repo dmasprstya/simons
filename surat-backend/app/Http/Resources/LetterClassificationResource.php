@@ -5,11 +5,11 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends JsonResource
+class LetterClassificationResource extends JsonResource
 {
     /**
-     * Transformasi model User menjadi array representasi API.
-     * Field password dan remember_token tidak diekspos.
+     * Transformasi model LetterClassification menjadi array representasi API.
+     * parent_id diekspos agar frontend bisa merekonstruksi hierarki.
      *
      * @return array<string, mixed>
      */
@@ -17,11 +17,13 @@ class UserResource extends JsonResource
     {
         return [
             'id'         => $this->id,
+            'code'       => $this->code,
             'name'       => $this->name,
-            'email'      => $this->email,
-            'division'   => $this->division,
-            'role'       => $this->role,
+            'type'       => $this->type,
+            'level'      => $this->level,
+            'is_leaf'    => $this->is_leaf,
             'is_active'  => $this->is_active,
+            'parent_id'  => $this->parent_id,
             'created_at' => $this->created_at?->format('Y-m-d H:i'),
         ];
     }
