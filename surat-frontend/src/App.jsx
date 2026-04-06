@@ -31,6 +31,9 @@ import ClassificationsPage from './pages/admin/ClassificationsPage';
 import AuditLogsPage from './pages/admin/AuditLogsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 
+// 404
+import NotFoundPage from './pages/NotFoundPage';
+
 /**
  * Komponen root redirect — arahkan ke dashboard jika sudah login,
  * atau ke login jika belum.
@@ -89,8 +92,8 @@ function App() {
           </Route>
         </Route>
 
-        {/* Catch-all — redirect ke root */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Catch-all — halaman 404 */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
