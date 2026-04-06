@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useClassifications } from '../../hooks/useClassifications';
+import { useToast } from '../../hooks/useToast';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
@@ -206,6 +207,7 @@ export default function ClassificationsPage() {
     handleUpdate,
     handleToggleActive,
   } = useClassifications();
+  const toast = useToast();
 
   // === Filter state ===
   const [typeFilter, setTypeFilter] = useState('');
@@ -230,9 +232,6 @@ export default function ClassificationsPage() {
     type: 'substantif',
   });
   const [formErrors, setFormErrors] = useState({});
-
-  // === Notifikasi ===
-  const [successMessage, setSuccessMessage] = useState(null);
 
   // Build filter params
   const buildParams = useCallback(() => {
@@ -317,10 +316,9 @@ export default function ClassificationsPage() {
       });
       setShowAddModal(false);
       setAddingParent(null);
-      setSuccessMessage('Klasifikasi baru berhasil dibuat.');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast.success('Klasifikasi baru berhasil dibuat.');
     } catch {
-      // Error sudah di-handle oleh hook
+      toast.error('Gagal membuat klasifikasi.');
     }
   };
 
@@ -353,10 +351,9 @@ export default function ClassificationsPage() {
       setShowEditModal(false);
       setEditingItem(null);
       setEditingParentId(null);
-      setSuccessMessage('Klasifikasi berhasil diperbarui.');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast.success('Klasifikasi berhasil diperbarui.');
     } catch {
-      // Error sudah di-handle oleh hook
+      toast.error('Gagal memperbarui klasifikasi.');
     }
   };
 
@@ -375,9 +372,9 @@ export default function ClassificationsPage() {
       setShowConfirm(false);
       setTogglingItem(null);
       setTogglingParentId(null);
-      setSuccessMessage('Status klasifikasi berhasil diubah.');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast.success('Status klasifikasi berhasil diubah.');
     } catch {
+      toast.error('Gagal mengubah status klasifikasi.');
       setShowConfirm(false);
     }
   };
@@ -490,25 +487,6 @@ export default function ClassificationsPage() {
         </Button>
       </div>
 
-      {/* Notifikasi sukses */}
-      {successMessage && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <svg
-            className="h-5 w-5 text-emerald-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-          <p className="text-sm text-emerald-700">{successMessage}</p>
-        </div>
-      )}
 
       {/* Filter card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
@@ -601,9 +579,16 @@ export default function ClassificationsPage() {
             {/* Empty state */}
             {!loading && roots.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400">
-                  Tidak ada data klasifikasi.
-                </td>
+                <td colSpan={6} className="px-6 py-16 text-center">
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-3">
+                    <span className="text-3xl">🗂️</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Belum ada data klasifikasi. Klik '+ Tambah Root' untuk memulai.
+                  </p>
+                </div>
+              </td>
               </tr>
             )}
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUsers } from '../../hooks/useUsers';
+import { useToast } from '../../hooks/useToast';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
@@ -31,6 +32,7 @@ export default function UsersPage() {
     handleUpdateUser,
     handleToggleActive,
   } = useUsers();
+  const toast = useToast();
 
   // === Filter state ===
   const [search, setSearch] = useState('');
@@ -57,9 +59,6 @@ export default function UsersPage() {
     role: 'user',
   });
   const [formErrors, setFormErrors] = useState({});
-
-  // === Notifikasi ===
-  const [successMessage, setSuccessMessage] = useState(null);
 
   // Build params dari filter
   const buildParams = useCallback(
@@ -166,10 +165,9 @@ export default function UsersPage() {
         role: formData.role,
       });
       setShowAddModal(false);
-      setSuccessMessage('User baru berhasil dibuat.');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast.success('User baru berhasil dibuat.');
     } catch {
-      // Error sudah di-handle oleh hook (actionError)
+      toast.error('Gagal membuat user baru.');
     }
   };
 
@@ -203,10 +201,9 @@ export default function UsersPage() {
       });
       setShowEditModal(false);
       setEditingUser(null);
-      setSuccessMessage('Data user berhasil diperbarui.');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast.success('Data user berhasil diperbarui.');
     } catch {
-      // Error sudah di-handle oleh hook (actionError)
+      toast.error('Gagal memperbarui data user.');
     }
   };
 
@@ -223,10 +220,9 @@ export default function UsersPage() {
       await handleToggleActive(togglingUser.id);
       setShowConfirm(false);
       setTogglingUser(null);
-      setSuccessMessage('Status user berhasil diubah.');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast.success('Status user berhasil diubah.');
     } catch {
-      // Error sudah di-handle oleh hook
+      toast.error('Gagal mengubah status user.');
       setShowConfirm(false);
     }
   };
@@ -454,25 +450,6 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      {/* Notifikasi sukses */}
-      {successMessage && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <svg
-            className="h-5 w-5 text-emerald-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-          <p className="text-sm text-emerald-700">{successMessage}</p>
-        </div>
-      )}
 
       {/* Filter card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
@@ -543,7 +520,8 @@ export default function UsersPage() {
         columns={columns}
         data={users}
         loading={loading}
-        emptyText="Tidak ada data user."
+        emptyText="Belum ada user terdaftar."
+        emptyIcon="👥"
       />
 
       {/* Pagination */}

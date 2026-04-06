@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
+import { useToast } from './hooks/useToast';
 
 // Guards
 import ProtectedRoute from './components/ProtectedRoute';
@@ -7,6 +8,9 @@ import AdminRoute from './components/AdminRoute';
 
 // Layout
 import { UserLayout } from './components/layout';
+
+// UI
+import ToastContainer from './components/ui/Toast';
 
 // Public pages
 import LoginPage from './pages/auth/LoginPage';
@@ -44,10 +48,18 @@ function RootRedirect() {
  * - /login → public
  * - /dashboard, /letters/*, /gap-requests → protected (semua role) + UserLayout
  * - /admin/* → protected + hanya role admin + UserLayout
+ *
+ * ToastContainer di-render secara global agar toast muncul di semua halaman.
  */
 function App() {
+  const toasts = useToast((state) => state.toasts);
+  const dismiss = useToast((state) => state.dismiss);
+
   return (
     <BrowserRouter>
+      {/* Global Toast Container — posisi kanan bawah */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+
       <Routes>
         {/* Root redirect */}
         <Route path="/" element={<RootRedirect />} />

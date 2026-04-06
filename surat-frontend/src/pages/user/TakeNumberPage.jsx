@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { takeNumber } from '../../api/letters.api';
+import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import FormErrors from '../../components/ui/FormErrors';
 
 /**
  * TakeNumberPage — Halaman untuk mengambil nomor surat baru.
@@ -19,6 +21,13 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
  */
 export default function TakeNumberPage() {
   const navigate = useNavigate();
+  const toast = useToast();
+
+  // Update document title
+  useEffect(() => {
+    document.title = 'Ambil Nomor — Sistem Penomoran Surat';
+    return () => { document.title = 'SIMONS — Sistem Penomoran Surat'; };
+  }, []);
 
   // Form state
   const [classificationId, setClassificationId] = useState(null);
@@ -29,6 +38,7 @@ export default function TakeNumberPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [serverErrors, setServerErrors] = useState(null);
 
   // Modal result state
   const [showResult, setShowResult] = useState(false);
@@ -64,6 +74,7 @@ export default function TakeNumberPage() {
 
     setLoading(true);
     setError(null);
+    setServerErrors(null);
 
     try {
       const response = await takeNumber({
@@ -72,18 +83,24 @@ export default function TakeNumberPage() {
         destination: destination.trim(),
       });
 
-      // Sukses — tampilkan modal hasil
+      // Sukses — tampilkan modal hasil + toast
       setResultData(response.data);
       setShowResult(true);
+      toast.success('Nomor surat berhasil diambil!');
     } catch (err) {
+      // Error 422 — validasi dari backend
+      if (err.response?.status === 422 && err.response?.data?.errors) {
+        setServerErrors(err.response.data.errors);
+      }
       // Error 409 — lock timeout / deadlock
-      if (err.response?.status === 409) {
+      else if (err.response?.status === 409) {
         setError('Sistem sedang sibuk, coba lagi dalam beberapa detik.');
       } else {
         const message =
           err.response?.data?.message || 'Gagal mengambil nomor surat. Silakan coba lagi.';
         setError(message);
       }
+      toast.error('Gagal mengambil nomor surat.');
     } finally {
       setLoading(false);
     }
@@ -96,6 +113,7 @@ export default function TakeNumberPage() {
     setDestination('');
     setError(null);
     setValidationErrors({});
+    setServerErrors(null);
     setShowResult(false);
     setResultData(null);
   };
@@ -204,6 +222,9 @@ export default function TakeNumberPage() {
               </span>
             </div>
           </div>
+
+          {/* Server validation errors (422) */}
+          {serverErrors && <FormErrors errors={serverErrors} />}
 
           {/* Error message */}
           {error && <ErrorMessage error={error} />}

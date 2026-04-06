@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAdminGapRequests } from '../../hooks/useAdminGapRequests';
+import { useToast } from '../../hooks/useToast';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
@@ -38,6 +39,7 @@ export default function AdminGapRequestPage() {
     rejectRequest,
     refetch,
   } = useAdminGapRequests();
+  const toast = useToast();
 
   // === Tab state ===
   const [activeTab, setActiveTab] = useState('pending');
@@ -55,9 +57,6 @@ export default function AdminGapRequestPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectLoading, setRejectLoading] = useState(false);
   const [rejectError, setRejectError] = useState(null);
-
-  // === Notifikasi state ===
-  const [successMessage, setSuccessMessage] = useState(null);
 
   // Ambil status dari tab aktif
   const currentStatus = TABS.find((t) => t.key === activeTab)?.status || '';
@@ -90,24 +89,21 @@ export default function AdminGapRequestPage() {
     try {
       const response = await approveRequest(approveTarget.id);
 
-      // Tampilkan nomor yang diterbitkan di notifikasi
       const issuedNumber =
         response.data?.issued_number ||
         response.data?.letter?.full_number ||
         response.data?.letter?.letter_number ||
         'N/A';
 
-      setSuccessMessage(
-        `Gap request berhasil disetujui! Nomor yang diterbitkan: ${issuedNumber}`
+      toast.success(
+        `Gap request disetujui! Nomor diterbitkan: ${issuedNumber}`
       );
 
       setApproveTarget(null);
       refetch();
-
-      // Hilangkan notifikasi setelah 8 detik (lebih lama karena ada info nomor)
-      setTimeout(() => setSuccessMessage(null), 8000);
     } catch (err) {
       setApproveError(err.message);
+      toast.error('Gagal menyetujui gap request.');
     } finally {
       setApproveLoading(false);
     }
@@ -133,14 +129,13 @@ export default function AdminGapRequestPage() {
     try {
       await rejectRequest(rejectTarget.id, rejectReason.trim());
 
-      setSuccessMessage('Gap request berhasil ditolak.');
+      toast.success('Gap request berhasil ditolak.');
       setRejectTarget(null);
       setRejectReason('');
       refetch();
-
-      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err) {
       setRejectError(err.message);
+      toast.error('Gagal menolak gap request.');
     } finally {
       setRejectLoading(false);
     }
@@ -275,25 +270,6 @@ export default function AdminGapRequestPage() {
         </p>
       </div>
 
-      {/* Notifikasi sukses */}
-      {successMessage && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <svg
-            className="h-5 w-5 text-emerald-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-          <p className="text-sm text-emerald-700 font-medium">{successMessage}</p>
-        </div>
-      )}
 
       {/* Tab navigation — bekerja tanpa reload halaman */}
       <div className="border-b border-gray-200">
@@ -330,7 +306,8 @@ export default function AdminGapRequestPage() {
         columns={columns}
         data={requests}
         loading={loading}
-        emptyText="Tidak ada gap request."
+        emptyText="Tidak ada gap request dalam kategori ini."
+        emptyIcon="📋"
       />
 
       {/* Pagination */}

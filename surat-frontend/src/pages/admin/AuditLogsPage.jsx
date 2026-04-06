@@ -430,9 +430,16 @@ export default function AuditLogsPage() {
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-6 py-12 text-center text-sm text-gray-400"
+                  className="px-6 py-16 text-center"
                 >
-                  Tidak ada data audit log.
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-3">
+                      <span className="text-3xl">📝</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500">
+                      Belum ada aktivitas yang tercatat.
+                    </p>
+                  </div>
                 </td>
               </tr>
             )}

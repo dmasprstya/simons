@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAdminLetters } from '../../hooks/useAdminLetters';
 import { exportReport } from '../../api/reports.api';
+import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
@@ -19,6 +20,7 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
  */
 export default function AllLettersPage() {
   const { letters, loading, error, meta, fetchAllLetters } = useAdminLetters();
+  const toast = useToast();
 
   // === Filter state ===
   const [search, setSearch] = useState('');
@@ -31,10 +33,6 @@ export default function AllLettersPage() {
 
   // === Export state ===
   const [exporting, setExporting] = useState(null); // 'excel' | 'pdf' | null
-
-  // === Notifikasi ===
-  const [successMessage, setSuccessMessage] = useState(null);
-  const [exportError, setExportError] = useState(null);
 
   // Build params dari filter
   const buildParams = useCallback(
@@ -82,17 +80,15 @@ export default function AllLettersPage() {
   // Handler export
   const handleExport = async (format) => {
     setExporting(format);
-    setExportError(null);
 
     try {
       const params = { ...buildParams(1), format };
       delete params.page; // Export tidak perlu pagination
       await exportReport(params);
 
-      setSuccessMessage(`File ${format.toUpperCase()} berhasil diunduh.`);
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast.success(`File ${format.toUpperCase()} berhasil diunduh.`);
     } catch (err) {
-      setExportError(
+      toast.error(
         err.response?.data?.message || `Gagal mengekspor ${format.toUpperCase()}.`
       );
     } finally {
@@ -217,28 +213,6 @@ export default function AllLettersPage() {
         </div>
       </div>
 
-      {/* Notifikasi sukses */}
-      {successMessage && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <svg
-            className="h-5 w-5 text-emerald-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-          <p className="text-sm text-emerald-700">{successMessage}</p>
-        </div>
-      )}
-
-      {/* Export error */}
-      {exportError && <ErrorMessage error={exportError} />}
 
       {/* Filter card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
@@ -344,7 +318,8 @@ export default function AllLettersPage() {
         columns={columns}
         data={letters}
         loading={loading}
-        emptyText="Tidak ada data surat."
+        emptyText="Belum ada data surat ditemukan."
+        emptyIcon="📄"
       />
 
       {/* Pagination */}

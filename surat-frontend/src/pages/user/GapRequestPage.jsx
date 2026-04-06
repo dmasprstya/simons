@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGapRequests } from '../../hooks/useGapRequests';
+import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
@@ -22,6 +23,7 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
 export default function GapRequestPage() {
   const { requests, loading, error, meta, fetchMyRequests, createRequest, refetch } =
     useGapRequests();
+  const toast = useToast();
 
   // === Form state ===
   const [classificationId, setClassificationId] = useState(null);
@@ -32,7 +34,6 @@ export default function GapRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState(null);
 
   // === Pagination state ===
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,16 +99,14 @@ export default function GapRequestPage() {
         reason: reason.trim(),
       });
 
-      // Sukses — tampilkan notifikasi, reset form, refresh tabel
-      setSuccessMessage('Request berhasil dikirim, menunggu persetujuan admin.');
+      // Sukses — tampilkan toast, reset form, refresh tabel
+      toast.success('Request berhasil dikirim, menunggu persetujuan admin.');
       resetForm();
       setCurrentPage(1);
       refetch();
-
-      // Hilangkan notifikasi setelah 5 detik
-      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err) {
       setSubmitError(err.message);
+      toast.error('Gagal mengirim request.');
     } finally {
       setSubmitting(false);
     }
@@ -206,25 +205,6 @@ export default function GapRequestPage() {
         </p>
       </div>
 
-      {/* Notifikasi sukses */}
-      {successMessage && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <svg
-            className="h-5 w-5 text-emerald-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-          <p className="text-sm text-emerald-700">{successMessage}</p>
-        </div>
-      )}
 
       {/* ==================== BAGIAN ATAS — Form Request Baru ==================== */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -346,7 +326,8 @@ export default function GapRequestPage() {
           columns={columns}
           data={requests}
           loading={loading}
-          emptyText="Belum ada gap request."
+          emptyText="Belum ada gap request. Buat request baru di form atas."
+          emptyIcon="📋"
         />
 
         {/* Pagination */}

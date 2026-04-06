@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLetters } from '../../hooks/useLetters';
+import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
@@ -20,6 +21,7 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
 export default function MyLettersPage() {
   const { letters, loading, error, meta, fetchMyLetters, voidLetter, refetch } =
     useLetters();
+  const toast = useToast();
 
   // Filter state
   const [dateFrom, setDateFrom] = useState('');
@@ -31,9 +33,6 @@ export default function MyLettersPage() {
   const [voidTarget, setVoidTarget] = useState(null);
   const [voidLoading, setVoidLoading] = useState(false);
   const [voidError, setVoidError] = useState(null);
-
-  // Notifikasi sukses
-  const [successMessage, setSuccessMessage] = useState(null);
 
   // Build params dari filter
   const buildParams = useCallback(
@@ -90,14 +89,12 @@ export default function MyLettersPage() {
     try {
       await voidLetter(voidTarget.id);
       setVoidTarget(null);
-      setSuccessMessage('Surat berhasil dibatalkan.');
+      toast.success('Surat berhasil dibatalkan.');
       // Refresh tabel
       refetch();
-
-      // Hilangkan notifikasi setelah 3 detik
-      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       setVoidError(err.message);
+      toast.error('Gagal membatalkan surat.');
     } finally {
       setVoidLoading(false);
     }
@@ -188,25 +185,6 @@ export default function MyLettersPage() {
         </p>
       </div>
 
-      {/* Notifikasi sukses */}
-      {successMessage && (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <svg
-            className="h-5 w-5 text-emerald-500 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-          <p className="text-sm text-emerald-700">{successMessage}</p>
-        </div>
-      )}
 
       {/* Filter card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
@@ -264,7 +242,13 @@ export default function MyLettersPage() {
       {error && <ErrorMessage error={error} />}
 
       {/* Tabel surat */}
-      <Table columns={columns} data={letters} loading={loading} emptyText="Tidak ada data surat." />
+      <Table
+        columns={columns}
+        data={letters}
+        loading={loading}
+        emptyText="Belum ada surat. Klik 'Ambil Nomor' untuk memulai."
+        emptyIcon="📝"
+      />
 
       {/* Pagination */}
       <Pagination meta={meta} onPageChange={handlePageChange} />
