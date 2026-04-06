@@ -257,7 +257,7 @@ export default function TakeNumberPage() {
                 Nomor Surat
               </p>
               <p className="text-2xl font-bold text-indigo-900 mt-1">
-                {resultData.full_number || resultData.letter_number}
+                {resultData.number}
               </p>
             </div>
 

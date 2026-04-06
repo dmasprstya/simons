@@ -2,7 +2,7 @@ import api from './axios';
 
 /**
  * Get Summary — ambil ringkasan laporan
- * @param {Object} params - { date, date_from, date_to, classification_id }
+ * @param {Object} params - { date_from, date_to, classification_id, division }
  */
 export async function getSummary(params = {}) {
   const response = await api.get('/reports/summary', { params });
@@ -11,16 +11,26 @@ export async function getSummary(params = {}) {
 
 /**
  * Export Report — download laporan sebagai file blob (Excel/PDF)
- * @param {Object} params - { date_from, date_to, classification_id, format, search, status, division }
+ * @param {Object} params - { date_from, date_to, classification_id, format, division }
  *
- * Menggunakan responseType: 'blob' agar browser bisa trigger download file.
- * Setelah response diterima, buat URL object dan klik link otomatis.
+ * Saat ExportService sudah diimplementasi, backend mengembalikan blob file.
+ * Saat masih stub, backend mengembalikan JSON — fungsi ini mendeteksi keduanya.
  */
 export async function exportReport(params = {}) {
   const response = await api.get('/reports/export', {
     params,
     responseType: 'blob',
   });
+
+  // Cek apakah response adalah JSON (stub) alih-alih blob file
+  // Jika content-type adalah application/json, berarti export belum tersedia
+  const contentType = response.headers['content-type'] || '';
+  if (contentType.includes('application/json')) {
+    // Parse blob kembali ke JSON untuk mendapatkan message
+    const text = await response.data.text();
+    const json = JSON.parse(text);
+    throw new Error(json.message || 'Fitur export belum tersedia.');
+  }
 
   // Ekstrak filename dari Content-Disposition header (jika ada)
   const contentDisposition = response.headers['content-disposition'];
@@ -45,3 +55,4 @@ export async function exportReport(params = {}) {
 
   return { success: true, filename };
 }
+

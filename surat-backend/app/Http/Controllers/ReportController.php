@@ -20,94 +20,135 @@ class ReportController extends Controller
     ) {}
 
     /**
-     * Ringkasan statistik nomor surat yang dikelompokkan per issued_date,
-     * classification_id, dan division user pembuat.
+     * Ringkasan statistik nomor surat — mengembalikan data yang sudah diagregasi
+     * dalam format yang siap ditampilkan oleh frontend.
      *
-     * Filter yang tersedia:
-     *   - issued_date_from:  batas awal tanggal surat
-     *   - issued_date_to:    batas akhir tanggal surat
-     *   - classification_id: filter per klasifikasi
-     *   - status:            active | voided
+     * Frontend mengirim parameter:
+     *   - date_from:          batas awal tanggal surat  (alias issued_date_from)
+     *   - date_to:            batas akhir tanggal surat (alias issued_date_to)
+     *   - classification_id:  filter per klasifikasi
+     *   - division:           filter per divisi
+     *   - status:             active | voided
      *
-     * Menggunakan GROUP BY untuk efisiensi — tidak mem-load seluruh record.
+     * Response shape:
+     * {
+     *   total_letters: int,
+     *   per_day: [{ date, count }],
+     *   per_classification: [{ classification, count }],
+     *   per_division: [{ division, count }],
+     * }
      */
     public function summary(Request $request): JsonResponse
     {
+        // Terima kedua format parameter (date_from ATAU issued_date_from)
+        // agar backward-compatible dan sesuai frontend
+        $dateFrom = $request->input('date_from', $request->input('issued_date_from'));
+        $dateTo   = $request->input('date_to', $request->input('issued_date_to'));
+
         $request->validate([
+            'date_from'         => 'nullable|date',
+            'date_to'           => 'nullable|date',
             'issued_date_from'  => 'nullable|date',
-            'issued_date_to'    => 'nullable|date|after_or_equal:issued_date_from',
+            'issued_date_to'    => 'nullable|date',
             'classification_id' => 'nullable|integer|exists:letter_classifications,id',
+            'division'          => 'nullable|string|max:255',
             'status'            => 'nullable|in:active,voided',
         ]);
 
-        $query = DB::table('letter_numbers')
-            ->join('users', 'letter_numbers.user_id', '=', 'users.id')
-            ->join('letter_classifications', 'letter_numbers.classification_id', '=', 'letter_classifications.id')
+        // === Base query builder dengan filter ===
+        $baseQuery = function () use ($request, $dateFrom, $dateTo) {
+            $q = DB::table('letter_numbers')
+                ->join('users', 'letter_numbers.user_id', '=', 'users.id')
+                ->join('letter_classifications', 'letter_numbers.classification_id', '=', 'letter_classifications.id');
+
+            // Filter rentang tanggal
+            if ($dateFrom) {
+                $q->whereDate('letter_numbers.issued_date', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $q->whereDate('letter_numbers.issued_date', '<=', $dateTo);
+            }
+
+            // Filter berdasarkan klasifikasi
+            if ($request->filled('classification_id')) {
+                $q->where('letter_numbers.classification_id', $request->classification_id);
+            }
+
+            // Filter berdasarkan divisi
+            if ($request->filled('division')) {
+                $q->where('users.division', 'like', '%' . $request->division . '%');
+            }
+
+            // Filter berdasarkan status
+            if ($request->filled('status')) {
+                $q->where('letter_numbers.status', $request->status);
+            }
+
+            return $q;
+        };
+
+        // 1) Total surat
+        $totalLetters = $baseQuery()->count();
+
+        // 2) Breakdown per hari — { date, count }
+        $perDay = $baseQuery()
             ->select([
-                'letter_numbers.issued_date',
-                'letter_numbers.classification_id',
-                'letter_classifications.name as classification_name',
-                'letter_classifications.code as classification_code',
-                'users.division',
-                DB::raw('COUNT(*) as total'),
-                DB::raw('SUM(CASE WHEN letter_numbers.status = \'active\' THEN 1 ELSE 0 END) as total_active'),
-                DB::raw('SUM(CASE WHEN letter_numbers.status = \'voided\' THEN 1 ELSE 0 END) as total_voided'),
+                'letter_numbers.issued_date as date',
+                DB::raw('COUNT(*) as count'),
             ])
-            ->groupBy([
-                'letter_numbers.issued_date',
-                'letter_numbers.classification_id',
-                'letter_classifications.name',
-                'letter_classifications.code',
-                'users.division',
+            ->groupBy('letter_numbers.issued_date')
+            ->orderBy('letter_numbers.issued_date')
+            ->get();
+
+        // 3) Breakdown per klasifikasi — { classification, count }
+        $perClassification = $baseQuery()
+            ->select([
+                DB::raw("(letter_classifications.code || ' — ' || letter_classifications.name) as classification"),
+                DB::raw('COUNT(*) as count'),
             ])
-            ->orderByDesc('letter_numbers.issued_date');
+            ->groupBy('letter_classifications.code', 'letter_classifications.name')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->get();
 
-        // Filter rentang tanggal
-        if ($request->filled('issued_date_from')) {
-            $query->whereDate('letter_numbers.issued_date', '>=', $request->issued_date_from);
-        }
-
-        if ($request->filled('issued_date_to')) {
-            $query->whereDate('letter_numbers.issued_date', '<=', $request->issued_date_to);
-        }
-
-        // Filter berdasarkan klasifikasi
-        if ($request->filled('classification_id')) {
-            $query->where('letter_numbers.classification_id', $request->classification_id);
-        }
-
-        // Filter berdasarkan status
-        if ($request->filled('status')) {
-            $query->where('letter_numbers.status', $request->status);
-        }
-
-        $summary = $query->get();
+        // 4) Breakdown per divisi — { division, count }
+        $perDivision = $baseQuery()
+            ->select([
+                DB::raw("IFNULL(users.division, 'Tanpa Divisi') as division"),
+                DB::raw('COUNT(*) as count'),
+            ])
+            ->groupBy('users.division')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->get();
 
         return response()->json([
-            'data'    => $summary,
+            'data'    => [
+                'total_letters'      => $totalLetters,
+                'per_day'            => $perDay,
+                'per_classification' => $perClassification,
+                'per_division'       => $perDivision,
+            ],
             'message' => 'Ringkasan laporan berhasil diambil.',
         ]);
     }
 
     /**
-     * Export data surat ke Excel.
+     * Export data surat ke Excel / PDF.
      *
-     * Stub response — ExportService::exportExcel() belum diimplementasi.
-     * Akan menghasilkan file Excel dan mengembalikan URL download saat
-     * maatwebsite/excel telah diintegrasikan.
-     *
-     * Filter yang tersedia: sama dengan summary() (issued_date_from, to, classification_id, status).
+     * Stub response — ExportService belum diimplementasi.
+     * Menerima parameter yang sama dengan summary().
      */
     public function export(Request $request): JsonResponse
     {
         $request->validate([
-            'issued_date_from'  => 'nullable|date',
-            'issued_date_to'    => 'nullable|date|after_or_equal:issued_date_from',
+            'date_from'         => 'nullable|date',
+            'date_to'           => 'nullable|date',
             'classification_id' => 'nullable|integer|exists:letter_classifications,id',
+            'division'          => 'nullable|string|max:255',
             'status'            => 'nullable|in:active,voided',
+            'format'            => 'nullable|in:excel,pdf',
         ]);
 
-        // Stub: ExportService::exportExcel() belum diimplementasi — kembalikan pesan placeholder
+        // Stub: ExportService belum diimplementasi — kembalikan pesan placeholder
         // TODO: Uncomment saat ExportService sudah diimplementasi dengan maatwebsite/excel
         // $path = $this->exportService->exportExcel($request->all());
         // return response()->json([

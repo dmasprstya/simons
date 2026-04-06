@@ -31,7 +31,7 @@ class LetterNumberController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = LetterNumber::where('user_id', Auth::id());
+        $query = LetterNumber::with('classification')->where('user_id', Auth::id());
 
         // Filter rentang tanggal issued_date
         if ($request->filled('issued_date_from')) {
@@ -96,6 +96,9 @@ class LetterNumberController extends Controller
             'destination'       => $request->destination,
             'status'            => 'active',
         ]);
+
+        // Eager load classification agar LetterNumberResource::whenLoaded() ikut me-render data klasifikasi
+        $letter->load('classification');
 
         return response()->json([
             'data'    => new LetterNumberResource($letter),
@@ -173,9 +176,40 @@ class LetterNumberController extends Controller
      *   - issued_date_from:  batas awal tanggal surat
      *   - issued_date_to:    batas akhir tanggal surat
      */
+    /**
+     * Riwayat pengambilan nomor surat terbaru dari semua user.
+     *
+     * Endpoint ini dapat diakses oleh semua user yang terautentikasi (bukan admin only).
+     * Mengembalikan 10 surat terakhir beserta relasi user dan classification
+     * agar terlihat siapa yang mengambil nomor dan klasifikasi suratnya.
+     */
+    public function recentAll(Request $request): JsonResponse
+    {
+        $limit = min((int) $request->input('limit', 10), 50);
+
+        $letters = LetterNumber::with(['user', 'classification'])
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'data'    => LetterNumberResource::collection($letters),
+            'message' => 'Riwayat pengambilan nomor surat terbaru berhasil diambil.',
+        ]);
+    }
+
+    /**
+     * Daftar semua surat (admin only).
+     *
+     * Filter yang tersedia:
+     *   - classification_id: ID klasifikasi surat
+     *   - user_id:           ID pembuat surat
+     *   - issued_date_from:  batas awal tanggal surat
+     *   - issued_date_to:    batas akhir tanggal surat
+     */
     public function all(Request $request): JsonResponse
     {
-        $query = LetterNumber::query();
+        $query = LetterNumber::with(['user', 'classification']);
 
         // Filter berdasarkan klasifikasi
         if ($request->filled('classification_id')) {

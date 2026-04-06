@@ -10,6 +10,16 @@ export async function getMyLetters(params = {}) {
 }
 
 /**
+ * Get Recent Letters — riwayat pengambilan nomor terbaru dari semua user
+ * Dapat diakses oleh semua user yang terautentikasi.
+ * @param {Object} params - { limit }
+ */
+export async function getRecentLetters(params = {}) {
+  const response = await api.get('/letters/recent', { params });
+  return response.data;
+}
+
+/**
  * Get All Letters — daftar semua surat (admin only)
  * @param {Object} params - { page, classification_id, date_from, date_to, user_id }
  */

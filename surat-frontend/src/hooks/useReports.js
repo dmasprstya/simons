@@ -56,7 +56,7 @@ export function useReports() {
       return { success: true };
     } catch (err) {
       const message =
-        err.response?.data?.message || `Gagal mengekspor ${format.toUpperCase()}.`;
+        err.response?.data?.message || err.message || `Gagal mengekspor ${format.toUpperCase()}.`;
       setExportError(message);
       return { success: false, error: message };
     } finally {

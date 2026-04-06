@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useSequenceStore } from '../../store/sequenceStore';
 import { getToday } from '../../api/sequences.api';
-import { getMyLetters } from '../../api/letters.api';
+import { getMyLetters, getRecentLetters } from '../../api/letters.api';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Button from '../../components/ui/Button';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import StatusChip from '../../components/ui/StatusChip';
+import Table from '../../components/ui/Table';
 
 /**
  * DashboardPage — Halaman utama untuk role user.
@@ -16,7 +17,8 @@ import StatusChip from '../../components/ui/StatusChip';
  * - Greeting dengan nama user + tanggal hari ini
  * - Card info sequence hari ini (pilih klasifikasi → fetch sequence)
  * - Tombol "Ambil Nomor Sekarang"
- * - Card riwayat singkat 5 surat terakhir
+ * - Card riwayat singkat 5 surat terakhir milik user
+ * - Tabel riwayat pengambilan nomor terbaru dari SEMUA user
  */
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -29,10 +31,15 @@ export default function DashboardPage() {
   const [sequenceLoading, setSequenceLoading] = useState(false);
   const [sequenceError, setSequenceError] = useState(null);
 
-  // State untuk riwayat singkat
+  // State untuk riwayat singkat milik user
   const [recentLetters, setRecentLetters] = useState([]);
   const [recentLoading, setRecentLoading] = useState(false);
   const [recentError, setRecentError] = useState(null);
+
+  // State untuk riwayat pengambilan nomor dari semua user
+  const [allRecentLetters, setAllRecentLetters] = useState([]);
+  const [allRecentLoading, setAllRecentLoading] = useState(false);
+  const [allRecentError, setAllRecentError] = useState(null);
 
   // Format tanggal hari ini dalam bahasa Indonesia
   const today = new Date().toLocaleDateString('id-ID', {
@@ -108,6 +115,99 @@ export default function DashboardPage() {
     fetchRecent();
     return () => { cancelled = true; };
   }, []);
+
+  // Fetch 10 riwayat pengambilan nomor terbaru dari semua user
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchAllRecent = async () => {
+      setAllRecentLoading(true);
+      setAllRecentError(null);
+
+      try {
+        const response = await getRecentLetters({ limit: 10 });
+        if (!cancelled) {
+          setAllRecentLetters(response.data || []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message =
+            err.response?.data?.message || 'Gagal memuat riwayat pengambilan nomor.';
+          setAllRecentError(message);
+        }
+      } finally {
+        if (!cancelled) setAllRecentLoading(false);
+      }
+    };
+
+    fetchAllRecent();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Kolom tabel riwayat pengambilan nomor semua user
+  const recentAllColumns = [
+    {
+      key: 'number',
+      label: 'Nomor',
+      render: (value) => (
+        <span className="font-semibold text-gray-900">{value}</span>
+      ),
+    },
+    {
+      key: 'user',
+      label: 'Pengambil',
+      render: (value) => (
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">
+            {value?.name || '-'}
+          </p>
+          <p className="text-xs text-gray-400 truncate">
+            {value?.division || '-'}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: 'classification',
+      label: 'Klasifikasi',
+      render: (value) => (
+        <span className="text-gray-600 text-sm">
+          {value?.code || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'subject',
+      label: 'Perihal',
+      render: (value) => (
+        <span className="max-w-[180px] truncate block text-sm text-gray-600" title={value}>
+          {value || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'issued_date',
+      label: 'Tanggal',
+      render: (value) => {
+        if (!value) return '-';
+        const date = new Date(value + 'T00:00:00');
+        return (
+          <span className="text-sm text-gray-500">
+            {date.toLocaleDateString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (value) => <StatusChip status={value} />,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -201,11 +301,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Card riwayat singkat */}
+        {/* Card riwayat singkat milik user */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
-              📝 Riwayat Surat Terbaru
+              📝 Surat Saya Terbaru
             </h2>
             <Button
               variant="ghost"
@@ -242,7 +342,7 @@ export default function DashboardPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {letter.full_number || letter.letter_number}
+                      {letter.number}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
                       {letter.subject}
@@ -276,6 +376,30 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Tabel riwayat pengambilan nomor dari SEMUA user */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              🕘 Riwayat Pengambilan Nomor Terbaru
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              10 pengambilan nomor surat terakhir dari seluruh pengguna.
+            </p>
+          </div>
+        </div>
+
+        {allRecentError && <ErrorMessage error={allRecentError} />}
+
+        <Table
+          columns={recentAllColumns}
+          data={allRecentLetters}
+          loading={allRecentLoading}
+          emptyText="Belum ada riwayat pengambilan nomor surat."
+          emptyIcon="🕘"
+        />
       </div>
     </div>
   );

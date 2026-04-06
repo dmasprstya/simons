@@ -103,11 +103,11 @@ export default function MyLettersPage() {
   // Kolom tabel
   const columns = [
     {
-      key: 'full_number',
+      key: 'number',
       label: 'Nomor',
-      render: (value, row) => (
+      render: (value) => (
         <span className="font-medium text-gray-900">
-          {value || row.letter_number}
+          {value}
         </span>
       ),
     },
@@ -265,7 +265,7 @@ export default function MyLettersPage() {
         message={
           voidTarget
             ? `Apakah Anda yakin ingin membatalkan surat nomor "${
-                voidTarget.full_number || voidTarget.letter_number
+                voidTarget.number
               }"? Aksi ini tidak dapat dibatalkan.`
             : ''
         }

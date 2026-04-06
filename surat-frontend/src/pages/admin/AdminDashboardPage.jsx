@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
+import { getRecentLetters } from '../../api/letters.api';
 import Table from '../../components/ui/Table';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import StatusChip from '../../components/ui/StatusChip';
 
 /**
  * AdminDashboardPage — Halaman dashboard untuk role admin.
  *
  * Fitur:
  * - 4 summary card: surat hari ini, gap request pending, sequence aktif, user aktif
+ * - Tabel riwayat pengambilan nomor terbaru dari SEMUA user
  * - Tabel 10 audit log terbaru
- * - Loading: skeleton card untuk setiap summary card
  */
 
 /**
@@ -100,6 +102,11 @@ export default function AdminDashboardPage() {
   // State untuk total surat hari ini (dari summary response)
   const [letterCount, setLetterCount] = useState(0);
 
+  // State untuk riwayat pengambilan nomor dari semua user
+  const [allRecentLetters, setAllRecentLetters] = useState([]);
+  const [allRecentLoading, setAllRecentLoading] = useState(false);
+  const [allRecentError, setAllRecentError] = useState(null);
+
   // Format tanggal hari ini dalam bahasa Indonesia
   const today = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
@@ -122,6 +129,99 @@ export default function AdminDashboardPage() {
       );
     }
   }, [todayLetters]);
+
+  // Fetch 10 riwayat pengambilan nomor terbaru dari semua user
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchAllRecent = async () => {
+      setAllRecentLoading(true);
+      setAllRecentError(null);
+
+      try {
+        const response = await getRecentLetters({ limit: 10 });
+        if (!cancelled) {
+          setAllRecentLetters(response.data || []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message =
+            err.response?.data?.message || 'Gagal memuat riwayat pengambilan nomor.';
+          setAllRecentError(message);
+        }
+      } finally {
+        if (!cancelled) setAllRecentLoading(false);
+      }
+    };
+
+    fetchAllRecent();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Kolom tabel riwayat pengambilan nomor semua user
+  const recentAllColumns = [
+    {
+      key: 'number',
+      label: 'Nomor',
+      render: (value) => (
+        <span className="font-semibold text-gray-900">{value}</span>
+      ),
+    },
+    {
+      key: 'user',
+      label: 'Pengambil',
+      render: (value) => (
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">
+            {value?.name || '-'}
+          </p>
+          <p className="text-xs text-gray-400 truncate">
+            {value?.division || '-'}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: 'classification',
+      label: 'Klasifikasi',
+      render: (value) => (
+        <span className="text-gray-600 text-sm">
+          {value?.code || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'subject',
+      label: 'Perihal',
+      render: (value) => (
+        <span className="max-w-[180px] truncate block text-sm text-gray-600" title={value}>
+          {value || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'issued_date',
+      label: 'Tanggal',
+      render: (value) => {
+        if (!value) return '-';
+        const date = new Date(value + 'T00:00:00');
+        return (
+          <span className="text-sm text-gray-500">
+            {date.toLocaleDateString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (value) => <StatusChip status={value} />,
+    },
+  ];
 
   // Kolom tabel audit log
   const auditColumns = [
@@ -241,7 +341,31 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
-      {/* Tabel Aktivitas Terbaru */}
+      {/* Tabel Riwayat Pengambilan Nomor dari SEMUA User */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              🕘 Riwayat Pengambilan Nomor Terbaru
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              10 pengambilan nomor surat terakhir dari seluruh pengguna.
+            </p>
+          </div>
+        </div>
+
+        {allRecentError && <ErrorMessage error={allRecentError} />}
+
+        <Table
+          columns={recentAllColumns}
+          data={allRecentLetters}
+          loading={allRecentLoading}
+          emptyText="Belum ada riwayat pengambilan nomor surat."
+          emptyIcon="🕘"
+        />
+      </div>
+
+      {/* Tabel Aktivitas Terbaru (Audit Logs) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">

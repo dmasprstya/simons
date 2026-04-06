@@ -52,6 +52,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
     // === LETTERS ===
     Route::prefix('letters')->group(function (): void {
         // Route statis HARUS didaftarkan sebelum route dinamis /{id}
+        Route::get('/recent', [LetterNumberController::class, 'recentAll']); // semua user
         Route::get('/all', [LetterNumberController::class, 'all'])->middleware('role:admin');
         Route::get('/',    [LetterNumberController::class, 'index']);
         Route::post('/',   [LetterNumberController::class, 'store']);

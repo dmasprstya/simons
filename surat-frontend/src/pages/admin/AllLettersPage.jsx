@@ -99,11 +99,11 @@ export default function AllLettersPage() {
   // Kolom tabel
   const columns = [
     {
-      key: 'full_number',
+      key: 'number',
       label: 'Nomor',
-      render: (value, row) => (
+      render: (value) => (
         <span className="font-medium text-gray-900">
-          {value || row.letter_number}
+          {value}
         </span>
       ),
     },
