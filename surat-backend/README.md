@@ -1,59 +1,160 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Surat Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem penomoran surat resmi berbasis Permenkumham No. 5 Tahun 2022.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Instalasi
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan sanctum:prune-expired --hours=24
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Pastikan konfigurasi database di `.env` sudah benar (DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD) sebelum menjalankan migrasi.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Cara Kerja Penomoran
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Nomor surat dibagi dalam blok. Setiap blok = N nomor aktif + N nomor cadangan (zona gap).
 
-## Laravel Sponsors
+**Default:** `gap_size=10`, `start=1000`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Blok | Nomor Aktif  | Zona Gap    |
+|------|-------------|-------------|
+| 1    | 1000–1009   | 1010–1019   |
+| 2    | 1020–1029   | 1030–1039   |
+| 3    | 1040–1049   | 1050–1059   |
 
-### Premium Partners
+**Formula zona gap untuk blok ke-N (N dimulai dari 0):**
+```
+aktif_start = default_start + N × (gap_size × 2)
+aktif_end   = aktif_start + gap_size − 1
+gap_start   = aktif_end + 1
+gap_end     = gap_start + gap_size − 1
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**Aturan nomor:**
+- `acquireNumber()` hanya mengeluarkan nomor dalam range `aktif_start–aktif_end`.
+- `releaseGapNumber()` mengeluarkan nomor dalam range `gap_start–gap_end` (untuk request gap yang disetujui admin).
+- Jika nomor berikutnya jatuh di zona gap, sistem otomatis melompat ke `aktif_start` blok berikutnya.
+- Nomor gap **hanya bisa diterbitkan** melalui proses persetujuan admin (`POST /api/gap-requests` → `PATCH /api/gap-requests/{id}/approve`).
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Scheduled Job
 
-## Code of Conduct
+```bash
+php artisan schedule:run   # jalankan setiap menit via cron
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Job `CalculateNextDaySequence` berjalan tiap malam **23:55** untuk menyiapkan nomor hari berikutnya secara otomatis.
 
-## Security Vulnerabilities
+**Konfigurasi cron (Linux/server):**
+```cron
+* * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## Testing
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test
+```
+
+Suite mencakup: AuthTest, NumberingServiceTest, GapRequestTest, LetterNumberTest, dan ConcurrencyTest.
+
+---
+
+## Endpoint Utama
+
+### 🔐 Auth (`/api/auth`)
+| Method | Endpoint                    | Middleware      | Deskripsi              |
+|--------|-----------------------------|-----------------|------------------------|
+| POST   | `/api/auth/login`           | -               | Login, dapat token     |
+| POST   | `/api/auth/logout`          | auth, active    | Logout (revoke token)  |
+| GET    | `/api/auth/me`              | auth, active    | Profil user login      |
+| POST   | `/api/auth/change-password` | auth, active    | Ganti password         |
+
+### 👤 Users (`/api/users`) — Admin only
+| Method | Endpoint                      | Deskripsi                  |
+|--------|-------------------------------|----------------------------|
+| GET    | `/api/users`                  | Daftar semua user          |
+| POST   | `/api/users`                  | Buat user baru             |
+| GET    | `/api/users/{id}`             | Detail user                |
+| PUT    | `/api/users/{id}`             | Update user                |
+| PATCH  | `/api/users/{id}/toggle-active` | Aktifkan/nonaktifkan user |
+
+### 📂 Klasifikasi Surat (`/api/classifications`)
+| Method | Endpoint                               | Middleware   | Deskripsi                     |
+|--------|----------------------------------------|--------------|-------------------------------|
+| GET    | `/api/classifications`                 | auth, active | Daftar klasifikasi            |
+| POST   | `/api/classifications`                 | auth, active, admin | Buat klasifikasi       |
+| GET    | `/api/classifications/{id}`            | auth, active | Detail klasifikasi            |
+| PUT    | `/api/classifications/{id}`            | auth, active, admin | Update klasifikasi     |
+| GET    | `/api/classifications/{id}/children`   | auth, active | Sub-klasifikasi               |
+| PATCH  | `/api/classifications/{id}/toggle-active` | auth, active, admin | Toggle aktif |
+
+### 📋 Nomor Surat (`/api/letters`)
+| Method | Endpoint               | Middleware   | Deskripsi                    |
+|--------|------------------------|--------------|------------------------------|
+| GET    | `/api/letters`         | auth, active | Surat milik user login       |
+| POST   | `/api/letters`         | auth, active | Request nomor surat baru     |
+| GET    | `/api/letters/all`     | auth, active, admin | Semua surat (admin)   |
+| GET    | `/api/letters/{id}`    | auth, active | Detail surat                 |
+| PATCH  | `/api/letters/{id}/void` | auth, active | Void/batalkan surat         |
+
+### 📦 Gap Request (`/api/gap-requests`)
+| Method | Endpoint                          | Middleware   | Deskripsi                          |
+|--------|-----------------------------------|--------------|------------------------------------|
+| GET    | `/api/gap-requests`               | auth, active | Gap request milik user login       |
+| POST   | `/api/gap-requests`               | auth, active | Ajukan gap request                 |
+| GET    | `/api/gap-requests/all`           | auth, active, admin | Semua gap request (admin)   |
+| PATCH  | `/api/gap-requests/{id}/approve`  | auth, active, admin | Setujui gap request         |
+| PATCH  | `/api/gap-requests/{id}/reject`   | auth, active, admin | Tolak gap request           |
+
+### 📅 Daily Sequence (`/api/sequences`)
+| Method | Endpoint                 | Middleware   | Deskripsi                          |
+|--------|--------------------------|--------------|------------------------------------|
+| GET    | `/api/sequences`         | auth, active, admin | Daftar sequence               |
+| GET    | `/api/sequences/today`   | auth, active | Sequence hari ini                  |
+| PATCH  | `/api/sequences/gap`     | auth, active, admin | Update gap_size               |
+
+### 📊 Laporan (`/api/reports`) — Admin only
+| Method | Endpoint                | Deskripsi                     |
+|--------|-------------------------|-------------------------------|
+| GET    | `/api/reports/summary`  | Ringkasan statistik surat     |
+| GET    | `/api/reports/export`   | Ekspor data surat (CSV/JSON)  |
+
+### 🔍 Audit Log (`/api/audit-logs`) — Admin only
+| Method | Endpoint                 | Deskripsi           |
+|--------|--------------------------|---------------------|
+| GET    | `/api/audit-logs`        | Daftar audit log    |
+| GET    | `/api/audit-logs/{id}`   | Detail audit log    |
+
+---
+
+## Penanganan Error
+
+| Kondisi                         | HTTP Status | Exception                  |
+|---------------------------------|-------------|----------------------------|
+| Lock timeout / deadlock         | 409         | `NumberingLockException`   |
+| Nomor gap sudah digunakan       | 422         | `GapAlreadyUsedException`  |
+| User nonaktif                   | 403         | `EnsureUserIsActive`       |
+| Validasi gagal                  | 422         | Laravel Form Request       |
+| Unauthorized                    | 401         | Sanctum                    |
+
+---
+
+## Stack Teknologi
+
+- **Backend:** Laravel (latest stable) + Laravel Sanctum
+- **Database:** MySQL
+- **Pattern:** Service Layer, Form Request, API Resource, Observer
+- **Auth:** Bearer Token via Sanctum
+- **Response:** JSON `{ data, message, meta }` — `meta` hanya jika paginated
