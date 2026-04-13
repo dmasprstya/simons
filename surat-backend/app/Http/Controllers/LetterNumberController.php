@@ -101,6 +101,7 @@ class LetterNumberController extends Controller
             'issued_date'       => today(),
             'subject'           => $request->subject,
             'destination'       => $request->destination,
+            'sifat_surat'       => $request->sifat_surat,
             'status'            => 'active',
         ]);
 

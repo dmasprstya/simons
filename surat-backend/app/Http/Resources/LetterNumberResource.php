@@ -18,17 +18,18 @@ class LetterNumberResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
+            'id'               => $this->id,
             'number'           => $this->number,
             'formatted_number' => $this->formatted_number,
             // issued_date di-cast sebagai Carbon date → format Y-m-d
-            'issued_date' => $this->issued_date?->format('Y-m-d'),
-            'subject'     => $this->subject,
-            'destination' => $this->destination,
-            'status'      => $this->status,
+            'issued_date'      => $this->issued_date?->format('Y-m-d'),
+            'subject'          => $this->subject,
+            'destination'      => $this->destination,
+            'sifat_surat'      => $this->sifat_surat,
+            'status'           => $this->status,
             // voided_at nullable — hanya ada jika surat telah di-void
-            'voided_at'   => $this->voided_at?->format('Y-m-d H:i'),
-            'created_at'  => $this->created_at?->format('Y-m-d H:i'),
+            'voided_at'        => $this->voided_at?->format('Y-m-d H:i'),
+            'created_at'       => $this->created_at?->format('Y-m-d H:i'),
 
             // Relasi — hanya ikut jika eager loaded di controller
             'classification' => new LetterClassificationResource($this->whenLoaded('classification')),

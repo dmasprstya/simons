@@ -24,6 +24,7 @@ class LetterNumber extends Model
         'issued_date',
         'subject',
         'destination',
+        'sifat_surat',
         'status',
         'voided_at',
         'voided_by',

@@ -34,6 +34,7 @@ export default function TakeNumberPage() {
   const [classificationId, setClassificationId] = useState(null);
   const [subject, setSubject] = useState('');
   const [destination, setDestination] = useState('');
+  const [sifatSurat, setSifatSurat] = useState('');
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -44,6 +45,14 @@ export default function TakeNumberPage() {
   // Modal result state
   const [showResult, setShowResult] = useState(false);
   const [resultData, setResultData] = useState(null);
+
+  // Opsi dropdown Sifat Surat — nilai enum sesuai backend
+  const SIFAT_SURAT_OPTIONS = [
+    { value: 'sangat_segera', label: 'Sangat Segera' },
+    { value: 'segera',        label: 'Segera' },
+    { value: 'biasa',         label: 'Biasa' },
+    { value: 'rahasia',       label: 'Rahasia' },
+  ];
 
   // Validasi form sebelum submit
   const validate = () => {
@@ -61,6 +70,9 @@ export default function TakeNumberPage() {
       errors.destination = 'Tujuan wajib diisi.';
     } else if (destination.trim().length > 255) {
       errors.destination = 'Tujuan maksimal 255 karakter.';
+    }
+    if (!sifatSurat) {
+      errors.sifat_surat = 'Sifat surat wajib dipilih.';
     }
 
     setValidationErrors(errors);
@@ -82,6 +94,7 @@ export default function TakeNumberPage() {
         classification_id: classificationId,
         subject: subject.trim(),
         destination: destination.trim(),
+        sifat_surat: sifatSurat,
       });
 
       // Sukses — tampilkan modal hasil + toast
@@ -112,6 +125,7 @@ export default function TakeNumberPage() {
     setClassificationId(null);
     setSubject('');
     setDestination('');
+    setSifatSurat('');
     setError(null);
     setValidationErrors({});
     setServerErrors(null);
@@ -225,6 +239,41 @@ export default function TakeNumberPage() {
             </div>
           </div>
 
+          {/* Sifat Surat */}
+          <div>
+            <label
+              htmlFor="sifat_surat"
+              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
+            >
+              Sifat Surat <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="sifat_surat"
+              value={sifatSurat}
+              onChange={(e) => setSifatSurat(e.target.value)}
+              disabled={loading}
+              className={`block w-full h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm text-[#0B1F3A]
+                transition-all duration-200
+                focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed
+                ${
+                  validationErrors.sifat_surat
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                    : 'border-[#E2E8F0]'
+                }`}
+            >
+              <option value="">— Pilih Sifat Surat —</option>
+              {SIFAT_SURAT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {validationErrors.sifat_surat && (
+              <p className="mt-1 text-xs text-red-600">{validationErrors.sifat_surat}</p>
+            )}
+          </div>
+
           {/* Server validation errors (422) */}
           {serverErrors && <FormErrors errors={serverErrors} />}
 
@@ -286,6 +335,18 @@ export default function TakeNumberPage() {
                 <p className="text-[10px] text-[#64748B] font-medium uppercase">Tujuan</p>
                 <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
                   {resultData.destination}
+                </p>
+              </div>
+              <div className="bg-[#F7F9FC] rounded-lg p-3 col-span-2">
+                <p className="text-[10px] text-[#64748B] font-medium uppercase">Sifat Surat</p>
+                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
+                  {/* Tampilkan label yang mudah dibaca dari nilai enum */}
+                  {{
+                    sangat_segera: 'Sangat Segera',
+                    segera:        'Segera',
+                    biasa:         'Biasa',
+                    rahasia:       'Rahasia',
+                  }[resultData.sifat_surat] ?? resultData.sifat_surat}
                 </p>
               </div>
             </div>

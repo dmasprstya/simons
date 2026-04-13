@@ -30,8 +30,10 @@ class StoreLetterNumberRequest extends FormRequest
                     ->where('is_leaf', true)
                     ->where('is_active', true),
             ],
-            'subject'     => 'required|string|max:255',
-            'destination' => 'required|string|max:255',
+            'subject'      => 'required|string|max:255',
+            'destination'  => 'required|string|max:255',
+            // Sifat surat wajib dipilih — enum harus sesuai dengan nilai yang valid
+            'sifat_surat'  => 'required|in:sangat_segera,segera,biasa,rahasia',
         ];
     }
 
@@ -49,6 +51,8 @@ class StoreLetterNumberRequest extends FormRequest
             'subject.max'                => 'Perihal surat maksimal 255 karakter.',
             'destination.required'       => 'Tujuan surat wajib diisi.',
             'destination.max'            => 'Tujuan surat maksimal 255 karakter.',
+            'sifat_surat.required'       => 'Sifat surat wajib dipilih.',
+            'sifat_surat.in'             => 'Sifat surat tidak valid. Pilih: Sangat Segera, Segera, Biasa, atau Rahasia.',
         ];
     }
 }
