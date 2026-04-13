@@ -143,15 +143,22 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
 
       {/* Kanan — Status + nama user + tombol keluar */}
       <div className="flex items-center gap-3">
-        {/* Online status dot + name — klik navigasi ke /profile */}
+        {/* Avatar + nama — klik navigasi ke /profile */}
         <Link
           to="/profile"
           className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
+          {user?.profile_photo ? (
+            <img
+              src={user.profile_photo}
+              alt="Foto Profil"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[#0B1F3A] flex items-center justify-center text-white text-sm font-semibold">
+              {(user?.name || 'U').charAt(0).toUpperCase()}
+            </div>
+          )}
           <span className="text-sm text-[#0B1F3A] font-medium">
             {user?.name || 'User'}
           </span>
