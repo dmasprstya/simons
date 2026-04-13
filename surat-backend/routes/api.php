@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     AuthController,
+    ProfileController,
     UserController,
     LetterClassificationController,
     LetterNumberController,
@@ -78,6 +79,15 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
             Route::patch('/{id}/approve', [GapRequestController::class, 'approve']);
             Route::patch('/{id}/reject',  [GapRequestController::class, 'reject']);
         });
+    });
+
+    // === PROFILE ===
+    Route::prefix('profile')->group(function (): void {
+        Route::get('/',                 [ProfileController::class, 'show']);
+        Route::put('/',                 [ProfileController::class, 'update']);
+        Route::post('/change-password', [ProfileController::class, 'changePassword']);
+        Route::post('/photo',           [ProfileController::class, 'uploadPhoto']);
+        Route::delete('/photo',         [ProfileController::class, 'deletePhoto']);
     });
 
     // === AUDIT LOGS (admin only) ===

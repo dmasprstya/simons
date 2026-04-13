@@ -12,6 +12,7 @@ import {
   TagIcon,
   ClipboardDocumentListIcon,
   ChartBarIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -135,7 +136,57 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
           )}
         </nav>
 
-        {/* Footer — User info */}
+        {/* Divider sebelum profil */}
+        <div className="border-t border-white/10" />
+
+        {/* Profile section — avatar, nama, role badge, link ke /profile */}
+        <div className={`px-3 py-3 space-y-2 ${collapsed ? 'lg:flex lg:flex-col lg:items-center' : ''}`}>
+          {/* Avatar + info */}
+          <div className={`flex items-center gap-2 ${collapsed ? 'lg:justify-center' : ''}`}>
+            {/* Avatar: foto profil jika ada, fallback ke inisial */}
+            {user?.profile_photo ? (
+              <img
+                src={user.profile_photo}
+                alt="Foto Profil"
+                className="h-8 w-8 rounded-full object-cover shrink-0 ring-2 ring-[#2A7FD4]/60"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#2A7FD4] text-white text-xs font-semibold shrink-0">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+            )}
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-white truncate">{user?.name || 'User'}</p>
+                {/* Role badge */}
+                <span className={`inline-block text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded mt-0.5
+                  ${user?.role === 'admin' ? 'bg-amber-500/20 text-amber-400' : 'bg-[#2A7FD4]/20 text-[#2A7FD4]'}`}>
+                  {user?.role || 'user'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* NavLink ke halaman profil */}
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
+              ${
+                isActive
+                  ? 'bg-[#2A7FD4] text-white font-medium shadow-sm shadow-[#2A7FD4]/30'
+                  : 'text-white/55 hover:bg-white/10 hover:text-white'
+              }
+              ${collapsed ? 'lg:justify-center' : ''}`
+            }
+            title={collapsed ? 'Profil Saya' : undefined}
+          >
+            <UserCircleIcon className="h-5 w-5 shrink-0" />
+            {!collapsed && <span className="truncate">Profil Saya</span>}
+          </NavLink>
+        </div>
+
+        {/* Footer — User info (divisi) */}
         <div className={`px-3 py-3 border-t border-white/10 ${collapsed ? 'lg:flex lg:justify-center' : ''}`}>
           <div className={`flex items-center gap-2 ${collapsed ? 'lg:justify-center' : ''}`}>
             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#2A7FD4] text-white text-xs font-semibold shrink-0">

@@ -16,6 +16,11 @@ export const useAuthStore = create(
 
       // Update data user (misal setelah edit profil)
       updateUser: (user) => set({ user }),
+
+      // Digunakan setelah update nama, divisi, atau foto berhasil
+      updateProfile: (updatedUser) => set((state) => ({
+          user: { ...state.user, ...updatedUser },
+      })),
     }),
     { name: 'auth-storage' } // persist ke localStorage
   )

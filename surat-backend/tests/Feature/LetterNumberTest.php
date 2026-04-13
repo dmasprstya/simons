@@ -51,6 +51,7 @@ class LetterNumberTest extends TestCase
                         'classification_id' => $classification->id,
                         'subject'           => 'Surat Test ' . uniqid(),
                         'destination'       => 'Tujuan Test',
+                        'sifat_surat'       => 'biasa',
                     ]);
     }
 

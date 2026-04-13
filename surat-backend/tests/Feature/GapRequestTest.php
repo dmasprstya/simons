@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\DailySequence;
 use App\Models\GapRequest;
 use App\Models\LetterClassification;
 use App\Models\User;
@@ -53,37 +52,6 @@ class GapRequestTest extends TestCase
         ]);
     }
 
-    /**
-     * Buat DailySequence untuk klasifikasi dan tanggal tertentu.
-     * Dengan default_start=1000 dan gap_size=10:
-     *   - Blok 0: aktif 1000-1009, gap 1010-1019
-     *
-     * Agar releaseGapNumber() bisa berhasil, sequence perlu ada
-     * dan last_number perlu >= gap_size (sudah melewati zona aktif blok 0).
-     *
-     * @param  LetterClassification  $classification
-     * @param  string                $date  Format Y-m-d
-     * @param  int                   $lastNumber  Jumlah nomor yang sudah dipakai (relative dari next_start)
-     */
-    private function makeSequence(
-        LetterClassification $classification,
-        string $date,
-        int $lastNumber = 10
-    ): DailySequence {
-        // Gunakan insertOrIgnore + find untuk menghindari konflik unique constraint
-        \Illuminate\Support\Facades\DB::table('daily_sequences')->insertOrIgnore([
-            'date'              => $date,
-            'classification_id' => $classification->id,
-            'last_number'       => $lastNumber,
-            'gap_size'          => 10,
-            'next_start'        => 1000,
-            'updated_at'        => now(),
-        ]);
-
-        return DailySequence::where('date', $date)
-            ->where('classification_id', $classification->id)
-            ->firstOrFail();
-    }
 
     /**
      * Buat GapRequest pending dengan nomor gap dan tanggal tertentu.
@@ -135,11 +103,8 @@ class GapRequestTest extends TestCase
         $classification = $this->makeClassification();
         $today          = today()->toDateString();
 
-        // Siapkan sequence dengan last_number=10 (blok 0 sudah penuh)
-        // sehingga nomor gap 1010 valid (posInBlock = 10 >= gap_size=10 adalah gap zone)
-        $this->makeSequence($classification, $today, 10);
-
-        // Buat gap request dengan nomor gap yang valid (1010 = gap zone blok 0)
+        // GlobalSequence (next_start=1000, gap_size=10) sudah ada via migration.
+        // Nomor 1010 = gap zone blok 0 (posInBlock=10, gap_size=10) — valid.
         $gapRequest = $this->makePendingGapRequest($user, $classification, $today, 1010);
 
         $response = $this->actingAs($admin, 'sanctum')
@@ -164,10 +129,7 @@ class GapRequestTest extends TestCase
         $classification = $this->makeClassification();
         $today          = today()->toDateString();
 
-        // Siapkan sequence dengan blok aktif sudah penuh (last_number=10)
-        $this->makeSequence($classification, $today, 10);
-
-        // Minta nomor 1010 (awal zona gap blok 0)
+        // GlobalSequence sudah ada via migration. Nomor 1010 = awal zona gap blok 0.
         $gapRequest = $this->makePendingGapRequest($user, $classification, $today, 1010);
 
         $response = $this->actingAs($admin, 'sanctum')
@@ -217,10 +179,7 @@ class GapRequestTest extends TestCase
         $classification = $this->makeClassification();
         $today          = today()->toDateString();
 
-        // Siapkan sequence
-        $this->makeSequence($classification, $today, 10);
-
-        // Buat gap request dengan nomor 1010
+        // GlobalSequence sudah ada via migration.
         $gapRequest = $this->makePendingGapRequest($user, $classification, $today, 1010);
 
         // Approve pertama kali — harus berhasil
