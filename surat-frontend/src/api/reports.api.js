@@ -10,35 +10,47 @@ export async function getSummary(params = {}) {
 }
 
 /**
- * Export Report — download laporan sebagai file blob (Excel/PDF)
+ * Export Report — download laporan sebagai file blob (CSV/PDF)
  * @param {Object} params - { date_from, date_to, classification_id, format, division }
- *
- * Saat ExportService sudah diimplementasi, backend mengembalikan blob file.
- * Saat masih stub, backend mengembalikan JSON — fungsi ini mendeteksi keduanya.
  */
 export async function exportReport(params = {}) {
-  const response = await api.get('/reports/export', {
-    params,
-    responseType: 'blob',
-  });
+  let response;
+  try {
+    response = await api.get('/reports/export', {
+      params: { ...params, format: params.format || 'csv' },
+      responseType: 'blob',
+    });
+  } catch (err) {
+    // Beberapa browser mengembalikan blob JSON pada error biner.
+    if (err.response?.data instanceof Blob) {
+      const text = await err.response.data.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || 'Gagal mengekspor laporan.');
+      } catch {
+        throw new Error(text || 'Network error saat mengunduh file.');
+      }
+    }
 
-  // Cek apakah response adalah JSON (stub) alih-alih blob file
-  // Jika content-type adalah application/json, berarti export belum tersedia
+    throw new Error(err.message || 'Network error saat mengunduh file.');
+  }
+
+  // Jika backend merespons JSON error, tampilkan message aslinya.
   const contentType = response.headers['content-type'] || '';
   if (contentType.includes('application/json')) {
-    // Parse blob kembali ke JSON untuk mendapatkan message
     const text = await response.data.text();
     const json = JSON.parse(text);
-    throw new Error(json.message || 'Fitur export belum tersedia.');
+    throw new Error(json.message || 'Gagal mengekspor laporan.');
   }
 
   // Ekstrak filename dari Content-Disposition header (jika ada)
   const contentDisposition = response.headers['content-disposition'];
-  let filename = `laporan-surat.${params.format || 'xlsx'}`;
+  const requestedFormat = (params.format || 'csv').toLowerCase();
+  let filename = requestedFormat === 'pdf' ? 'laporan-surat.pdf' : 'laporan-surat.csv';
 
   if (contentDisposition) {
-    const match = contentDisposition.match(/filename="?(.+)"?/);
-    if (match) filename = match[1];
+    const match = contentDisposition.match(/filename[^;=\n]*=(['"]?)([^'"\n]+)\1/);
+    if (match?.[2]) filename = match[2];
   }
 
   // Buat blob URL dan trigger download
@@ -50,7 +62,9 @@ export async function exportReport(params = {}) {
   link.click();
 
   // Cleanup
-  link.parentNode.removeChild(link);
+  if (link.parentNode) {
+    link.parentNode.removeChild(link);
+  }
   window.URL.revokeObjectURL(url);
 
   return { success: true, filename };

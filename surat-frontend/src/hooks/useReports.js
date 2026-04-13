@@ -10,7 +10,7 @@ import { getSummary, exportReport } from '../api/reports.api';
  *   summary       — object data ringkasan (total, breakdown per klasifikasi, per divisi)
  *   loading       — boolean, sedang fetch summary
  *   error         — string | null, error message
- *   exporting     — 'excel' | 'pdf' | null, format yang sedang diexport
+ *   exporting     — 'csv' | 'pdf' | null, format yang sedang diexport
  *   exportError   — string | null, error saat export
  *   fetchSummary  — function(params) untuk fetch data
  *   handleExport  — function(format, params) untuk export file
@@ -44,7 +44,7 @@ export function useReports() {
   }, []);
 
   /**
-   * Export laporan sebagai file (Excel/PDF)
+   * Export laporan sebagai file (CSV)
    * Menggunakan blob response dari API, trigger download otomatis
    */
   const handleExport = useCallback(async (format, params = {}) => {

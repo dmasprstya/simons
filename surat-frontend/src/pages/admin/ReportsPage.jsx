@@ -12,7 +12,7 @@ import EmptyState from '../../components/ui/EmptyState';
  * Fitur:
  * - Summary cards: total surat, breakdown per klasifikasi, breakdown per divisi
  * - Filter: date range, ClassificationPicker, divisi
- * - Export: Excel & PDF via blob download
+ * - Export: CSV & PDF via blob download
  * - Loading state saat export: disable tombol + teks "Menyiapkan file..."
  */
 
@@ -273,12 +273,12 @@ export default function ReportsPage() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => onExport('excel')}
-            loading={exporting === 'excel'}
+            onClick={() => onExport('csv')}
+            loading={exporting === 'csv'}
             disabled={!!exporting}
             className="!bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
           >
-            {exporting === 'excel' ? 'Menyiapkan...' : '📊 Export Excel'}
+            {exporting === 'csv' ? 'Menyiapkan...' : '📥 Export CSV'}
           </Button>
           <Button
             variant="secondary"

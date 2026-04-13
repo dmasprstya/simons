@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\LetterNumber;
+use App\Services\AuditService;
 use App\Services\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
 {
@@ -17,6 +18,7 @@ class ReportController extends Controller
      */
     public function __construct(
         private readonly ExportService $exportService,
+        private readonly AuditService $auditService,
     ) {}
 
     /**
@@ -40,6 +42,11 @@ class ReportController extends Controller
      */
     public function summary(Request $request): JsonResponse
     {
+        $driver = DB::connection()->getDriverName();
+        $classificationExpr = $driver === 'sqlite'
+            ? "(letter_classifications.code || ' — ' || letter_classifications.name)"
+            : "CONCAT(letter_classifications.code, ' — ', letter_classifications.name)";
+
         // Terima kedua format parameter (date_from ATAU issued_date_from)
         // agar backward-compatible dan sesuai frontend
         $dateFrom = $request->input('date_from', $request->input('issued_date_from'));
@@ -103,7 +110,7 @@ class ReportController extends Controller
         // 3) Breakdown per klasifikasi — { classification, count }
         $perClassification = $baseQuery()
             ->select([
-                DB::raw("(letter_classifications.code || ' — ' || letter_classifications.name) as classification"),
+                DB::raw($classificationExpr . ' as classification'),
                 DB::raw('COUNT(*) as count'),
             ])
             ->groupBy('letter_classifications.code', 'letter_classifications.name')
@@ -137,7 +144,7 @@ class ReportController extends Controller
      * Stub response — ExportService belum diimplementasi.
      * Menerima parameter yang sama dengan summary().
      */
-    public function export(Request $request): JsonResponse
+    public function export(Request $request): Response|JsonResponse
     {
         $request->validate([
             'date_from'         => 'nullable|date',
@@ -145,20 +152,89 @@ class ReportController extends Controller
             'classification_id' => 'nullable|integer|exists:letter_classifications,id',
             'division'          => 'nullable|string|max:255',
             'status'            => 'nullable|in:active,voided',
-            'format'            => 'nullable|in:excel,pdf',
+            'format'            => 'nullable|in:csv,pdf,json',
+        ]);
+        $filters = $request->only([
+            'date_from',
+            'date_to',
+            'classification_id',
+            'division',
+            'status',
+        ]);
+        $format = $request->input('format', 'csv');
+        $rows = $this->exportService->getReportRows($filters);
+
+        $this->auditService->log(
+            action: 'report.exported',
+            tableName: 'letter_numbers',
+            recordId: 0,
+            oldData: null,
+            newData: [
+                'format' => $format,
+                'filters' => $filters,
+                'total_rows' => $rows->count(),
+            ]
+        );
+
+        if ($format === 'json') {
+            return response()->json([
+                'data' => $rows,
+                'message' => 'Export laporan (JSON) berhasil dibuat.',
+            ]);
+        }
+
+        if ($format === 'pdf') {
+            $filename = $this->exportService->buildFilename('pdf');
+            $pdfContent = $this->exportService->buildPdfContent($rows, $filters);
+
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Length' => (string) strlen($pdfContent),
+                'Cache-Control' => 'no-store, no-cache',
+                'Pragma' => 'public',
+            ]);
+        }
+
+        $filename = $this->exportService->buildFilename('csv');
+
+        $csvHandle = fopen('php://temp', 'r+');
+        fputcsv($csvHandle, [
+            'Tanggal',
+            'Nomor Format',
+            'Nomor Urut',
+            'Klasifikasi',
+            'Perihal',
+            'Tujuan',
+            'Sifat Surat',
+            'Pemohon',
+            'Divisi',
+            'Status',
         ]);
 
-        // Stub: ExportService belum diimplementasi — kembalikan pesan placeholder
-        // TODO: Uncomment saat ExportService sudah diimplementasi dengan maatwebsite/excel
-        // $path = $this->exportService->exportExcel($request->all());
-        // return response()->json([
-        //     'data'    => ['url' => Storage::url($path)],
-        //     'message' => 'Export berhasil.',
-        // ]);
+        foreach ($rows as $row) {
+            fputcsv($csvHandle, [
+                $row->issued_date,
+                $row->formatted_number ?: $row->number,
+                $row->number,
+                $row->classification,
+                $row->subject,
+                $row->destination,
+                $row->sifat_surat,
+                $row->requested_by,
+                $row->division,
+                $row->status,
+            ]);
+        }
 
-        return response()->json([
-            'data'    => ['url' => null],
-            'message' => 'Fitur export belum tersedia. ExportService masih dalam tahap implementasi.',
+        rewind($csvHandle);
+        $csv = stream_get_contents($csvHandle) ?: '';
+        fclose($csvHandle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-store, no-cache',
         ]);
     }
 }
