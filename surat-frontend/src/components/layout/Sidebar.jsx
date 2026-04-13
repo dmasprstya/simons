@@ -67,6 +67,10 @@ function SidebarLink({ to, label, icon: Icon, collapsed }) {
 export default function Sidebar({ isOpen, onClose, collapsed = false }) {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
+  const divisionLabel =
+    typeof user?.division === 'string'
+      ? user.division
+      : user?.division?.title || user?.division?.name || '-';
 
   return (
     <>
@@ -158,6 +162,9 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
             {!collapsed && (
               <div className="min-w-0">
                 <p className="text-xs font-medium text-white truncate">{user?.name || 'User'}</p>
+                <p className="text-[10px] text-white/40 truncate mt-0.5">
+                  {divisionLabel}
+                </p>
                 {/* Role badge */}
                 <span className={`inline-block text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded mt-0.5
                   ${user?.role === 'admin' ? 'bg-amber-500/20 text-amber-400' : 'bg-[#2A7FD4]/20 text-[#2A7FD4]'}`}>
@@ -184,27 +191,6 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
             <UserCircleIcon className="h-5 w-5 shrink-0" />
             {!collapsed && <span className="truncate">Profil Saya</span>}
           </NavLink>
-        </div>
-
-        {/* Footer — User info (divisi) */}
-        <div className={`px-3 py-3 border-t border-white/10 ${collapsed ? 'lg:flex lg:justify-center' : ''}`}>
-          <div className={`flex items-center gap-2 ${collapsed ? 'lg:justify-center' : ''}`}>
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#2A7FD4] text-white text-xs font-semibold shrink-0">
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-            {!collapsed && (
-              <div className="min-w-0 lg:block">
-                <p className="text-xs font-medium text-white truncate">{user?.name || 'User'}</p>
-                <p className="text-[10px] text-white/40 truncate">{user?.division?.name || user?.role || '-'}</p>
-              </div>
-            )}
-            {collapsed && (
-              <div className="min-w-0 block lg:hidden">
-                <p className="text-xs font-medium text-white truncate">{user?.name || 'User'}</p>
-                <p className="text-[10px] text-white/40 truncate">{user?.division?.name || user?.role || '-'}</p>
-              </div>
-            )}
-          </div>
         </div>
       </aside>
     </>

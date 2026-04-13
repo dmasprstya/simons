@@ -52,6 +52,7 @@ export default function UsersPage() {
   // === Form state (tambah & edit) ===
   const [formData, setFormData] = useState({
     name: '',
+    nip: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -105,6 +106,10 @@ export default function UsersPage() {
       errors.name = 'Nama wajib diisi.';
     }
 
+    if (!formData.nip.trim()) {
+      errors.nip = 'NIP wajib diisi.';
+    }
+
     if (!formData.email.trim()) {
       errors.email = 'Email wajib diisi.';
     } else {
@@ -140,6 +145,7 @@ export default function UsersPage() {
   const openAddModal = () => {
     setFormData({
       name: '',
+      nip: '',
       email: '',
       password: '',
       password_confirmation: '',
@@ -158,6 +164,7 @@ export default function UsersPage() {
     try {
       await handleCreateUser({
         name: formData.name.trim(),
+        nip: formData.nip.trim(),
         email: formData.email.trim(),
         password: formData.password,
         password_confirmation: formData.password_confirmation,
@@ -176,6 +183,7 @@ export default function UsersPage() {
     setEditingUser(user);
     setFormData({
       name: user.name || '',
+      nip: user.nip || '',
       email: user.email || '',
       password: '',
       password_confirmation: '',
@@ -195,6 +203,7 @@ export default function UsersPage() {
     try {
       await handleUpdateUser(editingUser.id, {
         name: formData.name.trim(),
+        nip: formData.nip.trim(),
         email: formData.email.trim(),
         division: formData.division.trim(),
         role: formData.role,
@@ -252,6 +261,13 @@ export default function UsersPage() {
     {
       key: 'email',
       label: 'Email',
+      render: (value) => (
+        <span className="text-xs text-[#64748B]">{value || '-'}</span>
+      ),
+    },
+    {
+      key: 'nip',
+      label: 'NIP',
       render: (value) => (
         <span className="text-xs text-[#64748B]">{value || '-'}</span>
       ),
@@ -340,6 +356,23 @@ export default function UsersPage() {
         />
         {formErrors.name && (
           <p className="mt-1 text-xs text-red-600">{formErrors.name}</p>
+        )}
+      </div>
+
+      {/* Email */}
+      <div>
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+          NIP <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.nip}
+          onChange={handleInputChange('nip')}
+          placeholder="Masukkan NIP"
+          className={formErrors.nip ? inputErrorClass : inputBaseClass}
+        />
+        {formErrors.nip && (
+          <p className="mt-1 text-xs text-red-600">{formErrors.nip}</p>
         )}
       </div>
 

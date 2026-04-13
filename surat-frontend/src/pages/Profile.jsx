@@ -70,6 +70,7 @@ export default function ProfilePage() {
   // ── Section 2: Edit Info ──
   const [name, setName] = useState('');
   const [division, setDivision] = useState('');
+  const [nip, setNip] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [infoSaving, setInfoSaving] = useState(false);
@@ -94,6 +95,7 @@ export default function ProfilePage() {
         if (!cancelled) {
           setName(data.name ?? '');
           setDivision(data.division ?? '');
+          setNip(data.nip ?? '');
           setEmail(data.email ?? '');
           setRole(data.role ?? '');
           setCurrentPhoto(data.profile_photo ?? null);
@@ -103,6 +105,7 @@ export default function ProfilePage() {
         if (!cancelled) {
           setName(user?.name ?? '');
           setDivision(user?.division ?? '');
+          setNip(user?.nip ?? '');
           setEmail(user?.email ?? '');
           setRole(user?.role ?? '');
           setCurrentPhoto(user?.profile_photo ?? null);
@@ -370,6 +373,14 @@ export default function ProfilePage() {
                 onChange={(e) => setDivision(e.target.value)}
                 className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#2A7FD4] bg-white transition"
               />
+            </div>
+
+            {/* Email — read-only */}
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">NIP</p>
+              <p className="text-sm text-[#64748B] px-3 py-2 bg-[#F7F9FC] rounded-lg border border-[#E2E8F0]">
+                {nip || '-'}
+              </p>
             </div>
 
             {/* Email — read-only */}

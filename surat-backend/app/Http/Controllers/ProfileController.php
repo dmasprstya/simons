@@ -21,7 +21,7 @@ class ProfileController extends Controller
 
     /**
      * Update nama dan divisi user yang sedang login.
-     * Email dan role tidak bisa diubah sendiri.
+     * Email, role, dan NIP tidak bisa diubah sendiri.
      */
     public function update(Request $request): JsonResponse
     {
@@ -45,7 +45,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'new_password'     => 'required|string|min:8|confirmed',
+            'password'         => 'required|string|min:8|confirmed',
         ]);
 
         if (! Hash::check($request->current_password, Auth::user()->password)) {
@@ -55,7 +55,7 @@ class ProfileController extends Controller
         }
 
         Auth::user()->update([
-            'password' => Hash::make($request->new_password),
+            'password' => Hash::make($request->password),
         ]);
 
         return response()->json([

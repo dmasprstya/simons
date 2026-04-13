@@ -41,6 +41,8 @@ export default function DashboardPage() {
   const [allRecentLetters, setAllRecentLetters] = useState([]);
   const [allRecentLoading, setAllRecentLoading] = useState(false);
   const [allRecentError, setAllRecentError] = useState(null);
+  const latestTakenLetter = allRecentLetters[0] ?? null;
+  const latestTakenNumber = latestTakenLetter?.number ?? '-';
 
   // Format tanggal hari ini dalam bahasa Indonesia
   const today = new Date().toLocaleDateString('id-ID', {
@@ -220,6 +222,16 @@ export default function DashboardPage() {
           </h1>
           <p className="text-white/50 text-sm mt-0.5">{today}</p>
         </div>
+        {!allRecentLoading && !allRecentError && (
+          <div className="text-left sm:text-right">
+            <p className="text-white/70 text-xs uppercase tracking-wide">
+              Nomor Terakhir Diambil
+            </p>
+            <p className="text-white text-3xl sm:text-4xl font-bold font-mono leading-tight">
+              {latestTakenNumber}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Stat cards — 3 kolom placeholder (jika ada sequenceData) */}
