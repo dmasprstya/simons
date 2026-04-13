@@ -12,7 +12,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
  * ClassificationsPage — Halaman admin: kelola klasifikasi dalam format tree.
  *
  * Fitur:
- * - Tree view: Level 1 → expand Level 2 → expand Level 3
+ * - Tree view: Level 1 → expand Level 2 → expand Level 3 → expand Level 4
  * - Kolom per baris: Kode | Nama | Type | Level | Status | Aksi
  * - Aksi: Toggle is_active, Tambah Child, Edit
  * - Filter: type (substantif|fasilitatif), status (aktif|nonaktif)
@@ -38,8 +38,8 @@ function TreeRow({
   const children = childrenMap[item.id] || [];
   const hasChildren = item.children_count > 0 || children.length > 0;
 
-  // Level 3 tidak bisa punya child lagi
-  const canAddChild = (item.level || level) < 3;
+  // Level 4 tidak bisa punya child lagi
+  const canAddChild = (item.level || level) < 4;
 
   // Indentasi berdasarkan level
   const paddingLeft = `${(level - 1) * 32 + 16}px`;
@@ -77,7 +77,9 @@ function TreeRow({
                   ? 'bg-[#0B1F3A]'
                   : level === 2
                   ? 'bg-[#2A7FD4]'
-                  : 'bg-[#94A3B8]'
+                  : level === 3
+                  ? 'bg-[#94A3B8]'
+                  : 'bg-[#64748B]'
               }`}
             />
 
@@ -410,7 +412,7 @@ export default function ClassificationsPage() {
           type="text"
           value={formData.code}
           onChange={handleInputChange('code')}
-          placeholder="Contoh: 100, 100.1, 100.1.1"
+          placeholder="Contoh: 100, 100.1, 100.1.1, 100.1.1.1"
           className={formErrors.code
             ? inputBaseClass.replace('border-[#E2E8F0]', 'border-red-300').replace('bg-[#F7F9FC]', 'bg-[#FEF2F2]')
             : inputBaseClass
@@ -478,7 +480,7 @@ export default function ClassificationsPage() {
         <div>
           <h1 className="text-base font-semibold text-[#0B1F3A]">Klasifikasi Surat</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">
-            Kelola hierarki klasifikasi surat dalam format tree (Level 1 → 2 → 3).
+            Kelola hierarki klasifikasi surat dalam format tree (Level 1 → 2 → 3 → 4).
           </p>
         </div>
 
@@ -625,6 +627,10 @@ export default function ClassificationsPage() {
         <div className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full bg-[#94A3B8]" />
           Level 3
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-2 w-2 rounded-full bg-[#64748B]" />
+          Level 4
         </div>
       </div>
 

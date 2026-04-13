@@ -22,7 +22,7 @@ class UpdateLetterClassificationRequest extends StoreLetterClassificationRequest
             'name'      => 'required|string|max:255',
             'type'      => 'required|in:substantif,fasilitatif',
             'parent_id' => 'nullable|exists:letter_classifications,id',
-            'level'     => 'required|integer|between:1,3',
+            'level'     => 'required|integer|between:1,4',
         ];
     }
 }

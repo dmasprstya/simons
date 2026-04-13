@@ -59,7 +59,7 @@ export default function TakeNumberPage() {
     const errors = {};
 
     if (!classificationId) {
-      errors.classification = 'Klasifikasi wajib dipilih (sampai Level 3).';
+      errors.classification = 'Klasifikasi wajib dipilih.';
     }
     if (!subject.trim()) {
       errors.subject = 'Perihal wajib diisi.';

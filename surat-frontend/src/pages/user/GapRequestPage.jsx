@@ -56,7 +56,7 @@ export default function GapRequestPage() {
     const errors = {};
 
     if (!classificationId) {
-      errors.classification = 'Klasifikasi wajib dipilih (sampai Level 3).';
+      errors.classification = 'Klasifikasi wajib dipilih.';
     }
     if (!gapDate) {
       errors.gapDate = 'Tanggal gap wajib diisi.';

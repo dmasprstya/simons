@@ -18,7 +18,7 @@ class StoreLetterClassificationRequest extends FormRequest
 
     /**
      * Aturan validasi untuk membuat klasifikasi surat baru.
-     * Hierarki maksimal 3 level: level 1 (root), level 2 (sub), level 3 (leaf).
+     * Hierarki maksimal 4 level: level 1 (root) sampai level 4.
      *
      * @return array<string, mixed>
      */
@@ -29,7 +29,7 @@ class StoreLetterClassificationRequest extends FormRequest
             'name'      => 'required|string|max:255',
             'type'      => 'required|in:substantif,fasilitatif',
             'parent_id' => 'nullable|exists:letter_classifications,id',
-            'level'     => 'required|integer|between:1,3',
+            'level'     => 'required|integer|between:1,4',
         ];
     }
 
@@ -37,7 +37,7 @@ class StoreLetterClassificationRequest extends FormRequest
      * Validasi tambahan setelah rules() lolos:
      * 1. Jika parent_id diisi → validasi bahwa parent->level === level - 1
      *    (tidak boleh skip level hierarki)
-     * 2. Jika level === 3 → node ini otomatis menjadi leaf, tidak perlu diset manual
+     * 2. Level harus konsisten dengan parent (tidak boleh loncat level)
      *
      * @param Validator $validator
      */
@@ -91,7 +91,7 @@ class StoreLetterClassificationRequest extends FormRequest
             'parent_id.exists'   => 'Parent klasifikasi tidak ditemukan.',
             'level.required'     => 'Level klasifikasi wajib diisi.',
             'level.integer'      => 'Level klasifikasi harus berupa bilangan bulat.',
-            'level.between'      => 'Level klasifikasi harus antara 1 sampai 3.',
+            'level.between'      => 'Level klasifikasi harus antara 1 sampai 4.',
         ];
     }
 }
