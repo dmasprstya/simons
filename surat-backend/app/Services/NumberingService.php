@@ -4,10 +4,9 @@ namespace App\Services;
 
 use App\Exceptions\GapAlreadyUsedException;
 use App\Exceptions\NumberingLockException;
-use App\Models\DailySequence;
 use App\Models\GapRequest;
+use App\Models\GlobalSequence;
 use App\Models\LetterNumber;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -32,7 +31,7 @@ class NumberingService
      *   gap_start   = aktif_end + 1
      *   gap_end     = gap_start + gap_size - 1
      *
-     * @param  int  $nextStart   Nilai next_start dari DailySequence (awal blok 0)
+     * @param  int  $nextStart   Nilai next_start dari GlobalSequence (awal blok 0)
      * @param  int  $gapSize     Jumlah nomor per zona (aktif = gap = gapSize)
      * @param  int  $blockIndex  Indeks blok (0-based)
      * @return array{aktifStart: int, aktifEnd: int, gapStart: int, gapEnd: int}
@@ -69,46 +68,10 @@ class NumberingService
         return $query;
     }
 
-    // ─── Sequence Management ─────────────────────────────────────────────────
-
-    /**
-     * Lazy-create: buat row sequence hanya saat pertama kali dibutuhkan.
-     * Jika sequence untuk tanggal + klasifikasi sudah ada, kembalikan yang lama.
-     *
-     * Implementasi menggunakan INSERT IGNORE + SELECT (via updateOrInsert + find)
-     * untuk menghindari UNIQUE constraint error di SQLite saat dipanggil dari
-     * dalam DB::transaction (savepoint) yang menyebabkan firstOrCreate gagal.
-     *
-     * @param  int     $classificationId
-     * @param  Carbon  $date
-     * @return DailySequence
-     */
-    public function getOrCreateSequence(int $classificationId, Carbon $date): DailySequence
-    {
-        $dateStr = $date->toDateString(); // format 'Y-m-d' konsisten
-
-        // Lazy-create: buat row sequence hanya saat pertama kali dibutuhkan.
-        // insertOrIgnore: hanya INSERT jika row belum ada -- jika sudah ada, tidak ada update.
-        // Ini penting: last_number tidak boleh di-reset ke 0 jika sequence sudah ada.
-        DB::table('daily_sequences')->insertOrIgnore([
-            'date'              => $dateStr,
-            'classification_id' => $classificationId,
-            'last_number'       => 0,
-            'gap_size'          => config('numbering.default_gap_size'),
-            'next_start'        => config('numbering.default_start'),
-            'updated_at'        => now(),
-        ]);
-
-        // Ambil model Eloquent yang sudah ada (dijamin ada setelah insertOrIgnore)
-        return DailySequence::where('date', $dateStr)
-            ->where('classification_id', $classificationId)
-            ->firstOrFail();
-    }
-
     // ─── Acquire Number ──────────────────────────────────────────────────────
 
     /**
-     * Mengambil (acquire) nomor surat berikutnya untuk klasifikasi dan tanggal tertentu.
+     * Mengambil (acquire) nomor surat berikutnya dari GlobalSequence.
      *
      * Menggunakan pessimistic locking (SELECT ... FOR UPDATE) untuk mencegah
      * race condition saat multiple request tiba bersamaan.
@@ -123,35 +86,23 @@ class NumberingService
      *   Jika kandidat nomor jatuh di zona gap (posInBlock >= gap_size),
      *   langsung lompat ke aktif_start blok berikutnya.
      *
-     * @param  int     $classificationId
-     * @param  Carbon  $date
      * @return int  Nomor surat yang berhasil di-acquire (selalu dalam zona aktif)
      *
      * @throws NumberingLockException  Jika terjadi deadlock atau lock timeout
      */
-    public function acquireNumber(int $classificationId, Carbon $date): int
+    public function acquireNumber(): int
     {
-        // Pastikan sequence sudah ada SEBELUM masuk transaksi locking.
-        // getOrCreateSequence menggunakan updateOrInsert (idempotent) yang
-        // aman dipanggil di luar transaksi utama.
-        $sequence = $this->getOrCreateSequence($classificationId, $date);
-        $sequenceId = $sequence->id;
-
         $attempts    = 0;
         $maxAttempts = 3;
 
         while (true) {
             try {
-                return DB::transaction(function () use ($classificationId, $date, $sequenceId) {
-                    // Query by primary key -- lebih reliable dari where('date',...) di SQLite
-                    // Gunakan ::query()->where() agar withLock() menerima Builder yang eksplisit
-                    $seq = $this->withLock(
-                        DailySequence::query()->where('id', $sequenceId)
-                    )->first();
+                return DB::transaction(function () {
+                    // Lock GlobalSequence row tunggal (id=1)
+                    $seq = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
 
                     if (!$seq) {
-                        // Tidak seharusnya terjadi -- sequence sudah dibuat sebelum transaksi
-                        throw new NumberingLockException("Sequence ID={$sequenceId} tidak dapat di-load.");
+                        throw new NumberingLockException("GlobalSequence tidak ditemukan.");
                     }
 
                     // Hitung nomor kandidat berikutnya berdasarkan last_number yang tersimpan
@@ -171,10 +122,7 @@ class NumberingService
                     }
 
                     // Verifikasi nomor belum dipakai (guard terhadap race condition residual)
-                    $alreadyUsed = LetterNumber::where('classification_id', $classificationId)
-                        ->where('issued_date', $date->toDateString())
-                        ->where('number', $candidate)
-                        ->exists();
+                    $alreadyUsed = LetterNumber::where('number', $candidate)->exists();
 
                     if ($alreadyUsed) {
                         throw new NumberingLockException("Nomor {$candidate} sudah digunakan.");
@@ -212,24 +160,17 @@ class NumberingService
      * @param  GapRequest  $gapRequest  GapRequest dengan status 'approved'
      * @return LetterNumber  Record LetterNumber yang baru dibuat
      *
-     * @throws \RuntimeException        Jika sequence tidak ditemukan
+     * @throws \RuntimeException        Jika GlobalSequence tidak ditemukan
      * @throws GapAlreadyUsedException  Jika nomor bukan zona gap atau sudah diterbitkan
      */
     public function releaseGapNumber(GapRequest $gapRequest): LetterNumber
     {
         return DB::transaction(function () use ($gapRequest) {
-            // Cast ke Carbon eksplisit agar IDE mengenali toDateString()
-            $gapDate  = Carbon::parse($gapRequest->gap_date);
-            $dateStr  = $gapDate->toDateString();
-            // Gunakan ::query()->where() agar withLock() menerima Builder yang eksplisit
-            $sequence = $this->withLock(
-                DailySequence::query()
-                    ->where('date', $dateStr)
-                    ->where('classification_id', $gapRequest->classification_id)
-            )->first();
+            // Lock GlobalSequence row tunggal (id=1)
+            $sequence = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
 
             if (!$sequence) {
-                throw new \RuntimeException("Sequence tidak ditemukan untuk tanggal dan klasifikasi ini.");
+                throw new \RuntimeException("GlobalSequence tidak ditemukan.");
             }
 
             // Hitung apakah nomor target benar-benar di zona gap
@@ -243,10 +184,7 @@ class NumberingService
             }
 
             // Cek nomor belum pernah diterbitkan sebagai LetterNumber
-            $exists = LetterNumber::where('classification_id', $gapRequest->classification_id)
-                ->where('issued_date', $dateStr)
-                ->where('number', $gapRequest->number)
-                ->exists();
+            $exists = LetterNumber::where('number', $gapRequest->number)->exists();
 
             if ($exists) {
                 throw new GapAlreadyUsedException("Nomor gap {$gapRequest->number} sudah diterbitkan.");
@@ -271,41 +209,53 @@ class NumberingService
         });
     }
 
-    // ─── Prepare Next Day ────────────────────────────────────────────────────
+    // ─── Sequence Info ───────────────────────────────────────────────────────
 
     /**
-     * Menyiapkan sequence untuk hari berikutnya berdasarkan sequence hari ini.
+     * Mengembalikan informasi state GlobalSequence saat ini beserta detail blok aktif.
      *
-     * Logika: temukan blok terakhir yang dipakai hari ini, lalu set next_start
-     * hari berikutnya ke awal blok setelahnya (melewati sisa zona aktif + zona gap
-     * yang belum terpakai hari ini). Ini memastikan nomor tidak overlap antar hari.
+     * Digunakan oleh admin untuk memantau posisi nomor surat global:
+     *   - Nomor berikutnya yang akan diterbitkan
+     *   - Rentang zona aktif dan zona gap blok saat ini
      *
-     * Contoh: jika hari ini pakai nomor 1000-1005 (blok 0, gap_size=10),
-     *   currentBlock = 0
-     *   next_start besok = 1000 + (0+1) * 20 = 1020
+     * @return array<string, mixed>
+     */
+    public function getSequenceInfo(): array
+    {
+        $seq = GlobalSequence::getInstance();
+        $blockSize  = $seq->gap_size * 2;
+        $current    = $seq->next_start + $seq->last_number;
+        $blockIndex = (int) floor(($current - $seq->next_start) / $blockSize);
+        $block      = $this->calculateBlock($seq->next_start, $seq->gap_size, $blockIndex);
+
+        return [
+            'next_number'         => $current,
+            'gap_size'            => $seq->gap_size,
+            'next_start'          => $seq->next_start,
+            'last_number'         => $seq->last_number,
+            'current_block_aktif' => $block['aktifStart'] . '–' . $block['aktifEnd'],
+            'current_block_gap'   => $block['gapStart'] . '–' . $block['gapEnd'],
+            'updated_at'          => $seq->updated_at,
+        ];
+    }
+
+    // ─── Update Gap Size ─────────────────────────────────────────────────────
+
+    /**
+     * Memperbarui ukuran zona gap pada GlobalSequence.
      *
-     * @param  DailySequence  $sequence  Sequence hari ini yang akan dilanjutkan
+     * Perubahan gap_size memengaruhi kalkulasi blok berikutnya — tidak berlaku
+     * retroaktif terhadap nomor yang sudah diterbitkan.
+     *
+     * @param  int  $newGapSize  Ukuran gap baru (jumlah nomor per zona)
      * @return void
      */
-    public function prepareNextDay(DailySequence $sequence): void
+    public function updateGapSize(int $newGapSize): void
     {
-        // Hitung next_start untuk hari berikutnya:
-        // Blok terakhir yang dipakai + 1 blok penuh (aktif + gap)
-        $lastNumber   = $sequence->next_start + $sequence->last_number - 1;
-        $blockSize    = $sequence->gap_size * 2;
-        $currentBlock = (int) floor(($lastNumber - $sequence->next_start) / $blockSize);
-        $nextStart    = $sequence->next_start + ($currentBlock + 1) * $blockSize;
-
-        DailySequence::updateOrCreate(
-            [
-                'date'              => now()->addDay()->toDateString(),
-                'classification_id' => $sequence->classification_id,
-            ],
-            [
-                'last_number' => 0,
-                'gap_size'    => $sequence->gap_size,
-                'next_start'  => $nextStart,
-            ]
-        );
+        DB::transaction(function () use ($newGapSize) {
+            $seq           = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
+            $seq->gap_size = $newGapSize;
+            $seq->save();
+        });
     }
 }

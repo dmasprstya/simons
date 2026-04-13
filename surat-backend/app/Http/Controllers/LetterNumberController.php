@@ -78,10 +78,7 @@ class LetterNumberController extends Controller
     {
         try {
             // Acquire nomor berikutnya dalam zona aktif blok saat ini
-            $number = $this->numberingService->acquireNumber(
-                $request->classification_id,
-                today()
-            );
+            $number = $this->numberingService->acquireNumber();
         } catch (NumberingLockException $e) {
             // Lock timeout atau deadlock melebihi batas retry → 409 Conflict
             return response()->json(['message' => $e->getMessage()], 409);

@@ -29,19 +29,9 @@ class DailySequenceController extends Controller
      */
     public function today(Request $request): JsonResponse
     {
-        $request->validate([
-            'classification_id' => 'required|integer|exists:letter_classifications,id',
-        ]);
-
-        // Lazy-create: buat sequence jika belum ada untuk hari ini
-        $sequence = $this->numberingService->getOrCreateSequence(
-            (int) $request->classification_id,
-            today()
-        );
-
         return response()->json([
-            'data'    => new DailySequenceResource($sequence),
-            'message' => 'Sequence hari ini berhasil diambil.',
+            'data'    => $this->numberingService->getSequenceInfo(),
+            'message' => 'Info sequence global berhasil diambil.',
         ]);
     }
 
@@ -55,33 +45,9 @@ class DailySequenceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = DailySequence::query();
-
-        // Filter rentang tanggal sequence
-        if ($request->filled('date_from')) {
-            $query->where('date', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->where('date', '<=', $request->date_to);
-        }
-
-        // Filter berdasarkan klasifikasi
-        if ($request->filled('classification_id')) {
-            $query->where('classification_id', $request->classification_id);
-        }
-
-        $sequences = $query->orderByDesc('date')->paginate(30);
-
         return response()->json([
-            'data'    => DailySequenceResource::collection($sequences),
-            'message' => 'Daftar sequence berhasil diambil.',
-            'meta'    => $sequences->toArray()['meta'] ?? [
-                'current_page' => $sequences->currentPage(),
-                'last_page'    => $sequences->lastPage(),
-                'per_page'     => $sequences->perPage(),
-                'total'        => $sequences->total(),
-            ],
+            'data'    => $this->numberingService->getSequenceInfo(),
+            'message' => 'Info sequence global berhasil diambil.',
         ]);
     }
 
@@ -98,35 +64,10 @@ class DailySequenceController extends Controller
      */
     public function updateGap(UpdateGapSizeRequest $request): JsonResponse
     {
-        // Gap baru berlaku untuk sequence yang dibuat mulai besok
-        $targetDate       = $request->filled('date') ? $request->date : today()->addDay()->toDateString();
-        $classificationId = $request->filled('classification_id') ? (int) $request->classification_id : null;
-
-        if ($classificationId) {
-            // Update gap_size untuk sequence klasifikasi dan tanggal tertentu
-            DailySequence::updateOrCreate(
-                [
-                    'date'              => $targetDate,
-                    'classification_id' => $classificationId,
-                ],
-                [
-                    'gap_size'    => $request->gap_size,
-                    'last_number' => 0,
-                    'next_start'  => config('numbering.default_start'),
-                ]
-            );
-
-            return response()->json([
-                'message' => "Gap size berhasil diperbarui menjadi {$request->gap_size} untuk sequence {$targetDate}.",
-            ]);
-        }
-
-        // Jika tidak ada classification_id, update semua sequence besok
-        DailySequence::where('date', $targetDate)
-            ->update(['gap_size' => $request->gap_size]);
-
+        $this->numberingService->updateGapSize($request->gap_size);
         return response()->json([
-            'message' => "Gap size berhasil diperbarui menjadi {$request->gap_size} untuk semua sequence pada {$targetDate}.",
+            'data'    => $this->numberingService->getSequenceInfo(),
+            'message' => 'Gap size berhasil diperbarui.',
         ]);
     }
 }
