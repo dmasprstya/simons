@@ -143,8 +143,11 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
 
       {/* Kanan — Status + nama user + tombol keluar */}
       <div className="flex items-center gap-3">
-        {/* Online status dot + name */}
-        <div className="hidden sm:flex items-center gap-2">
+        {/* Online status dot + name — klik navigasi ke /profile */}
+        <Link
+          to="/profile"
+          className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -152,7 +155,7 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
           <span className="text-sm text-[#0B1F3A] font-medium">
             {user?.name || 'User'}
           </span>
-        </div>
+        </Link>
 
         {/* Tombol Logout — border tipis, compact */}
         <button

@@ -31,6 +31,9 @@ import ClassificationsPage from './pages/admin/ClassificationsPage';
 import AuditLogsPage from './pages/admin/AuditLogsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 
+// Profile
+import Profile from './pages/Profile';
+
 // 404
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -77,6 +80,7 @@ function App() {
             <Route path="/letters/take" element={<TakeNumberPage />} />
             <Route path="/letters" element={<MyLettersPage />} />
             <Route path="/gap-requests" element={<GapRequestPage />} />
+            <Route path="/profile" element={<Profile />} />
 
             {/* Admin routes — membutuhkan role admin */}
             <Route element={<AdminRoute />}>
