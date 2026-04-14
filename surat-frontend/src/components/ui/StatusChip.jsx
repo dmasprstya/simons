@@ -15,7 +15,7 @@ import Badge from './Badge';
  */
 
 const statusConfig = {
-  active:   { variant: 'success', label: 'Aktif' },
+  active:   { variant: 'active',  label: 'Active' },
   voided:   { variant: 'danger',  label: 'Dibatalkan' },
   pending:  { variant: 'warning', label: 'Menunggu' },
   approved: { variant: 'success', label: 'Disetujui' },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSequences, updateGap } from '../../api/sequences.api';
+import { getSequences, updateGap, resetSequence } from '../../api/sequences.api';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
@@ -67,6 +67,14 @@ export default function SequenceSettingsPage() {
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(null);
 
+  // === Reset sequence state ===
+  const [resetNextStart, setResetNextStart] = useState(1000);
+  const [resetConfirmText, setResetConfirmText] = useState('');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState(null);
+  const [resetSuccess, setResetSuccess] = useState(null);
+
   // === Tabel sequence state ===
   const [sequences, setSequences] = useState([]);
   const [seqLoading, setSeqLoading] = useState(false);
@@ -99,18 +107,18 @@ export default function SequenceSettingsPage() {
 
       try {
         const response = await getSequences(buildParams(page));
-        setSequences(response.data || []);
+
+        // API mengembalikan satu object GlobalSequence (bukan array/paginated),
+        // bungkus menjadi array agar Table dapat melakukan .map()
+        const raw = response.data;
+        const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        setSequences(arr);
         setSeqMeta(response.meta || null);
 
-        // Jika response pertama punya info gap_size, set sebagai current value
-        if (
-          response.data?.length > 0 &&
-          response.data[0].gap_size &&
-          originalGapSize === 10
-        ) {
-          const currentGap = response.data[0].gap_size;
-          setGapSize(currentGap);
-          setOriginalGapSize(currentGap);
+        // Ambil gap_size dari response untuk sinkronisasi form
+        if (raw?.gap_size && originalGapSize === 10) {
+          setGapSize(raw.gap_size);
+          setOriginalGapSize(raw.gap_size);
         }
       } catch (err) {
         const message =
@@ -149,6 +157,42 @@ export default function SequenceSettingsPage() {
     setCurrentPage(1);
   };
 
+  // Handle buka dialog konfirmasi reset
+  const handleOpenReset = () => {
+    if (!resetNextStart || resetNextStart < 1) {
+      setResetError('Nomor awal harus minimal 1.');
+      return;
+    }
+    setResetError(null);
+    setResetConfirmText('');
+    setShowResetConfirm(true);
+  };
+
+  // Handle eksekusi reset setelah konfirmasi
+  const handleConfirmReset = async () => {
+    if (resetConfirmText !== 'RESET') return;
+
+    setResetting(true);
+    setResetError(null);
+    setResetSuccess(null);
+
+    try {
+      const payload = { next_start: resetNextStart };
+
+      await resetSequence(payload);
+      setShowResetConfirm(false);
+      setResetConfirmText('');
+      setResetSuccess(`Sequence berhasil direset. Penomoran dimulai dari nomor ${resetNextStart}.`);
+
+      fetchSequences(1);
+      setTimeout(() => setResetSuccess(null), 6000);
+    } catch (err) {
+      setResetError(err.response?.data?.message || 'Gagal mereset sequence. Silakan coba lagi.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   // Handle simpan gap size
   const handleSaveGap = async () => {
     // Validasi
@@ -179,13 +223,13 @@ export default function SequenceSettingsPage() {
     }
   };
 
-  // Kolom tabel riwayat sequence
+  // Kolom tabel riwayat sequence (GlobalSequence: last_issued_date, last_number, gap_size, next_start)
   const columns = [
     {
-      key: 'date',
-      label: 'Tanggal',
+      key: 'last_issued_date',
+      label: 'Tanggal Terakhir',
       render: (value) => {
-        if (!value) return '-';
+        if (!value) return <span className="text-xs text-[#94A3B8]">-</span>;
         const date = new Date(value + 'T00:00:00');
         return (
           <span className="text-xs text-[#64748B]">
@@ -197,15 +241,6 @@ export default function SequenceSettingsPage() {
           </span>
         );
       },
-    },
-    {
-      key: 'classification',
-      label: 'Klasifikasi',
-      render: (value) => (
-        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
-          {value?.full_code || value?.code || '-'}
-        </span>
-      ),
     },
     {
       key: 'last_number',
@@ -333,8 +368,110 @@ export default function SequenceSettingsPage() {
           loading={saving}
           disabled={gapSize === originalGapSize}
         >
-          💾 Simpan
+          Simpan
         </Button>
+      </div>
+
+      {/* ==================== BAGIAN TENGAH — Reset Penomoran ==================== */}
+      <div className="bg-white rounded-xl border border-red-100 p-6 space-y-5">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-red-400"></span>
+          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Reset Penomoran</h2>
+        </div>
+
+        {/* Peringatan */}
+        <div className="flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 p-3">
+          <svg className="h-4 w-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <p className="text-xs text-red-700">
+            Aksi ini <strong>tidak dapat dibatalkan</strong>. Zona gap yang sedang berjalan akan diarsipkan, lalu penomoran dimulai ulang dari nomor yang ditentukan.
+          </p>
+        </div>
+
+        {/* Input field */}
+        <div className="max-w-xs">
+          <label htmlFor="reset_next_start" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+            Nomor Awal Baru <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="reset_next_start"
+            type="number"
+            min={1}
+            value={resetNextStart}
+            onChange={(e) => setResetNextStart(parseInt(e.target.value, 10) || '')}
+            disabled={resetting}
+            className={inputBaseClass}
+          />
+        </div>
+
+        {/* Reset error */}
+        {resetError && !showResetConfirm && (
+          <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-xs text-red-700">{resetError}</p>
+          </div>
+        )}
+
+        {/* Reset success */}
+        {resetSuccess && (
+          <div className="flex items-center gap-3 rounded-lg border border-[#065F46]/10 bg-[#ECFDF5] px-4 py-3">
+            <svg className="h-4 w-4 text-[#065F46] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <p className="text-xs text-[#065F46]">{resetSuccess}</p>
+          </div>
+        )}
+
+        {/* Tombol buka konfirmasi */}
+        {!showResetConfirm && (
+          <button
+            id="btn_open_reset_confirm"
+            onClick={handleOpenReset}
+            disabled={resetting || !resetNextStart}
+            className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Reset Penomoran
+          </button>
+        )}
+
+        {/* Dialog konfirmasi inline */}
+        {showResetConfirm && (
+          <div className="rounded-xl border border-red-300 bg-red-50 p-4 space-y-3">
+            <p className="text-xs text-red-800 font-semibold">
+              Ketik <code className="bg-red-100 px-1 py-0.5 rounded font-mono font-bold">RESET</code> untuk mengonfirmasi:
+            </p>
+            <input
+              id="reset_confirm_text"
+              type="text"
+              placeholder="Ketik RESET di sini"
+              value={resetConfirmText}
+              onChange={(e) => setResetConfirmText(e.target.value)}
+              disabled={resetting}
+              className={`${inputBaseClass} border-red-300 focus:border-red-500 focus:ring-red-200`}
+            />
+            {resetError && (
+              <p className="text-xs text-red-700">{resetError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                id="btn_confirm_reset"
+                onClick={handleConfirmReset}
+                disabled={resetConfirmText !== 'RESET' || resetting}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resetting ? 'Mereset...' : '✓ Ya, Reset Sekarang'}
+              </button>
+              <button
+                id="btn_cancel_reset"
+                onClick={() => { setShowResetConfirm(false); setResetError(null); }}
+                disabled={resetting}
+                className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ==================== BAGIAN BAWAH — Tabel Riwayat Sequence ==================== */}

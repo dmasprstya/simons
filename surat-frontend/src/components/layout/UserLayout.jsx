@@ -37,7 +37,7 @@ export default function UserLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta">
       {/* Sidebar — fixed di kiri */}
       <Sidebar
         isOpen={mobileOpen}
@@ -54,12 +54,12 @@ export default function UserLayout() {
       {/* Konten utama — diberikan margin agar tidak tertutup */}
       <main
         className={`
-          pt-[52px] transition-all duration-300
+          pt-[64px] transition-all duration-300
           ml-0
-          ${collapsed ? 'lg:ml-[68px]' : 'lg:ml-[220px]'}
+          ${collapsed ? 'lg:ml-[68px]' : 'lg:ml-[260px]'}
         `}
       >
-        <div className="p-4 md:p-6">
+        <div className="p-10">
           <Outlet />
         </div>
       </main>

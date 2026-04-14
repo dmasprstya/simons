@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DailyGap;
 use App\Models\GapRequest;
 use App\Models\LetterClassification;
 use App\Models\User;
@@ -82,9 +83,18 @@ class GapRequestTest extends TestCase
         $user           = $this->makeUser();
         $classification = $this->makeClassification();
 
+        // Seed DailyGap agar Guard 1 (nomor harus dalam zona gap tercatat) lolos.
+        // Blok 0 zona gap: 1010–1019 (next_start=1000, gap_size=10).
+        DailyGap::create([
+            'date'      => today()->subDay()->toDateString(), // kemarin = hari gap sudah ditutup
+            'gap_start' => 1010,
+            'gap_end'   => 1019,
+        ]);
+
         $response = $this->actingAs($user, 'sanctum')
                          ->postJson('/api/gap-requests', [
                              'classification_id' => $classification->id,
+                             'number'            => 1010, // nomor dalam zona gap yang tercatat
                              'gap_date'          => today()->toDateString(),
                              'reason'            => 'Surat yang sebelumnya hilang perlu diganti dengan nomor cadangan',
                          ]);

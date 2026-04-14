@@ -48,11 +48,11 @@ function SidebarLink({ to, label, icon: Icon, collapsed }) {
       to={to}
       end
       className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 group
+        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group
         ${
           isActive
-            ? 'bg-[#2A7FD4] text-white font-medium shadow-sm shadow-[#2A7FD4]/30'
-            : 'text-white/55 hover:bg-white/10 hover:text-white'
+            ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
+            : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
         }
         ${collapsed ? 'justify-center' : ''}`
       }
@@ -85,38 +85,31 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
 
       <aside
         className={`
-          fixed left-0 top-0 bottom-0 bg-[#0B1F3A] flex flex-col z-50
+          fixed left-0 top-0 bottom-0 bg-white border-r border-slate-100 flex flex-col z-50
           transition-all duration-300 ease-in-out
-          ${collapsed ? 'lg:w-[68px]' : 'lg:w-[220px]'}
-          ${isOpen ? 'w-[220px] translate-x-0' : 'w-[220px] -translate-x-full'}
+          ${collapsed ? 'lg:w-[68px]' : 'lg:w-[260px]'}
+          ${isOpen ? 'w-[260px] translate-x-0' : 'w-[260px] -translate-x-full'}
           lg:translate-x-0
         `}
       >
         {/* Logo / Branding */}
-        <div className={`flex items-center gap-3 px-4 py-5 border-b border-white/10 ${collapsed ? 'lg:justify-center lg:px-2' : ''}`}>
-          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#2A7FD4] text-white font-bold text-sm shrink-0">
+        <div className={`flex items-center gap-3 px-6 py-6 pb-8 ${collapsed ? 'lg:justify-center lg:px-2' : ''}`}>
+          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-blue-600 text-white font-bold text-lg shadow-lg shadow-blue-600/30 shrink-0">
             S
           </div>
           {!collapsed && (
             <div className="lg:block">
-              <h1 className="text-sm font-bold text-white leading-tight">SIMONS</h1>
-              <p className="text-[10px] text-white/40 leading-tight">Penomoran Surat</p>
-            </div>
-          )}
-          {/* Visible only in collapsed state on lg, hide completely */}
-          {collapsed && (
-            <div className="block lg:hidden">
-              <h1 className="text-sm font-bold text-white leading-tight">SIMONS</h1>
-              <p className="text-[10px] text-white/40 leading-tight">Penomoran Surat</p>
+              <h1 className="text-xl font-extrabold text-[#1B2559] tracking-tight leading-tight">SIMONS</h1>
+              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Management System</p>
             </div>
           )}
         </div>
 
         {/* Menu Navigasi */}
-        <nav className="flex-1 overflow-y-auto sidebar-scroll px-3 py-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto sidebar-scroll px-4 pb-4 space-y-1.5 font-plus-jakarta">
           {/* Menu User */}
           {!collapsed && (
-            <p className="px-3 mb-2 text-[10px] font-semibold text-white/30 uppercase tracking-widest">
+            <p className="px-3 mt-4 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">
               Menu Utama
             </p>
           )}
@@ -127,9 +120,9 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
           {/* Menu Admin — tampilkan hanya jika role admin */}
           {isAdmin && (
             <>
-              <div className="my-3 border-t border-white/10" />
+              <div className="my-6 border-t border-slate-100 mx-2" />
               {!collapsed && (
-                <p className="px-3 mb-2 text-[10px] font-semibold text-white/30 uppercase tracking-widest">
+                <p className="px-3 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">
                   Administrasi
                 </p>
               )}
@@ -141,55 +134,45 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
         </nav>
 
         {/* Divider sebelum profil */}
-        <div className="border-t border-white/10" />
-
-        {/* Profile section — avatar, nama, role badge, link ke /profile */}
-        <div className={`px-3 py-3 space-y-2 ${collapsed ? 'lg:flex lg:flex-col lg:items-center' : ''}`}>
+        <div className={`px-4 py-6 border-t border-slate-100 ${collapsed ? 'lg:flex lg:flex-col lg:items-center' : ''}`}>
           {/* Avatar + info */}
-          <div className={`flex items-center gap-2 ${collapsed ? 'lg:justify-center' : ''}`}>
-            {/* Avatar: foto profil jika ada, fallback ke inisial */}
+          <div className={`flex items-center gap-3 mb-4 ${collapsed ? 'lg:justify-center' : ''}`}>
             {user?.profile_photo ? (
               <img
                 src={user.profile_photo}
                 alt="Foto Profil"
-                className="h-8 w-8 rounded-full object-cover shrink-0 ring-2 ring-[#2A7FD4]/60"
+                className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-100 shadow-sm"
               />
             ) : (
-              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#2A7FD4] text-white text-xs font-semibold shrink-0">
+              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-blue-50 text-blue-600 text-sm font-bold shrink-0 border border-blue-100">
                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
             )}
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-medium text-white truncate">{user?.name || 'User'}</p>
-                <p className="text-[10px] text-white/40 truncate mt-0.5">
+                <p className="text-sm font-bold text-[#1B2559] truncate">{user?.name || 'User'}</p>
+                <p className="text-[11px] font-medium text-slate-400 truncate mt-0.5">
                   {divisionLabel}
                 </p>
-                {/* Role badge */}
-                <span className={`inline-block text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded mt-0.5
-                  ${user?.role === 'admin' ? 'bg-amber-500/20 text-amber-400' : 'bg-[#2A7FD4]/20 text-[#2A7FD4]'}`}>
-                  {user?.role || 'user'}
-                </span>
               </div>
             )}
           </div>
 
-          {/* NavLink ke halaman profil */}
           <NavLink
             to="/profile"
             className={({ isActive }) =>
-              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200
               ${
                 isActive
-                  ? 'bg-[#2A7FD4] text-white font-medium shadow-sm shadow-[#2A7FD4]/30'
-                  : 'text-white/55 hover:bg-white/10 hover:text-white'
+                  ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
               }
               ${collapsed ? 'lg:justify-center' : ''}`
             }
             title={collapsed ? 'Profil Saya' : undefined}
           >
             <UserCircleIcon className="h-5 w-5 shrink-0" />
-            {!collapsed && <span className="truncate">Profil Saya</span>}
+            {!collapsed && <span className="truncate font-medium">Profil Saya</span>}
           </NavLink>
         </div>
       </aside>

@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     LetterNumberController,
     DailySequenceController,
     GapRequestController,
+    GapNumberController,
     AuditLogController,
     ReportController
 };
@@ -65,8 +66,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
     Route::prefix('sequences')->group(function (): void {
         // Route statis HARUS didaftarkan sebelum route lainnya
         Route::get('/today', [DailySequenceController::class, 'today']);
-        Route::patch('/gap', [DailySequenceController::class, 'updateGap'])->middleware('role:admin');
-        Route::get('/',      [DailySequenceController::class, 'index'])->middleware('role:admin');
+        Route::patch('/gap',   [DailySequenceController::class, 'updateGap'])->middleware('role:admin');
+        Route::post('/reset',  [DailySequenceController::class, 'reset'])->middleware('role:admin');
+        Route::get('/',        [DailySequenceController::class, 'index'])->middleware('role:admin');
     });
 
     // === GAP REQUESTS ===
@@ -101,5 +103,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::get('/summary', [ReportController::class, 'summary']);
         Route::get('/export',  [ReportController::class, 'export']);
     });
+
+    // === GAP NUMBERS (nomor kosong dari zona gap harian) ===
+    // Tersedia untuk semua user terautentikasi — digunakan saat mengajukan gap request.
+    Route::get('/gap-numbers', [GapNumberController::class, 'index']);
 
 }); // end auth:sanctum + active

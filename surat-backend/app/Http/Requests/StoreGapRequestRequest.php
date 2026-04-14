@@ -30,6 +30,8 @@ class StoreGapRequestRequest extends FormRequest
                     ->where('is_leaf', true)
                     ->where('is_active', true),
             ],
+            // Nomor yang dimohon — harus dari zona gap yang valid (diverifikasi di controller)
+            'number'   => 'required|integer|min:1',
             // after_or_equal:today mencegah pengajuan retroaktif
             'gap_date' => 'required|date|after_or_equal:today',
             'reason'   => 'required|string|min:10|max:1000',
@@ -46,6 +48,9 @@ class StoreGapRequestRequest extends FormRequest
         return [
             'classification_id.required'     => 'Klasifikasi surat wajib dipilih.',
             'classification_id.exists'        => 'Klasifikasi surat tidak valid, tidak aktif, atau bukan node daun.',
+            'number.required'                => 'Nomor gap wajib diisi.',
+            'number.integer'                 => 'Nomor gap harus berupa bilangan bulat.',
+            'number.min'                     => 'Nomor gap harus lebih dari 0.',
             'gap_date.required'              => 'Tanggal gap wajib diisi.',
             'gap_date.date'                  => 'Format tanggal gap tidak valid.',
             'gap_date.after_or_equal'        => 'Tanggal gap tidak boleh di masa lampau.',

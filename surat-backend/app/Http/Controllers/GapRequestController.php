@@ -6,6 +6,7 @@ use App\Exceptions\GapAlreadyUsedException;
 use App\Exceptions\NumberingLockException;
 use App\Http\Requests\StoreGapRequestRequest;
 use App\Http\Resources\GapRequestResource;
+use App\Models\DailyGap;
 use App\Models\GapRequest;
 use App\Services\GapRequestService;
 use Illuminate\Http\JsonResponse;
@@ -49,12 +50,42 @@ class GapRequestController extends Controller
      *
      * User mengajukan permintaan untuk mendapatkan nomor dari zona gap
      * (nomor cadangan). Admin akan mereview dan approve/reject.
+     *
+     * Validasi bisnis tambahan (setelah FormRequest):
+     *   1. Nomor harus berada dalam rentang suatu baris DailyGap yang tercatat
+     *      (artinya nomor berasal dari zona gap blok yang sudah ditutup hari sebelumnya).
+     *   2. Nomor tidak boleh sedang dikunci oleh gap request lain yang masih
+     *      pending atau sudah approved.
      */
     public function store(StoreGapRequestRequest $request): JsonResponse
     {
-        $validated                = $request->validated();
+        $validated = $request->validated();
+        $number    = $validated['number'];
+
+        // Guard 1: nomor harus masuk dalam rentang DailyGap yang tercatat
+        $inGapZone = DailyGap::where('gap_start', '<=', $number)
+            ->where('gap_end', '>=', $number)
+            ->exists();
+
+        if (!$inGapZone) {
+            return response()->json([
+                'message' => 'Nomor bukan bagian dari zona gap manapun.',
+            ], 422);
+        }
+
+        // Guard 2: nomor tidak boleh sedang dikunci oleh request lain
+        $isLocked = GapRequest::where('number', $number)
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+
+        if ($isLocked) {
+            return response()->json([
+                'message' => 'Nomor ini sudah direquest oleh user lain.',
+            ], 422);
+        }
+
         $validated['requested_by'] = Auth::id();
-        $validated['status']      = 'pending';
+        $validated['status']       = 'pending';
 
         $gapRequest = GapRequest::create($validated);
 

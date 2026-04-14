@@ -3,6 +3,7 @@ import { displayLetterNumber } from '../../utils/formatNumber';
 import { useGapRequests } from '../../hooks/useGapRequests';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
+import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
@@ -22,8 +23,10 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
  *   - Sukses: notifikasi + reset form + refresh tabel
  */
 export default function GapRequestPage() {
-  const { requests, loading, error, meta, fetchMyRequests, createRequest, refetch } =
-    useGapRequests();
+  const {
+    requests, loading, error, meta, fetchMyRequests, createRequest, refetch,
+    vacantNumbers, vacantMeta, vacantLoading, vacantError, fetchVacantNumbers,
+  } = useGapRequests();
   const toast = useToast();
 
   // === Form state ===
@@ -39,6 +42,11 @@ export default function GapRequestPage() {
   // === Pagination state ===
   const [currentPage, setCurrentPage] = useState(1);
 
+  // === Nomor Kosong filter state ===
+  const [vacantDateFrom, setVacantDateFrom] = useState('');
+  const [vacantDateTo, setVacantDateTo] = useState('');
+  const [vacantPage, setVacantPage] = useState(null); // null = belum pernah tampil
+
   // Batas karakter alasan
   const REASON_MAX = 1000;
   const REASON_MIN = 10;
@@ -50,6 +58,12 @@ export default function GapRequestPage() {
   useEffect(() => {
     fetchMyRequests({ page: currentPage });
   }, [fetchMyRequests, currentPage]);
+
+  // Fetch nomor kosong saat vacantPage berubah (hanya jika sudah pernah klik Tampilkan)
+  useEffect(() => {
+    if (vacantPage === null) return;
+    fetchVacantNumbers({ date_from: vacantDateFrom, date_to: vacantDateTo, page: vacantPage });
+  }, [vacantPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // === Validasi form ===
   const validate = () => {
@@ -200,21 +214,20 @@ export default function GapRequestPage() {
   `;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-base font-semibold text-[#0B1F3A]">Gap Request</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
+        <h1 className="text-2xl font-bold text-navy">Gap Request</h1>
+        <p className="mt-1 text-sm text-muted">
           Ajukan permintaan nomor surat dari zona gap dan lihat riwayat request Anda.
         </p>
-        <div className="border-b border-[#E2E8F0] mt-4 mb-5" />
       </div>
 
       {/* ==================== BAGIAN ATAS — Form Request Baru ==================== */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Buat Request Baru</h2>
+      <Card className="max-w-2xl mx-auto">
+        <div className="mb-5">
+          <h2 className="text-base font-bold text-navy">Buat Request Baru</h2>
+          <p className="text-xs text-muted mt-0.5">Isi form di bawah untuk mengajukan gap request.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -322,13 +335,107 @@ export default function GapRequestPage() {
             Kirim Request
           </Button>
         </form>
-      </div>
+      </Card>
+
+      {/* ==================== BAGIAN TENGAH — Nomor Kosong Tersedia ==================== */}
+      <Card className="space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-navy">Nomor Kosong Tersedia</h2>
+          <p className="text-xs text-muted mt-0.5">Filter berdasarkan rentang tanggal gap.</p>
+        </div>
+
+        {/* Filter bar */}
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="vacant_date_from" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A]">
+              Dari Tanggal
+            </label>
+            <input
+              id="vacant_date_from"
+              type="date"
+              value={vacantDateFrom}
+              onChange={(e) => setVacantDateFrom(e.target.value)}
+              className={`${inputBaseClass} border-[#E2E8F0] w-auto`}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="vacant_date_to" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A]">
+              Sampai Tanggal
+            </label>
+            <input
+              id="vacant_date_to"
+              type="date"
+              value={vacantDateTo}
+              onChange={(e) => setVacantDateTo(e.target.value)}
+              className={`${inputBaseClass} border-[#E2E8F0] w-auto`}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              // Reset ke page 1; jika vacantPage sudah 1, paksa re-fetch via fetchVacantNumbers langsung
+              if (vacantPage === 1) {
+                fetchVacantNumbers({ date_from: vacantDateFrom, date_to: vacantDateTo, page: 1 });
+              } else {
+                setVacantPage(1);
+              }
+            }}
+          >
+            Tampilkan
+          </Button>
+        </div>
+
+        {/* Error state */}
+        {vacantError && <ErrorMessage error={vacantError} />}
+
+        {/* Tabel nomor kosong */}
+        <Table
+          columns={[
+            {
+              key: 'number',
+              label: 'Nomor',
+              render: (value) => (
+                <span className="font-mono font-semibold text-[#2A7FD4]">{value}</span>
+              ),
+            },
+            {
+              key: 'date',
+              label: 'Tanggal Gap',
+              render: (value) => {
+                if (!value) return '-';
+                const date = new Date(value + 'T00:00:00');
+                return date.toLocaleDateString('id-ID', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                });
+              },
+            },
+            {
+              key: 'gap_start',
+              label: 'Zona Gap',
+              render: (value, row) => (
+                <span className="text-xs text-[#64748B]">{value} – {row.gap_end}</span>
+              ),
+            },
+          ]}
+          data={vacantPage !== null ? vacantNumbers : []}
+          loading={vacantLoading}
+          emptyText="Tidak ada nomor kosong tersedia."
+          emptyIcon="✅"
+        />
+
+        {/* Pagination */}
+        <Pagination meta={vacantMeta} onPageChange={(page) => setVacantPage(page)} />
+      </Card>
 
       {/* ==================== BAGIAN BAWAH — Tabel Riwayat Request ==================== */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Riwayat Request</h2>
+      <Card className="space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-navy">Riwayat Request</h2>
+          <p className="text-xs text-muted mt-0.5">Semua gap request yang pernah Anda ajukan.</p>
         </div>
 
         {/* Error state tabel */}
@@ -345,7 +452,7 @@ export default function GapRequestPage() {
 
         {/* Pagination */}
         <Pagination meta={meta} onPageChange={handlePageChange} />
-      </div>
+      </Card>
     </div>
   );
 }

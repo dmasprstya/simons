@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ResetSequenceRequest;
 use App\Http\Requests\UpdateGapSizeRequest;
-use App\Http\Resources\DailySequenceResource;
-use App\Models\DailySequence;
+use App\Services\AuditService;
 use App\Services\NumberingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DailySequenceController extends Controller
 {
-    /**
-     * Inject NumberingService untuk getOrCreateSequence.
-     */
     public function __construct(
         private readonly NumberingService $numberingService,
+        private readonly AuditService     $auditService,
     ) {}
 
     /**
@@ -29,6 +27,9 @@ class DailySequenceController extends Controller
      */
     public function today(Request $request): JsonResponse
     {
+        // Trigger rollover zona gap jika hari telah berganti tanpa nomor baru diterbitkan
+        $this->numberingService->ensureDayIsCurrent();
+
         return response()->json([
             'data'    => $this->numberingService->getSequenceInfo(),
             'message' => 'Info sequence global berhasil diambil.',
@@ -45,6 +46,9 @@ class DailySequenceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        // Trigger rollover zona gap jika hari telah berganti
+        $this->numberingService->ensureDayIsCurrent();
+
         return response()->json([
             'data'    => $this->numberingService->getSequenceInfo(),
             'message' => 'Info sequence global berhasil diambil.',
@@ -68,6 +72,39 @@ class DailySequenceController extends Controller
         return response()->json([
             'data'    => $this->numberingService->getSequenceInfo(),
             'message' => 'Gap size berhasil diperbarui.',
+        ]);
+    }
+
+    /**
+     * Reset sequence penomoran ke titik awal baru.
+     *
+     * Endpoint: POST /sequences/reset
+     * Middleware: admin only
+     *
+     * Zona gap blok yang sedang berjalan diarsipkan ke daily_gaps sebelum reset.
+     * Aksi ini dicatat di audit_logs.
+     */
+    public function reset(ResetSequenceRequest $request): JsonResponse
+    {
+        // Simpan state lama untuk audit
+        $oldInfo = $this->numberingService->getSequenceInfo();
+
+        $newState = $this->numberingService->resetSequence(
+            nextStart: $request->integer('next_start'),
+        );
+
+        // Catat ke audit_logs — global_sequence id selalu 1
+        $this->auditService->log(
+            action:    'sequence.reset',
+            tableName: 'global_sequence',
+            recordId:  1,
+            oldData:   $oldInfo,
+            newData:   $newState,
+        );
+
+        return response()->json([
+            'data'    => $newState,
+            'message' => 'Sequence berhasil direset. Penomoran akan dimulai dari ' . $newState['next_start'] . '.',
         ]);
     }
 }

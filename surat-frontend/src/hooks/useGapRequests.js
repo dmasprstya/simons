@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { getMyRequests, createRequest as createRequestApi } from '../api/gapRequests.api';
+import { getMyRequests, createRequest as createRequestApi, getVacantNumbers } from '../api/gapRequests.api';
 
 /**
  * useGapRequests — custom hook untuk mengelola data gap request milik user.
@@ -15,6 +15,12 @@ export function useGapRequests() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [meta, setMeta] = useState(null);
+
+  // Vacant Numbers state
+  const [vacantNumbers, setVacantNumbers] = useState([]);
+  const [vacantMeta, setVacantMeta] = useState(null);
+  const [vacantLoading, setVacantLoading] = useState(false);
+  const [vacantError, setVacantError] = useState(null);
 
   // Simpan params terakhir untuk refetch
   const lastParamsRef = useRef({});
@@ -67,6 +73,29 @@ export function useGapRequests() {
     return fetchMyRequests(lastParamsRef.current);
   }, [fetchMyRequests]);
 
+  /**
+   * Fetch daftar nomor gap yang kosong/tersedia
+   * @param {Object} params - { date_from, date_to, page }
+   */
+  const fetchVacantNumbers = useCallback(async (params = {}) => {
+    setVacantLoading(true);
+    setVacantError(null);
+
+    try {
+      const response = await getVacantNumbers(params);
+      setVacantNumbers(response.data || []);
+      setVacantMeta(response.meta || null);
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Gagal memuat daftar nomor gap kosong. Silakan coba lagi.';
+      setVacantError(message);
+      setVacantNumbers([]);
+      setVacantMeta(null);
+    } finally {
+      setVacantLoading(false);
+    }
+  }, []);
+
   return {
     requests,
     loading,
@@ -75,5 +104,10 @@ export function useGapRequests() {
     fetchMyRequests,
     createRequest,
     refetch,
+    vacantNumbers,
+    vacantMeta,
+    vacantLoading,
+    vacantError,
+    fetchVacantNumbers,
   };
 }

@@ -4,6 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int                                  $id
+ * @property int                                  $last_number
+ * @property int                                  $next_start
+ * @property int                                  $gap_size
+ * @property \Illuminate\Support\Carbon|null       $last_issued_date
+ * @property \Illuminate\Support\Carbon|null       $updated_at
+ */
 class GlobalSequence extends Model
 {
     protected $table = 'global_sequence';
@@ -11,14 +19,15 @@ class GlobalSequence extends Model
     const CREATED_AT = null;
     const UPDATED_AT = 'updated_at';
 
-    protected $fillable = ['last_number', 'next_start', 'gap_size'];
+    protected $fillable = ['last_number', 'next_start', 'gap_size', 'last_issued_date'];
 
     protected function casts(): array
     {
         return [
-            'last_number' => 'integer',
-            'next_start'  => 'integer',
-            'gap_size'    => 'integer',
+            'last_number'      => 'integer',
+            'next_start'       => 'integer',
+            'gap_size'         => 'integer',
+            'last_issued_date' => 'date',
         ];
     }
 

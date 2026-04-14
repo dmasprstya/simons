@@ -3,6 +3,7 @@ import { displayLetterNumber } from '../../utils/formatNumber';
 import { useLetters } from '../../hooks/useLetters';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
+import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
@@ -176,17 +177,15 @@ export default function MyLettersPage() {
   `;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-base font-semibold text-[#0B1F3A]">Riwayat Surat</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
-          Daftar seluruh surat yang pernah Anda ambil.
-        </p>
+        <h1 className="text-2xl font-bold text-navy">Riwayat Surat</h1>
+        <p className="mt-1 text-sm text-muted">Daftar seluruh surat yang pernah Anda ambil.</p>
       </div>
 
       {/* Filter bar */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
+      <Card padding="sm">
         <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-center">
           {/* Date From */}
           <div className="w-full sm:w-36">
@@ -220,21 +219,11 @@ export default function MyLettersPage() {
 
           {/* Action buttons */}
           <div className="flex gap-2">
-            <button
-              onClick={handleFilter}
-              className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors"
-            >
-              Filter
-            </button>
-            <button
-              onClick={handleResetFilter}
-              className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
-            >
-              Reset
-            </button>
+            <Button variant="primary" size="sm" onClick={handleFilter}>Filter</Button>
+            <Button variant="secondary" size="sm" onClick={handleResetFilter}>Reset</Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Error state */}
       {error && <ErrorMessage error={error} />}

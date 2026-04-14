@@ -42,3 +42,12 @@ export async function rejectRequest(id, reason) {
   const response = await api.patch(`/gap-requests/${id}/reject`, { reason });
   return response.data;
 }
+
+/**
+ * Get Vacant Numbers — daftar nomor gap yang tersedia (vacant)
+ * @param {Object} params - { date_from, date_to, page }
+ */
+export async function getVacantNumbers(params = {}) {
+  const response = await api.get('/gap-numbers', { params });
+  return response.data;
+}

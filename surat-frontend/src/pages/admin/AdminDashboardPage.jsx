@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { getRecentLetters } from '../../api/letters.api';
+import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import StatusChip from '../../components/ui/StatusChip';
@@ -20,12 +21,12 @@ import StatusChip from '../../components/ui/StatusChip';
  */
 function SkeletonCard() {
   return (
-    <div className="bg-[#F7F9FC] rounded-lg p-3 animate-pulse">
-      <div className="space-y-2">
-        <div className="h-3 bg-[#E2E8F0] rounded w-2/3" />
-        <div className="h-6 bg-[#E2E8F0] rounded w-1/3" />
+    <Card padding="md" className="animate-pulse">
+      <div className="space-y-3">
+        <div className="h-3 bg-slate-100 rounded-full w-2/3" />
+        <div className="h-8 bg-slate-100 rounded-full w-1/3" />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -34,22 +35,20 @@ function SkeletonCard() {
  */
 function SummaryCard({ icon, label, value, subtext }) {
   return (
-    <div className="bg-[#F7F9FC] rounded-lg p-3 transition-all hover:bg-[#EBF4FD]/50">
-      <div className="flex items-start gap-3">
-        <span className="text-lg mt-0.5">{icon}</span>
+    <Card hover>
+      <div className="flex items-start gap-4">
+        <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-blue-50 text-2xl shrink-0">
+          {icon}
+        </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-[#64748B] uppercase tracking-wide">
-            {label}
-          </p>
-          <p className="text-xl font-semibold text-[#0B1F3A] mt-0.5">
-            {value ?? '-'}
-          </p>
+          <p className="text-xs font-semibold text-muted uppercase tracking-widest">{label}</p>
+          <p className="text-3xl font-bold text-navy mt-1">{value ?? '-'}</p>
           {subtext && (
-            <p className="text-[10px] text-[#94A3B8] mt-0.5 truncate">{subtext}</p>
+            <p className="text-xs text-muted mt-1 truncate">{subtext}</p>
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -259,14 +258,16 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="bg-[#0B1F3A] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h1 className="text-lg font-semibold text-white">
-            🛡️ Admin Dashboard
-          </h1>
-          <p className="text-white/50 text-sm mt-0.5">{today}</p>
+      <div className="relative overflow-hidden rounded-3xl p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        style={{ background: 'linear-gradient(135deg, #4D7CFF 0%, #6366F1 100%)' }}
+      >
+        <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-white/10 blur-xl" />
+        <div className="relative">
+          <h1 className="text-2xl font-bold text-white">🛡️ Admin Dashboard</h1>
+          <p className="text-white/60 text-sm mt-1">{today}</p>
         </div>
       </div>
 
@@ -313,17 +314,10 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tabel Riwayat Pengambilan Nomor dari SEMUA User */}
-      <div className="space-y-3">
+      <Card className="space-y-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">
-              Riwayat Pengambilan Nomor Terbaru
-            </h2>
-          </div>
-          <p className="text-xs text-[#94A3B8] ml-4">
-            10 pengambilan nomor surat terakhir dari seluruh pengguna.
-          </p>
+          <h2 className="text-base font-bold text-navy">Riwayat Pengambilan Nomor Terbaru</h2>
+          <p className="text-xs text-muted mt-0.5">10 pengambilan nomor surat terakhir dari seluruh pengguna.</p>
         </div>
 
         {allRecentError && <ErrorMessage error={allRecentError} />}
@@ -335,18 +329,15 @@ export default function AdminDashboardPage() {
           emptyText="Belum ada riwayat pengambilan nomor surat."
           emptyIcon="🕘"
         />
-      </div>
+      </Card>
 
       {/* Tabel Aktivitas Terbaru (Audit Logs) */}
-      <div className="space-y-3">
+      <Card className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">
-              Aktivitas Terbaru
-            </h2>
+          <div>
+            <h2 className="text-base font-bold text-navy">Aktivitas Terbaru</h2>
+            <p className="text-xs text-muted mt-0.5">10 log audit terakhir dari seluruh pengguna.</p>
           </div>
-          <span className="text-[10px] text-[#94A3B8]">10 log terakhir</span>
         </div>
 
         {logsError && <ErrorMessage error={logsError} />}
@@ -357,7 +348,7 @@ export default function AdminDashboardPage() {
           loading={logsLoading}
           emptyText="Belum ada aktivitas tercatat."
         />
-      </div>
+      </Card>
     </div>
   );
 }

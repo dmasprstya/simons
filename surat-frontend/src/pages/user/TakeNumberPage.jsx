@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { takeNumber } from '../../api/letters.api';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
+import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import ErrorMessage from '../../components/ui/ErrorMessage';
@@ -141,18 +142,17 @@ export default function TakeNumberPage() {
   `;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <div className="max-w-2xl mx-auto space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-base font-semibold text-[#0B1F3A]">Ambil Nomor Surat</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
+        <h1 className="text-2xl font-bold text-navy">Ambil Nomor Surat</h1>
+        <p className="mt-1 text-sm text-muted">
           Isi formulir di bawah untuk mengambil nomor surat baru.
         </p>
-        <div className="border-b border-[#E2E8F0] mt-4 mb-5" />
       </div>
 
       {/* Form card */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+      <Card>
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* ClassificationPicker */}
           <div>
@@ -291,7 +291,7 @@ export default function TakeNumberPage() {
             Ambil Nomor
           </Button>
         </form>
-      </div>
+      </Card>
 
       {/* Modal hasil */}
       <Modal
@@ -303,43 +303,37 @@ export default function TakeNumberPage() {
         {resultData && (
           <div className="space-y-4">
             {/* Detail nomor surat terformat (W7-{kode}-{nomor}) */}
-            <div className="bg-[#EBF4FD] rounded-lg p-4 text-center">
-              <p className="text-[10px] text-[#2A7FD4] font-medium uppercase tracking-widest">
+            <div className="bg-blue-50 rounded-2xl p-5 text-center">
+              <p className="text-xs text-blue-500 font-bold uppercase tracking-widest">
                 Nomor Surat
               </p>
-              <p className="text-2xl font-bold text-[#0B1F3A] mt-1 font-mono tracking-wide">
+              <p className="text-3xl font-bold text-navy mt-2 font-mono tracking-wide">
                 {displayLetterNumber(resultData)}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[#F7F9FC] rounded-lg p-3">
-                <p className="text-[10px] text-[#64748B] font-medium uppercase">Tanggal</p>
-                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
-                  {resultData.issued_date}
-                </p>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Tanggal</p>
+                <p className="text-sm font-bold text-navy mt-0.5">{resultData.issued_date}</p>
               </div>
-              <div className="bg-[#F7F9FC] rounded-lg p-3">
-                <p className="text-[10px] text-[#64748B] font-medium uppercase">Klasifikasi</p>
-                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5 truncate">
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Klasifikasi</p>
+                <p className="text-sm font-bold text-navy mt-0.5 truncate">
                   {resultData.classification?.full_code || resultData.classification?.code || '-'}
                 </p>
               </div>
-              <div className="bg-[#F7F9FC] rounded-lg p-3 col-span-2">
-                <p className="text-[10px] text-[#64748B] font-medium uppercase">Perihal</p>
-                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
-                  {resultData.subject}
-                </p>
+              <div className="bg-slate-50 rounded-xl p-3 col-span-2">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Perihal</p>
+                <p className="text-sm font-bold text-navy mt-0.5">{resultData.subject}</p>
               </div>
-              <div className="bg-[#F7F9FC] rounded-lg p-3 col-span-2">
-                <p className="text-[10px] text-[#64748B] font-medium uppercase">Tujuan</p>
-                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
-                  {resultData.destination}
-                </p>
+              <div className="bg-slate-50 rounded-xl p-3 col-span-2">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Tujuan</p>
+                <p className="text-sm font-bold text-navy mt-0.5">{resultData.destination}</p>
               </div>
-              <div className="bg-[#F7F9FC] rounded-lg p-3 col-span-2">
-                <p className="text-[10px] text-[#64748B] font-medium uppercase">Sifat Surat</p>
-                <p className="text-sm font-semibold text-[#0B1F3A] mt-0.5">
+              <div className="bg-slate-50 rounded-xl p-3 col-span-2">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Sifat Surat</p>
+                <p className="text-sm font-bold text-navy mt-0.5">
                   {/* Tampilkan label yang mudah dibaca dari nilai enum */}
                   {{
                     sangat_segera: 'Sangat Segera',

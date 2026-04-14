@@ -1,26 +1,31 @@
 /**
  * Badge — Label status reusable dengan variant warna.
+ * VCEP-2026: Pill-shaped, soft background tones.
  *
  * Props:
  *   children  — teks/konten badge
- *   variant   — 'success' | 'warning' | 'danger' | 'info' | 'default'
+ *   variant   — 'active' | 'success' | 'warning' | 'danger' | 'info' | 'default'
  *   className — kelas tambahan
  */
 
 const variantClasses = {
-  success: 'bg-[#ECFDF5] text-[#065F46]',
-  warning: 'bg-amber-50 text-amber-700',
-  danger:  'bg-[#FEF2F2] text-[#991B1B]',
-  info:    'bg-[#EBF4FD] text-[#185FA5]',
-  default: 'bg-[#F7F9FC] text-[#64748B]',
+  /* Status 'Active' — light blue pill sesuai blueprint */
+  active:  'bg-blue-50 text-blue-600 ring-1 ring-blue-100',
+  /* Umum */
+  success: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100',
+  warning: 'bg-amber-50  text-amber-700  ring-1 ring-amber-100',
+  danger:  'bg-red-50    text-red-600    ring-1 ring-red-100',
+  info:    'bg-blue-50   text-blue-600   ring-1 ring-blue-100',
+  default: 'bg-slate-100 text-slate-500  ring-1 ring-slate-200',
 };
 
 export default function Badge({ children, variant = 'default', className = '' }) {
   return (
     <span
       className={`
-        inline-flex items-center rounded px-2 py-0.5
-        text-xs font-medium
+        inline-flex items-center gap-1
+        rounded-full px-2.5 py-0.5
+        text-xs font-semibold tracking-wide
         ${variantClasses[variant] || variantClasses.default}
         ${className}
       `}
