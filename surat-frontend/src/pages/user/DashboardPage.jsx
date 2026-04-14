@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { useSequenceStore } from '../../store/sequenceStore';
 import { getToday } from '../../api/sequences.api';
 import { getMyLetters, getRecentLetters } from '../../api/letters.api';
-import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import ErrorMessage from '../../components/ui/ErrorMessage';
@@ -24,14 +22,7 @@ import Table from '../../components/ui/Table';
  */
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
-  const { setSequence } = useSequenceStore();
   const navigate = useNavigate();
-
-  // State untuk sequence hari ini
-  const [selectedClassification, setSelectedClassification] = useState(null);
-  const [sequenceData, setSequenceData] = useState(null);
-  const [sequenceLoading, setSequenceLoading] = useState(false);
-  const [sequenceError, setSequenceError] = useState(null);
 
   // State untuk riwayat singkat milik user
   const [recentLetters, setRecentLetters] = useState([]);
@@ -43,7 +34,7 @@ export default function DashboardPage() {
   const [allRecentLoading, setAllRecentLoading] = useState(false);
   const [allRecentError, setAllRecentError] = useState(null);
 
-  // State untuk nomor global sequence (sumber kebenaran nomor terakhir di banner)
+  // State untuk global sequence
   const [globalSeq, setGlobalSeq] = useState(null);
   const [globalSeqLoading, setGlobalSeqLoading] = useState(false);
   const latestTakenNumber = globalSeq?.last_number > 0
@@ -57,45 +48,6 @@ export default function DashboardPage() {
     month: 'long',
     day: 'numeric',
   });
-
-  // Fetch sequence hari ini saat klasifikasi dipilih
-  const fetchSequence = useCallback(
-    async (classificationId) => {
-      if (!classificationId) {
-        setSequenceData(null);
-        return;
-      }
-
-      setSequenceLoading(true);
-      setSequenceError(null);
-
-      try {
-        const response = await getToday(classificationId);
-        setSequenceData(response.data);
-        // Simpan ke store global
-        setSequence(classificationId, response.data);
-      } catch (err) {
-        const message =
-          err.response?.data?.message || 'Gagal memuat data sequence. Silakan coba lagi.';
-        setSequenceError(message);
-        setSequenceData(null);
-      } finally {
-        setSequenceLoading(false);
-      }
-    },
-    [setSequence]
-  );
-
-  // Handler saat pilih klasifikasi
-  const handleClassificationChange = (classificationId) => {
-    setSelectedClassification(classificationId);
-    if (classificationId) {
-      fetchSequence(classificationId);
-    } else {
-      setSequenceData(null);
-      setSequenceError(null);
-    }
-  };
 
   // Fetch 5 surat terakhir milik user
   useEffect(() => {
@@ -267,52 +219,17 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Stat cards — 3 kolom (jika ada sequenceData) */}
-      {sequenceData && !sequenceLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card padding="sm" className="text-center">
-            <p className="text-xs text-muted uppercase tracking-widest font-semibold">Nomor Terakhir</p>
-            <p className="text-2xl font-bold text-navy mt-1 font-mono">
-              {sequenceData.last_number ?? '-'}
-            </p>
-          </Card>
-          <Card padding="sm" className="text-center">
-            <p className="text-xs text-muted uppercase tracking-widest font-semibold">Zona Aktif</p>
-            <p className="text-lg font-bold text-navy mt-1 font-mono">
-              {sequenceData.active_start ?? '-'} – {sequenceData.active_end ?? '-'}
-            </p>
-          </Card>
-          <Card padding="sm" className="text-center">
-            <p className="text-xs text-muted uppercase tracking-widest font-semibold">Zona Gap</p>
-            <p className="text-lg font-bold text-navy mt-1 font-mono">
-              {sequenceData.gap_start ?? '-'} – {sequenceData.gap_end ?? '-'}
-            </p>
-          </Card>
-        </div>
-      )}
-
       {/* Grid 2 kolom: Info Sequence | Surat Terbaru */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Card info sequence hari ini */}
+        {/* Card info sequence global hari ini */}
         <Card className="space-y-5">
           <div>
             <h2 className="text-base font-bold text-navy">Info Sequence Hari Ini</h2>
-            <p className="text-xs text-muted mt-0.5">Pilih klasifikasi untuk melihat status sequence.</p>
-          </div>
-
-          {/* ClassificationPicker */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest text-muted mb-2">
-              Pilih Klasifikasi
-            </label>
-            <ClassificationPicker
-              value={selectedClassification}
-              onChange={handleClassificationChange}
-            />
+            <p className="text-xs text-muted mt-0.5">Status penomoran surat global saat ini.</p>
           </div>
 
           {/* Loading skeleton */}
-          {sequenceLoading && (
+          {globalSeqLoading && (
             <div className="space-y-3 animate-pulse">
               <div className="h-3 bg-slate-100 rounded-full w-3/4" />
               <div className="h-3 bg-slate-100 rounded-full w-1/2" />
@@ -320,14 +237,28 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Error state */}
-          {sequenceError && <ErrorMessage error={sequenceError} />}
-
-          {/* Placeholder jika belum pilih klasifikasi */}
-          {!selectedClassification && !sequenceLoading && (
-            <p className="text-xs text-muted text-center py-4">
-              Pilih klasifikasi di atas untuk melihat info sequence hari ini.
-            </p>
+          {/* Info stats */}
+          {!globalSeqLoading && globalSeq && (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-slate-50 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Nomor Terakhir</p>
+                <p className="text-xl font-bold text-navy mt-1 font-mono">
+                  {globalSeq.last_number > 0 ? globalSeq.next_number - 1 : '-'}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Zona Aktif</p>
+                <p className="text-xs font-bold text-navy mt-1 font-mono">
+                  {globalSeq.active_start ?? '-'}–{globalSeq.active_end ?? '-'}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Zona Gap</p>
+                <p className="text-xs font-bold text-navy mt-1 font-mono">
+                  {globalSeq.gap_start ?? '-'}–{globalSeq.gap_end ?? '-'}
+                </p>
+              </div>
+            </div>
           )}
 
           {/* Tombol Ambil Nomor */}

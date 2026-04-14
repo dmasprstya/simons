@@ -1,13 +1,10 @@
 import api from './axios';
 
 /**
- * Get Today — ambil data sequence hari ini untuk classification tertentu
- * @param {number} classificationId
+ * Get Today — ambil data sequence global hari ini
  */
-export async function getToday(classificationId) {
-  const response = await api.get('/sequences/today', {
-    params: { classification_id: classificationId },
-  });
+export async function getToday() {
+  const response = await api.get('/sequences/today');
   return response.data;
 }
 

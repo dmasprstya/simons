@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSequences, updateGap, resetSequence } from '../../api/sequences.api';
-import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
@@ -82,7 +81,6 @@ export default function SequenceSettingsPage() {
   const [seqMeta, setSeqMeta] = useState(null);
 
   // === Filter state ===
-  const [filterClassification, setFilterClassification] = useState(null);
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,12 +89,11 @@ export default function SequenceSettingsPage() {
   const buildParams = useCallback(
     (page = 1) => {
       const params = { page };
-      if (filterClassification) params.classification_id = filterClassification;
       if (filterDateFrom) params.date_from = filterDateFrom;
       if (filterDateTo) params.date_to = filterDateTo;
       return params;
     },
-    [filterClassification, filterDateFrom, filterDateTo]
+    [filterDateFrom, filterDateTo]
   );
 
   // Fetch riwayat sequence
@@ -151,7 +148,6 @@ export default function SequenceSettingsPage() {
 
   // Handle reset filter
   const handleResetFilter = () => {
-    setFilterClassification(null);
     setFilterDateFrom('');
     setFilterDateTo('');
     setCurrentPage(1);
@@ -484,17 +480,6 @@ export default function SequenceSettingsPage() {
         {/* Filter bar */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
-            {/* Classification */}
-            <div className="w-full sm:w-auto sm:flex-1 sm:min-w-[200px]">
-              <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-                Klasifikasi
-              </label>
-              <ClassificationPicker
-                value={filterClassification}
-                onChange={setFilterClassification}
-              />
-            </div>
-
             {/* Date From */}
             <div className="w-full sm:w-36">
               <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
