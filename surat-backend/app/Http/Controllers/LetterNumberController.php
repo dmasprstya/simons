@@ -47,7 +47,8 @@ class LetterNumberController extends Controller
             $query->where('classification_id', $request->classification_id);
         }
 
-        $letters = $query->orderByDesc('issued_date')->orderByDesc('number')->paginate(20);
+        $perPage = (int) $request->input('per_page', 20);
+        $letters = $query->orderByDesc('issued_date')->orderByDesc('number')->paginate($perPage);
 
         return response()->json([
             'data'    => LetterNumberResource::collection($letters),
