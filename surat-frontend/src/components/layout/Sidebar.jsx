@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -13,6 +14,8 @@ import {
   ClipboardDocumentListIcon,
   ChartBarIcon,
   UserCircleIcon,
+  ChevronDownIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -31,15 +34,34 @@ const userMenuItems = [
   { to: '/gap-requests', label: 'Request Gap', icon: DocumentArrowUpIcon },
 ];
 
-const adminMenuItems = [
-  { to: '/admin/dashboard', label: 'Dashboard Admin', icon: HomeIcon },
-  { to: '/admin/letters', label: 'Semua Surat', icon: DocumentDuplicateIcon },
-  { to: '/admin/gap-requests', label: 'Kelola Gap', icon: ShieldCheckIcon },
-  { to: '/admin/sequences', label: 'Pengaturan Sequence', icon: AdjustmentsHorizontalIcon },
-  { to: '/admin/users', label: 'Kelola User', icon: UsersIcon },
-  { to: '/admin/classifications', label: 'Klasifikasi', icon: TagIcon },
-  { to: '/admin/audit-logs', label: 'Audit Log', icon: ClipboardDocumentListIcon },
-  { to: '/admin/reports', label: 'Laporan', icon: ChartBarIcon },
+const adminGroups = [
+  {
+    title: 'Administrasi',
+    items: [
+      { to: '/admin/letters', label: 'Semua Surat', icon: DocumentDuplicateIcon },
+      { to: '/admin/gap-requests', label: 'Kelola Gap', icon: ShieldCheckIcon },
+    ],
+  },
+  {
+    title: 'Pengaturan',
+    items: [
+      { to: '/admin/sequences', label: 'Pengaturan Sequence', icon: AdjustmentsHorizontalIcon },
+      { to: '/admin/classifications', label: 'Klasifikasi', icon: TagIcon },
+    ],
+  },
+  {
+    title: 'User & Akses',
+    items: [
+      { to: '/admin/users', label: 'Kelola User', icon: UsersIcon },
+      { to: '/admin/audit-logs', label: 'Audit Log', icon: ClipboardDocumentListIcon },
+    ],
+  },
+  {
+    title: 'Laporan',
+    items: [
+      { to: '/admin/reports', label: 'Laporan', icon: ChartBarIcon },
+    ],
+  },
 ];
 
 function SidebarLink({ to, label, icon: Icon, collapsed }) {
@@ -65,6 +87,7 @@ function SidebarLink({ to, label, icon: Icon, collapsed }) {
 }
 
 export default function Sidebar({ isOpen, onClose, collapsed = false }) {
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
   const divisionLabel =
@@ -121,14 +144,42 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
           {isAdmin && (
             <>
               <div className="my-6 border-t border-slate-100 mx-2" />
-              {!collapsed && (
-                <p className="px-3 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">
-                  Administrasi
-                </p>
+              
+              <button
+                type="button"
+                onClick={() => setIsAdminOpen(!isAdminOpen)}
+                className={`flex items-center gap-3 w-full px-3 mb-2 transition-all duration-200 group
+                  ${collapsed ? 'justify-center' : ''}`}
+              >
+                <QueueListIcon className={`h-5 w-5 shrink-0 ${isAdminOpen ? 'text-blue-600' : 'text-slate-400'}`} />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] group-hover:text-blue-600">
+                      Administrasi
+                    </span>
+                    <ChevronDownIcon 
+                      className={`h-3.5 w-3.5 text-slate-300 transition-transform duration-200 ${isAdminOpen ? 'rotate-180 text-blue-600' : ''}`} 
+                    />
+                  </>
+                )}
+              </button>
+
+              {isAdminOpen && (
+                <div className={`space-y-4 ${collapsed ? '' : 'pl-2 mt-2'}`}>
+                  {adminGroups.map((group) => (
+                    <div key={group.title} className="space-y-1">
+                      {!collapsed && (
+                        <p className="px-3 text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1 shadow-sm">
+                          {group.title}
+                        </p>
+                      )}
+                      {group.items.map((item) => (
+                        <SidebarLink key={item.to} {...item} collapsed={collapsed} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
               )}
-              {adminMenuItems.map((item) => (
-                <SidebarLink key={item.to} {...item} collapsed={collapsed} />
-              ))}
             </>
           )}
         </nav>

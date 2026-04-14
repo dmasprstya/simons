@@ -204,17 +204,6 @@ export default function DashboardPage() {
               </p>
             </div>
           )}
-
-          <Button
-            variant="primary"
-            size="lg"
-            className="shadow-lg shadow-blue-500/20 px-8 py-4 h-auto"
-            onClick={() => navigate('/letters/take')}
-          >
-            <span className="flex items-center gap-2 text-sm font-bold">
-              Ambil Nomor Sekarang
-            </span>
-          </Button>
         </div>
       </div>
 
