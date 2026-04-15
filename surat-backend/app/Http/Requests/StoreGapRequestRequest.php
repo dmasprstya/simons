@@ -32,8 +32,8 @@ class StoreGapRequestRequest extends FormRequest
             ],
             // Nomor yang dimohon — harus dari zona gap yang valid (diverifikasi di controller)
             'number'   => 'required|integer|min:1',
-            // after_or_equal:today mencegah pengajuan retroaktif
-            'gap_date' => 'required|date|after_or_equal:today',
+            // gap_date boleh di masa lalu karena nomor gap bisa dari hari sebelumnya
+            'gap_date' => 'required|date',
             'reason'   => 'required|string|min:10|max:1000',
         ];
     }

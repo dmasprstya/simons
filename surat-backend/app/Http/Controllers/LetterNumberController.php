@@ -33,13 +33,16 @@ class LetterNumberController extends Controller
     {
         $query = LetterNumber::with('classification')->where('user_id', Auth::id());
 
-        // Filter rentang tanggal issued_date
-        if ($request->filled('issued_date_from')) {
-            $query->whereDate('issued_date', '>=', $request->issued_date_from);
+        // Filter rentang tanggal issued_date — terima date_from/date_to (frontend) atau issued_date_from/issued_date_to
+        $dateFrom = $request->input('date_from', $request->input('issued_date_from'));
+        $dateTo   = $request->input('date_to', $request->input('issued_date_to'));
+
+        if ($dateFrom) {
+            $query->whereDate('issued_date', '>=', $dateFrom);
         }
 
-        if ($request->filled('issued_date_to')) {
-            $query->whereDate('issued_date', '<=', $request->issued_date_to);
+        if ($dateTo) {
+            $query->whereDate('issued_date', '<=', $dateTo);
         }
 
         // Filter berdasarkan klasifikasi
@@ -217,6 +220,16 @@ class LetterNumberController extends Controller
     {
         $query = LetterNumber::with(['user', 'classification']);
 
+        // Filter pencarian teks — nama user, perihal, nomor, atau formatted_number
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                  ->orWhere('formatted_number', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
+
         // Filter berdasarkan klasifikasi
         if ($request->filled('classification_id')) {
             $query->where('classification_id', $request->classification_id);
@@ -227,13 +240,26 @@ class LetterNumberController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
-        // Filter rentang tanggal issued_date
-        if ($request->filled('issued_date_from')) {
-            $query->whereDate('issued_date', '>=', $request->issued_date_from);
+        // Filter berdasarkan status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
-        if ($request->filled('issued_date_to')) {
-            $query->whereDate('issued_date', '<=', $request->issued_date_to);
+        // Filter berdasarkan divisi user
+        if ($request->filled('division')) {
+            $query->whereHas('user', fn ($u) => $u->where('division', 'like', '%' . $request->division . '%'));
+        }
+
+        // Filter rentang tanggal issued_date — terima date_from/date_to atau issued_date_from/issued_date_to
+        $dateFrom = $request->input('date_from', $request->input('issued_date_from'));
+        $dateTo   = $request->input('date_to', $request->input('issued_date_to'));
+
+        if ($dateFrom) {
+            $query->whereDate('issued_date', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('issued_date', '<=', $dateTo);
         }
 
         $letters = $query->orderByDesc('issued_date')->orderByDesc('number')->paginate(20);

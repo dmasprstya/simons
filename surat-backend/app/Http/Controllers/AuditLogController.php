@@ -26,6 +26,12 @@ class AuditLogController extends Controller
     {
         $query = AuditLog::query();
 
+        // Filter pencarian teks — nama user dari relasi
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+        }
+
         // Filter berdasarkan user yang melakukan aksi
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
@@ -36,9 +42,10 @@ class AuditLogController extends Controller
             $query->where('action', $request->action);
         }
 
-        // Filter berdasarkan nama tabel
-        if ($request->filled('table_name')) {
-            $query->where('table_name', $request->table_name);
+        // Filter berdasarkan nama tabel — terima table_name (backend) atau auditable_type (frontend)
+        $tableFilter = $request->input('table_name', $request->input('auditable_type'));
+        if ($tableFilter) {
+            $query->where('table_name', 'like', "%{$tableFilter}%");
         }
 
         // Filter rentang tanggal created_at (waktu aksi terjadi)

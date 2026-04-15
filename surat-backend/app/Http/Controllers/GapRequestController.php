@@ -104,7 +104,13 @@ class GapRequestController extends Controller
      */
     public function all(Request $request): JsonResponse
     {
-        $query = GapRequest::query();
+        $query = GapRequest::with(['requestedBy', 'reviewedBy', 'classification']);
+
+        // Filter pencarian teks \u2014 nama user yang mengajukan
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('requestedBy', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+        }
 
         // Filter berdasarkan status review
         if ($request->filled('status')) {
@@ -114,6 +120,15 @@ class GapRequestController extends Controller
         // Filter berdasarkan klasifikasi
         if ($request->filled('classification_id')) {
             $query->where('classification_id', $request->classification_id);
+        }
+
+        // Filter rentang tanggal pengajuan
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
         }
 
         $requests = $query->orderByDesc('created_at')->paginate(20);

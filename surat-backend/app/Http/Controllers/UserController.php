@@ -21,14 +21,29 @@ class UserController extends Controller
     {
         $query = User::query();
 
+        // Filter pencarian teks \u2014 nama, email, atau NIP
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
         // Filter berdasarkan role jika disediakan
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
 
+        // Filter berdasarkan status aktif (is_active = 1 atau 0)
+        if ($request->has('is_active') && $request->input('is_active') !== '') {
+            $query->where('is_active', (bool) $request->is_active);
+        }
+
         // Filter berdasarkan division jika disediakan
         if ($request->filled('division')) {
-            $query->where('division', $request->division);
+            $query->where('division', 'like', '%' . $request->division . '%');
         }
 
         $users = $query->orderBy('name')->paginate(20);

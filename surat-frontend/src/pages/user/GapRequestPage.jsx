@@ -31,6 +31,7 @@ export default function GapRequestPage() {
 
   // === Form state ===
   const [classificationId, setClassificationId] = useState(null);
+  const [selectedNumber, setSelectedNumber] = useState(null); // nomor gap yang dipilih dari tabel
   const [gapDate, setGapDate] = useState('');
   const [reason, setReason] = useState('');
 
@@ -47,12 +48,33 @@ export default function GapRequestPage() {
   const [vacantDateTo, setVacantDateTo] = useState('');
   const [vacantPage, setVacantPage] = useState(null); // null = belum pernah tampil
 
+  // === Expand state untuk tree view nomor kosong ===
+  const [expandedMonths, setExpandedMonths] = useState({});
+  const [expandedDates, setExpandedDates] = useState({});
+
+  // Grouping vacantNumbers → { monthKey: { label, dates: { dateKey: { label, numbers[] } } } }
+  const groupedVacant = (() => {
+    if (!vacantNumbers || vacantNumbers.length === 0) return {};
+    const groups = {};
+    vacantNumbers.forEach((item) => {
+      const d = new Date(item.date + 'T00:00:00');
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      const dateKey = item.date;
+      const dateLabel = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+      if (!groups[monthKey]) groups[monthKey] = { label: monthLabel, dates: {} };
+      if (!groups[monthKey].dates[dateKey]) groups[monthKey].dates[dateKey] = { label: dateLabel, numbers: [] };
+      groups[monthKey].dates[dateKey].numbers.push(item);
+    });
+    return groups;
+  })();
+
+  const toggleMonth = (key) => setExpandedMonths((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleDate = (key) => setExpandedDates((prev) => ({ ...prev, [key]: !prev[key] }));
+
   // Batas karakter alasan
   const REASON_MAX = 1000;
   const REASON_MIN = 10;
-
-  // Tanggal minimum = hari ini (format YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
 
   // Fetch data riwayat saat mount dan saat page berubah
   useEffect(() => {
@@ -65,6 +87,13 @@ export default function GapRequestPage() {
     fetchVacantNumbers({ date_from: vacantDateFrom, date_to: vacantDateTo, page: vacantPage });
   }, [vacantPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // === Pilih nomor dari tabel ===
+  const handleSelectNumber = (row) => {
+    setSelectedNumber(row.number);
+    setGapDate(row.date);
+    setValidationErrors((prev) => ({ ...prev, number: undefined, gapDate: undefined }));
+  };
+
   // === Validasi form ===
   const validate = () => {
     const errors = {};
@@ -72,10 +101,11 @@ export default function GapRequestPage() {
     if (!classificationId) {
       errors.classification = 'Klasifikasi wajib dipilih.';
     }
+    if (!selectedNumber) {
+      errors.number = 'Pilih nomor gap dari tabel Nomor Kosong Tersedia.';
+    }
     if (!gapDate) {
       errors.gapDate = 'Tanggal gap wajib diisi.';
-    } else if (gapDate < today) {
-      errors.gapDate = 'Tanggal gap tidak boleh sebelum hari ini.';
     }
     if (!reason.trim()) {
       errors.reason = 'Alasan wajib diisi.';
@@ -92,6 +122,7 @@ export default function GapRequestPage() {
   // === Reset form ===
   const resetForm = () => {
     setClassificationId(null);
+    setSelectedNumber(null);
     setGapDate('');
     setReason('');
     setSubmitError(null);
@@ -110,6 +141,7 @@ export default function GapRequestPage() {
     try {
       await createRequest({
         classification_id: classificationId,
+        number: selectedNumber,
         gap_date: gapDate,
         reason: reason.trim(),
       });
@@ -248,31 +280,43 @@ export default function GapRequestPage() {
             )}
           </div>
 
-          {/* Date picker — Tanggal Gap (minimal hari ini) */}
+          {/* Nomor gap terpilih — diisi otomatis dari tabel nomor kosong */}
           <div>
-            <label
-              htmlFor="gap_date"
-              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
-            >
-              Tanggal Gap <span className="text-red-500">*</span>
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+              Nomor Gap <span className="text-red-500">*</span>
             </label>
-            <input
-              id="gap_date"
-              type="date"
-              value={gapDate}
-              onChange={(e) => setGapDate(e.target.value)}
-              min={today}
-              disabled={submitting}
-              className={`${inputBaseClass} ${
-                validationErrors.gapDate
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+            <div
+              className={`flex items-center h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm ${
+                validationErrors.number
+                  ? 'border-red-300'
+                  : selectedNumber
+                  ? 'border-[#2A7FD4]'
                   : 'border-[#E2E8F0]'
               }`}
-            />
-            {validationErrors.gapDate && (
-              <p className="mt-1 text-xs text-red-600">
-                {validationErrors.gapDate}
-              </p>
+            >
+              {selectedNumber ? (
+                <>
+                  <span className="font-mono font-semibold text-[#2A7FD4] mr-2">{selectedNumber}</span>
+                  {gapDate && (
+                    <span className="text-xs text-[#64748B]">
+                      — {new Date(gapDate + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedNumber(null); setGapDate(''); }}
+                    className="ml-auto text-[#94A3B8] hover:text-red-500 text-xs"
+                    disabled={submitting}
+                  >
+                    ✕ Batal
+                  </button>
+                </>
+              ) : (
+                <span className="text-[#94A3B8] italic">Pilih nomor dari tabel Nomor Kosong di bawah</span>
+              )}
+            </div>
+            {validationErrors.number && (
+              <p className="mt-1 text-xs text-red-600">{validationErrors.number}</p>
             )}
           </div>
 
@@ -390,42 +434,91 @@ export default function GapRequestPage() {
         {/* Error state */}
         {vacantError && <ErrorMessage error={vacantError} />}
 
-        {/* Tabel nomor kosong */}
-        <Table
-          columns={[
-            {
-              key: 'number',
-              label: 'Nomor',
-              render: (value) => (
-                <span className="font-mono font-semibold text-[#2A7FD4]">{value}</span>
-              ),
-            },
-            {
-              key: 'date',
-              label: 'Tanggal Gap',
-              render: (value) => {
-                if (!value) return '-';
-                const date = new Date(value + 'T00:00:00');
-                return date.toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                });
-              },
-            },
-            {
-              key: 'gap_start',
-              label: 'Zona Gap',
-              render: (value, row) => (
-                <span className="text-xs text-[#64748B]">{value} – {row.gap_end}</span>
-              ),
-            },
-          ]}
-          data={vacantPage !== null ? vacantNumbers : []}
-          loading={vacantLoading}
-          emptyText="Tidak ada nomor kosong tersedia."
-          emptyIcon="✅"
-        />
+        {/* Tree view nomor kosong — Month → Date → Numbers */}
+        {vacantLoading && (
+          <div className="py-6 text-center text-sm text-[#94A3B8] animate-pulse">Memuat nomor kosong...</div>
+        )}
+
+        {!vacantLoading && vacantPage !== null && Object.keys(groupedVacant).length === 0 && (
+          <div className="py-8 text-center">
+            <div className="text-2xl mb-1">✅</div>
+            <p className="text-sm text-[#94A3B8]">Tidak ada nomor kosong tersedia.</p>
+          </div>
+        )}
+
+        {!vacantLoading && Object.keys(groupedVacant).length > 0 && (
+          <div className="space-y-2">
+            {Object.entries(groupedVacant).map(([monthKey, monthData]) => (
+              <div key={monthKey} className="border border-[#E2E8F0] rounded-lg overflow-hidden">
+                {/* Month header */}
+                <button
+                  type="button"
+                  onClick={() => toggleMonth(monthKey)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 bg-[#F0F6FF] hover:bg-[#E4EFFE] transition-colors text-left"
+                >
+                  <span className="text-sm font-semibold text-[#0B1F3A] flex items-center gap-2">
+                    <span className="text-base">📅</span>
+                    {monthData.label}
+                    <span className="text-xs font-normal text-[#64748B]">
+                      ({Object.values(monthData.dates).reduce((acc, d) => acc + d.numbers.length, 0)} nomor)
+                    </span>
+                  </span>
+                  <span className={`text-[#2A7FD4] text-xs transition-transform duration-200 ${expandedMonths[monthKey] ? 'rotate-90' : ''}`}>
+                    ▶
+                  </span>
+                </button>
+
+                {/* Date list */}
+                {expandedMonths[monthKey] && (
+                  <div className="divide-y divide-[#F1F5F9]">
+                    {Object.entries(monthData.dates).map(([dateKey, dateData]) => (
+                      <div key={dateKey}>
+                        {/* Date header */}
+                        <button
+                          type="button"
+                          onClick={() => toggleDate(dateKey)}
+                          className="w-full flex items-center justify-between px-5 py-2 bg-white hover:bg-[#F7F9FC] transition-colors text-left"
+                        >
+                          <span className="text-xs font-medium text-[#334155] flex items-center gap-2">
+                            <span>🗓</span>
+                            {dateData.label}
+                            <span className="text-[#94A3B8] font-normal">
+                              ({dateData.numbers.length} nomor)
+                            </span>
+                          </span>
+                          <span className={`text-[#94A3B8] text-[10px] transition-transform duration-200 ${expandedDates[dateKey] ? 'rotate-90' : ''}`}>
+                            ▶
+                          </span>
+                        </button>
+
+                        {/* Numbers grid */}
+                        {expandedDates[dateKey] && (
+                          <div className="px-5 py-3 bg-[#FAFBFE] flex flex-wrap gap-2">
+                            {dateData.numbers.map((item) => (
+                              <button
+                                key={item.number}
+                                type="button"
+                                onClick={() => handleSelectNumber(item)}
+                                title={`Zona gap: ${item.gap_start} – ${item.gap_end}`}
+                                className={`px-3 py-1 rounded-md text-xs font-mono font-semibold border transition-all duration-150 ${
+                                  selectedNumber === item.number
+                                    ? 'bg-[#2A7FD4] text-white border-[#2A7FD4] shadow-sm'
+                                    : 'bg-white text-[#2A7FD4] border-[#BFDBFE] hover:bg-[#2A7FD4] hover:text-white hover:border-[#2A7FD4]'
+                                }`}
+                              >
+                                {selectedNumber === item.number ? `✓ ${item.number}` : item.number}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Pagination */}
         <Pagination meta={vacantMeta} onPageChange={(page) => setVacantPage(page)} />
