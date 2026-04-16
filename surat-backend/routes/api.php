@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     AuthController,
+    DashboardController,
     ProfileController,
     UserController,
     LetterClassificationController,
@@ -26,6 +27,10 @@ Route::prefix('auth')->group(function (): void {
 });
 
 Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
+
+    // === DASHBOARD ===
+    Route::get('dashboard', [DashboardController::class, 'index'])->middleware('role:user');
+    Route::get('dashboard/admin', [DashboardController::class, 'adminIndex'])->middleware('role:admin');
 
     // === USERS (admin only) ===
     Route::prefix('users')->middleware('role:admin')->group(function (): void {

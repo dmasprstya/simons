@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { getToday } from '../../api/sequences.api';
-import { getMyLetters, getRecentLetters } from '../../api/letters.api';
+import { getDashboardData } from '../../api/dashboard.api';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import ErrorMessage from '../../components/ui/ErrorMessage';
@@ -25,26 +24,19 @@ export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
-  // State untuk riwayat singkat milik user
   const [recentLetters, setRecentLetters] = useState([]);
-  const [recentError, setRecentError] = useState(null);
-
-  // State untuk riwayat pengambilan nomor dari semua user
   const [allRecentLetters, setAllRecentLetters] = useState([]);
-  const [allRecentError, setAllRecentError] = useState(null);
-
   const [globalSeq, setGlobalSeq] = useState(null);
+  const [userStats, setUserStats] = useState({ today: 0, month: 0, active: 0, total: 0 });
+
+  // loading: true saat fetch pertama — skeleton ditampilkan
+  // error: string jika request gagal total — tampilkan pesan + retry
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const latestTakenNumber = globalSeq?.last_number > 0
     ? globalSeq.next_number - 1
     : '-';
-
-  // Stats for Ringkasan Cepat
-  const [userStats, setUserStats] = useState({
-    today: 0,
-    month: 0,
-    active: 0,
-    total: 0
-  });
 
   // Format tanggal hari ini dalam bahasa Indonesia
   const today = new Date().toLocaleDateString('id-ID', {
@@ -54,60 +46,45 @@ export default function DashboardPage() {
     day: 'numeric',
   });
 
-  // Global loading state for entire dashboard data
-  const [loading, setLoading] = useState(false);
+  // fetchData didefinisikan di component scope agar tombol retry bisa memanggilnya langsung
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getDashboardData();
+      const d = res.data;
+      setUserStats(d.stats);
+      setRecentLetters(d.recent_letters || []);
+      setAllRecentLetters(d.all_recent_letters || []);
+      setGlobalSeq(d.sequence);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Gagal memuat data dashboard.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Fetch all data on mount
+  // Fetch on mount — cancelled flag mencegah setState setelah unmount
   useEffect(() => {
     let cancelled = false;
-
-    const fetchData = async () => {
+    const run = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-
-        // Parallel fetch for all dashboard components
-        const [
-          recentRes,
-          globalRes,
-          allRecentRes,
-          todayStats,
-          monthStats,
-          activeStats,
-          totalStats
-        ] = await Promise.all([
-          getMyLetters({ per_page: 5 }),
-          getToday().catch(() => ({ data: null })), // Silent catch for banner
-          getRecentLetters({ limit: 10 }),
-          getMyLetters({ issued_date_from: todayStr, issued_date_to: todayStr, per_page: 1 }),
-          getMyLetters({ issued_date_from: firstDayOfMonth, per_page: 1 }),
-          getMyLetters({ status: 'active', per_page: 1 }),
-          getMyLetters({ per_page: 1 })
-        ]);
-
-        if (!cancelled) {
-          setRecentLetters(recentRes.data || []);
-          setGlobalSeq(globalRes.data);
-          setAllRecentLetters(allRecentRes.data || []);
-          setUserStats({
-            today: todayStats.meta?.total || 0,
-            month: monthStats.meta?.total || 0,
-            active: activeStats.meta?.total || 0,
-            total: totalStats.meta?.total || 0
-          });
-        }
+        const res = await getDashboardData();
+        if (cancelled) return;
+        const d = res.data;
+        setUserStats(d.stats);
+        setRecentLetters(d.recent_letters || []);
+        setAllRecentLetters(d.all_recent_letters || []);
+        setGlobalSeq(d.sequence);
       } catch (err) {
-        if (!cancelled) {
-          setRecentError(err.response?.data?.message || 'Gagal memuat data dashboard.');
-        }
+        if (!cancelled) setError(err.response?.data?.message || 'Gagal memuat data dashboard.');
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
-
-    fetchData();
+    run();
     return () => { cancelled = true; };
   }, []);
 
@@ -175,6 +152,16 @@ export default function DashboardPage() {
       render: (value) => <StatusChip status={value} />,
     },
   ];
+
+  // Jika request gagal total, tampilkan error + tombol retry di level dashboard
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <p className="text-sm text-red-500 font-medium">{error}</p>
+        <Button variant="primary" size="sm" onClick={fetchData}>Coba Lagi</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -262,9 +249,9 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {recentError && <ErrorMessage error={recentError} />}
+            {/* error sudah ditangani di level dashboard — tidak perlu per-section error */}
 
-            {!loading && !recentError && recentLetters.length > 0 && (
+            {!loading && recentLetters.length > 0 && (
               <div className="divide-y divide-slate-50">
                 {recentLetters.map((letter) => (
                   <div
@@ -290,7 +277,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {!loading && !recentError && recentLetters.length === 0 && (
+            {!loading && recentLetters.length === 0 && (
               <div className="text-center py-10">
                 <p className="text-sm text-muted">Belum ada surat yang diambil.</p>
                 <Button
@@ -320,7 +307,7 @@ export default function DashboardPage() {
           <Badge variant="info" className="px-3 py-1 text-[10px]">Global Activity</Badge>
         </div>
 
-        {allRecentError && <ErrorMessage error={allRecentError} />}
+        {/* error sudah ditangani di level dashboard */}
 
         <Table
           columns={recentAllColumns}

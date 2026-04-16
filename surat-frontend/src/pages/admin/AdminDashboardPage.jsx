@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
-import { getRecentLetters } from '../../api/letters.api';
+import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import ErrorMessage from '../../components/ui/ErrorMessage';
@@ -10,15 +10,11 @@ import StatusChip from '../../components/ui/StatusChip';
 /**
  * AdminDashboardPage — Halaman dashboard untuk role admin.
  *
- * Fitur:
- * - 4 summary card: surat hari ini, gap request pending, sequence aktif, user aktif
- * - Tabel riwayat pengambilan nomor terbaru dari SEMUA user
- * - Tabel 10 audit log terbaru
+ * Performa: semua data diambil dalam satu request ke GET /api/dashboard/admin
+ * (menggantikan 5 request terpisah: getSummary, getAllRequests, getUsers,
+ * getRecentLetters, getLogs).
  */
 
-/**
- * SkeletonCard — placeholder loading untuk summary card
- */
 function SkeletonCard() {
   return (
     <Card padding="md" className="animate-pulse">
@@ -30,9 +26,6 @@ function SkeletonCard() {
   );
 }
 
-/**
- * SummaryCard — card ringkasan dengan ikon, label, dan nilai
- */
 function SummaryCard({ icon, label, value, subtext }) {
   return (
     <Card hover>
@@ -54,26 +47,15 @@ function SummaryCard({ icon, label, value, subtext }) {
 
 export default function AdminDashboardPage() {
   const {
-    todayLetters,
-    pendingGaps,
-    activeUsers,
-    cardsLoading,
-    cardsError,
+    stats,
+    allRecentLetters,
     auditLogs,
-    logsLoading,
-    logsError,
+    sequence,
+    loading,
+    error,
     fetchAll,
   } = useAdminDashboard();
 
-  // State untuk total surat hari ini (dari summary response)
-  const [letterCount, setLetterCount] = useState(0);
-
-  // State untuk riwayat pengambilan nomor dari semua user
-  const [allRecentLetters, setAllRecentLetters] = useState([]);
-  const [allRecentLoading, setAllRecentLoading] = useState(false);
-  const [allRecentError, setAllRecentError] = useState(null);
-
-  // Format tanggal hari ini dalam bahasa Indonesia
   const today = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
     year: 'numeric',
@@ -81,48 +63,19 @@ export default function AdminDashboardPage() {
     day: 'numeric',
   });
 
-  // Fetch semua data saat mount
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
-  // Hitung jumlah surat dari summary data
-  useEffect(() => {
-    if (todayLetters) {
-      // todayLetters bisa berupa { total_letters: N } atau { count: N } tergantung API
-      setLetterCount(
-        todayLetters.total_letters ?? todayLetters.count ?? todayLetters.total ?? 0
-      );
-    }
-  }, [todayLetters]);
-
-  // Fetch 10 riwayat pengambilan nomor terbaru dari semua user
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchAllRecent = async () => {
-      setAllRecentLoading(true);
-      setAllRecentError(null);
-
-      try {
-        const response = await getRecentLetters({ limit: 10 });
-        if (!cancelled) {
-          setAllRecentLetters(response.data || []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const message =
-            err.response?.data?.message || 'Gagal memuat riwayat pengambilan nomor.';
-          setAllRecentError(message);
-        }
-      } finally {
-        if (!cancelled) setAllRecentLoading(false);
-      }
-    };
-
-    fetchAllRecent();
-    return () => { cancelled = true; };
-  }, []);
+  // Jika request gagal total, tampilkan error + tombol retry di level dashboard
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <p className="text-sm text-red-500 font-medium">{error}</p>
+        <Button variant="primary" size="sm" onClick={fetchAll}>Coba Lagi</Button>
+      </div>
+    );
+  }
 
   // Kolom tabel riwayat pengambilan nomor semua user
   const recentAllColumns = [
@@ -271,12 +224,9 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Cards error */}
-      {cardsError && <ErrorMessage error={cardsError} />}
-
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {cardsLoading ? (
+        {loading ? (
           <>
             <SkeletonCard />
             <SkeletonCard />
@@ -288,25 +238,25 @@ export default function AdminDashboardPage() {
             <SummaryCard
               icon="📄"
               label="Surat Hari Ini"
-              value={letterCount}
+              value={stats.today_letters}
               subtext="Total nomor surat yang diambil hari ini"
             />
             <SummaryCard
               icon="⏳"
               label="Gap Request Pending"
-              value={pendingGaps ?? 0}
+              value={stats.pending_gaps}
               subtext="Request yang menunggu persetujuan"
             />
             <SummaryCard
               icon="🔢"
               label="Sequence Aktif"
-              value={todayLetters?.active_sequences ?? '-'}
-              subtext="Sequence aktif hari ini"
+              value={sequence?.next_number ?? '-'}
+              subtext="Nomor berikutnya dalam antrian"
             />
             <SummaryCard
               icon="👥"
               label="User Aktif"
-              value={activeUsers ?? 0}
+              value={stats.active_users}
               subtext="Total pengguna sistem yang aktif"
             />
           </>
@@ -320,12 +270,10 @@ export default function AdminDashboardPage() {
           <p className="text-xs text-muted mt-0.5">10 pengambilan nomor surat terakhir dari seluruh pengguna.</p>
         </div>
 
-        {allRecentError && <ErrorMessage error={allRecentError} />}
-
         <Table
           columns={recentAllColumns}
           data={allRecentLetters}
-          loading={allRecentLoading}
+          loading={loading}
           emptyText="Belum ada riwayat pengambilan nomor surat."
           emptyIcon="🕘"
         />
@@ -340,12 +288,10 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {logsError && <ErrorMessage error={logsError} />}
-
         <Table
           columns={auditColumns}
           data={auditLogs}
-          loading={logsLoading}
+          loading={loading}
           emptyText="Belum ada aktivitas tercatat."
         />
       </Card>
