@@ -214,7 +214,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
           </option>
           {level2Options.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.code} — {item.name}
+              {item.name}
             </option>
           ))}
         </select>
@@ -236,7 +236,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
           </option>
           {level3Options.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.code} — {item.name}
+              {item.name}
             </option>
           ))}
         </select>
@@ -258,7 +258,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
           </option>
           {level4Options.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.code} — {item.name}
+              {item.name}
             </option>
           ))}
         </select>

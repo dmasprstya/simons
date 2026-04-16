@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { displayLetterNumber } from '../../utils/formatNumber';
+import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
 import { useGapRequests } from '../../hooks/useGapRequests';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
@@ -185,7 +185,7 @@ export default function GapRequestPage() {
       label: 'Klasifikasi',
       render: (value) => (
         <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
-          {value?.full_code || value?.code || '-'}
+          {displayClassification(value)}
         </span>
       ),
     },

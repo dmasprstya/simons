@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { displayLetterNumber } from '../../utils/formatNumber';
+import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { takeNumber } from '../../api/letters.api';
 import { useToast } from '../../hooks/useToast';
@@ -320,7 +320,7 @@ export default function TakeNumberPage() {
               <div className="bg-slate-50 rounded-xl p-3">
                 <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Klasifikasi</p>
                 <p className="text-sm font-bold text-navy mt-0.5 truncate">
-                  {resultData.classification?.full_code || resultData.classification?.code || '-'}
+                  {displayClassification(resultData.classification)}
                 </p>
               </div>
               <div className="bg-slate-50 rounded-xl p-3 col-span-2">

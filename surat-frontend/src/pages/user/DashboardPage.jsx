@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { displayLetterNumber } from '../../utils/formatNumber';
+import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { getToday } from '../../api/sequences.api';
@@ -139,7 +139,7 @@ export default function DashboardPage() {
       label: 'Klasifikasi',
       render: (value) => (
         <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
-          {value?.code || '-'}
+          {displayClassification(value)}
         </span>
       ),
     },

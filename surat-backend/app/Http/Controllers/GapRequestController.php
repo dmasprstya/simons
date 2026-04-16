@@ -29,7 +29,8 @@ class GapRequestController extends Controller
      */
     public function index(): JsonResponse
     {
-        $requests = GapRequest::where('requested_by', Auth::id())
+        $requests = GapRequest::with('classification')
+            ->where('requested_by', Auth::id())
             ->orderByDesc('created_at')
             ->paginate(20);
 

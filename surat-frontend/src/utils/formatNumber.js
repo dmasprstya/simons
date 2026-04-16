@@ -20,3 +20,17 @@ export function displayLetterNumber(letter) {
 export function isFormattedNumber(str) {
   return /^W7-[\w.]+(-\d+)$/.test(str);
 }
+
+/**
+ * Menampilkan klasifikasi sesuai level:
+ *   level 1 → "HM - Hukum dan Perundang-undangan"
+ *   level 2+ → "Peraturan Perundang-undangan" (hanya nama)
+ *
+ * @param {Object|null} classification - Objek klasifikasi dari API
+ * @returns {string}
+ */
+export function displayClassification(classification) {
+  if (!classification) return '-';
+  if (classification.level === 1) return `${classification.code} - ${classification.name}`;
+  return classification.name || '-';
+}

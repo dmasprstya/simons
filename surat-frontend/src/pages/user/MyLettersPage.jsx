@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { displayLetterNumber } from '../../utils/formatNumber';
+import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
 import { useLetters } from '../../hooks/useLetters';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
@@ -118,7 +118,7 @@ export default function MyLettersPage() {
       label: 'Klasifikasi',
       render: (value) => (
         <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
-          {value?.full_code || value?.code || '-'}
+          {displayClassification(value)}
         </span>
       ),
     },
