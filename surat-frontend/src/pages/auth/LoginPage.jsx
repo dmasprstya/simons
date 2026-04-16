@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth.api';
 import { useAuthStore } from '../../store/authStore';
 import Button from '../../components/ui/Button';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 /**
  * LoginPage — Halaman login dengan form email + password.
@@ -21,8 +22,10 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const passwordRef = useRef(null);
 
   // Validasi client-side sederhana
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -109,6 +112,12 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && email.trim()) {
+                    e.preventDefault();
+                    passwordRef.current?.focus();
+                  }
+                }}
                 placeholder="nama@contoh.com"
                 disabled={loading}
                 autoComplete="email"
@@ -124,19 +133,34 @@ export default function LoginPage() {
               <label htmlFor="login-password" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1.5">
                 Password
               </label>
-              <input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukkan password"
-                disabled={loading}
-                autoComplete="current-password"
-                className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-[#0B1F3A] placeholder-[#94A3B8]
-                  focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20 focus:border-[#2A7FD4] focus:bg-white
-                  disabled:bg-[#F7F9FC] disabled:cursor-not-allowed
-                  transition-all duration-200"
-              />
+              <div className="relative">
+                <input
+                  id="login-password"
+                  ref={passwordRef}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Masukkan password"
+                  disabled={loading}
+                  autoComplete="current-password"
+                  className="w-full h-10 px-3 pr-10 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-[#0B1F3A] placeholder-[#94A3B8]
+                    focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20 focus:border-[#2A7FD4] focus:bg-white
+                    disabled:bg-[#F7F9FC] disabled:cursor-not-allowed
+                    transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors"
+                  tabIndex="-1"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Submit Button */}
