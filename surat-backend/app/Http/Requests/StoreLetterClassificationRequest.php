@@ -20,12 +20,18 @@ class StoreLetterClassificationRequest extends FormRequest
      * Aturan validasi untuk membuat klasifikasi surat baru.
      * Hierarki maksimal 4 level: level 1 (root) sampai level 4.
      *
+     * Catatan uniqueness: kode harus unik di antara SIBLING (sesama parent_id).
+     * Kode yang sama boleh muncul di parent berbeda (level berbeda),
+     * karena konteks hierarki yang berbeda memiliki namespace tersendiri.
+     * Validasi ini dikerjakan di withValidator() agar bisa mengakses parent_id dinamis.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'code'      => 'required|string|unique:letter_classifications,code',
+            // Uniqueness kode dicek secara custom di withValidator() (scoped per parent_id)
+            'code'      => 'required|string',
             'name'      => 'required|string|max:255',
             'type'      => 'required|in:substantif,fasilitatif',
             'parent_id' => 'nullable|exists:letter_classifications,id',
@@ -45,8 +51,41 @@ class StoreLetterClassificationRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            $parentId = $this->input('parent_id');
+            $parentId = $this->input('parent_id');  // null untuk level 1 (root)
+            $code     = $this->input('code');
             $level    = (int) $this->input('level');
+
+            // ── Cek uniqueness kode per sibling (scoped by parent_id) ──────────────
+            // Kode harus unik di antara sibling aktif (sesama parent_id).
+            // Record nonaktif dikecualikan karena logika restore ada di store().
+            // Ini menggantikan Rule::unique global yang keliru memblokir kode di parent lain.
+            if ($code) {
+                $excludeId = $this->route('classification') ?? $this->route('id');
+
+                $siblingQuery = LetterClassification::where('code', $code)
+                    ->where('is_active', true);
+
+                if ($parentId !== null) {
+                    // Child: sibling adalah yang punya parent_id sama
+                    $siblingQuery->where('parent_id', $parentId);
+                } else {
+                    // Root (level 1): sibling adalah sesama root
+                    $siblingQuery->whereNull('parent_id');
+                }
+
+                // Saat update, kecualikan record diri sendiri
+                if ($excludeId) {
+                    $siblingQuery->where('id', '!=', $excludeId);
+                }
+
+                if ($siblingQuery->exists()) {
+                    $validator->errors()->add(
+                        'code',
+                        'Kode klasifikasi sudah digunakan oleh klasifikasi lain dalam grup yang sama.'
+                    );
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────────
 
             if ($parentId !== null) {
                 /** @var LetterClassification|null $parent */

@@ -32,6 +32,7 @@ function TreeRow({
   onEdit,
   onAddChild,
   onToggleActive,
+  onDelete,
 }) {
   const isExpanded = expandedIds.has(item.id);
   const isLoadingChildren = loadingChildrenIds.has(item.id);
@@ -145,6 +146,14 @@ function TreeRow({
             >
               {item.is_active ? 'Nonaktifkan' : 'Aktifkan'}
             </button>
+            <button
+              type="button"
+              onClick={() => onDelete(item, parentId)}
+              className="bg-[#FEF2F2] text-[#991B1B] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-red-200 transition-colors"
+              title="Hapus permanen"
+            >
+              Hapus
+            </button>
           </div>
         </td>
       </tr>
@@ -177,6 +186,7 @@ function TreeRow({
             onEdit={onEdit}
             onAddChild={onAddChild}
             onToggleActive={onToggleActive}
+            onDelete={onDelete}
           />
         ))}
 
@@ -208,6 +218,7 @@ export default function ClassificationsPage() {
     handleCreate,
     handleUpdate,
     handleToggleActive,
+    handleDelete,
   } = useClassifications();
   const toast = useToast();
 
@@ -226,6 +237,11 @@ export default function ClassificationsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [togglingItem, setTogglingItem] = useState(null);
   const [togglingParentId, setTogglingParentId] = useState(null);
+
+  // === Delete confirm dialog state ===
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingItem, setDeletingItem] = useState(null);
+  const [deletingParentId, setDeletingParentId] = useState(null);
 
   // === Form state ===
   const [formData, setFormData] = useState({
@@ -379,6 +395,28 @@ export default function ClassificationsPage() {
     } catch {
       toast.error('Gagal mengubah status klasifikasi.');
       setShowConfirm(false);
+    }
+  };
+
+  // === Handler Delete ===
+  const openDeleteConfirm = (item, parentId) => {
+    setDeletingItem(item);
+    setDeletingParentId(parentId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingItem) return;
+
+    try {
+      await handleDelete(deletingItem.id, deletingParentId);
+      setShowDeleteConfirm(false);
+      setDeletingItem(null);
+      setDeletingParentId(null);
+      toast.success('Klasifikasi berhasil dihapus.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal menghapus klasifikasi.');
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -609,6 +647,7 @@ export default function ClassificationsPage() {
                   onEdit={openEditModal}
                   onAddChild={openAddChildModal}
                   onToggleActive={openToggleConfirm}
+                  onDelete={openDeleteConfirm}
                 />
               ))}
           </tbody>
@@ -725,6 +764,21 @@ export default function ClassificationsPage() {
             : `Apakah Anda yakin ingin mengaktifkan kembali klasifikasi "${togglingItem?.code} — ${togglingItem?.name}"?`
         }
         confirmLabel={togglingItem?.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+        loading={actionLoading}
+      />
+
+      {/* Confirm Dialog Hapus Permanen */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeletingItem(null);
+          setDeletingParentId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Klasifikasi"
+        message={`Apakah Anda yakin ingin menghapus permanen klasifikasi "${deletingItem?.code} — ${deletingItem?.name}"? Aksi ini tidak dapat dibatalkan.`}
+        confirmLabel="Hapus"
         loading={actionLoading}
       />
     </div>

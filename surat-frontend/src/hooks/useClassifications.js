@@ -5,6 +5,7 @@ import {
   createClassification,
   updateClassification,
   toggleActive,
+  deleteClassification,
 } from '../api/classifications.api';
 
 /**
@@ -206,6 +207,38 @@ export function useClassifications() {
     [fetchRoots, fetchChildren, lastFilter]
   );
 
+  /**
+   * Hapus permanen klasifikasi
+   * @param {number} id
+   * @param {number|null} parentId - parent ID untuk refresh tree
+   */
+  const handleDelete = useCallback(
+    async (id, parentId = null) => {
+      setActionLoading(true);
+      setActionError(null);
+
+      try {
+        const response = await deleteClassification(id);
+
+        if (parentId) {
+          await fetchChildren(parentId);
+        } else {
+          await fetchRoots(lastFilter);
+        }
+
+        return response;
+      } catch (err) {
+        const message =
+          err.response?.data?.message || 'Gagal menghapus klasifikasi.';
+        setActionError(message);
+        throw err;
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [fetchRoots, fetchChildren, lastFilter]
+  );
+
   return {
     roots,
     childrenMap,
@@ -222,5 +255,6 @@ export function useClassifications() {
     handleCreate,
     handleUpdate,
     handleToggleActive,
+    handleDelete,
   };
 }

@@ -55,3 +55,11 @@ export async function toggleActive(id) {
   const response = await api.patch(`/classifications/${id}/toggle-active`);
   return response.data;
 }
+
+/**
+ * Delete Classification — hapus permanen klasifikasi (hanya jika tidak punya children)
+ */
+export async function deleteClassification(id) {
+  const response = await api.delete(`/classifications/${id}`);
+  return response.data;
+}

@@ -49,11 +49,14 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::get('/search', [LetterClassificationController::class, 'search']);
         Route::get('/{id}/children', [LetterClassificationController::class, 'children']);
         Route::get('/{id}', [LetterClassificationController::class, 'show']);
-        // Write — admin only
+        // Write & admin-only reads
         Route::middleware('role:admin')->group(function (): void {
+            // Flat list semua level — berguna untuk admin mengelola & debug child classifications
+            Route::get('/all', [LetterClassificationController::class, 'allFlat']);
             Route::post('/', [LetterClassificationController::class, 'store']);
             Route::put('/{id}', [LetterClassificationController::class, 'update']);
             Route::patch('/{id}/toggle-active', [LetterClassificationController::class, 'toggleActive']);
+            Route::delete('/{id}', [LetterClassificationController::class, 'destroy']);
         });
     });
 

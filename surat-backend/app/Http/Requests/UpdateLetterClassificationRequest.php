@@ -5,20 +5,19 @@ namespace App\Http\Requests;
 class UpdateLetterClassificationRequest extends StoreLetterClassificationRequest
 {
     /**
-     * Extend StoreLetterClassificationRequest — hanya override rules() untuk
-     * mengecualikan record yang sedang diupdate dari validasi unique pada kolom code.
-     * Logika withValidator() diwariskan dari parent tanpa perubahan.
+     * Override rules() dari StoreLetterClassificationRequest.
+     *
+     * Validasi uniqueness kode dikerjakan oleh withValidator() yang diwarisi dari parent.
+     * withValidator() sudah menangani exclusion record diri sendiri via route parameter
+     * ('classification' atau 'id'), jadi tidak perlu Rule::unique hardcoded di sini.
      *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
-        // Ambil ID dari route parameter — bisa bernama 'classification' atau 'id'
-        $id = $this->route('classification') ?? $this->route('id');
-
         return [
-            // Ignore record saat ini pada cek unique (format: unique:table,column,except_id)
-            'code'      => "required|string|unique:letter_classifications,code,{$id}",
+            // Uniqueness kode dicek di withValidator() (scoped per parent_id, exclude self)
+            'code'      => 'required|string',
             'name'      => 'required|string|max:255',
             'type'      => 'required|in:substantif,fasilitatif',
             'parent_id' => 'nullable|exists:letter_classifications,id',

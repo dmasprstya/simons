@@ -54,7 +54,6 @@ class LetterClassificationController extends Controller
         $parent = LetterClassification::findOrFail($id);
 
         $children = LetterClassification::where('parent_id', $id)
-            ->where('is_active', true)
             ->orderBy('code')
             ->get();
 
@@ -141,25 +140,51 @@ class LetterClassificationController extends Controller
     ): JsonResponse {
         $validated = $request->validated();
 
-        // Node baru belum punya anak → selalu leaf
-        $validated['is_leaf'] = true;
-
         $classification = DB::transaction(function () use ($validated, $audit): LetterClassification {
-            $node = LetterClassification::create($validated);
+            // Jika ada record nonaktif dengan kode yang sama DAN parent_id yang sama, restore saja.
+            // Penting: scope ke parent_id agar tidak salah merestore record dari parent berbeda.
+            $existingQuery = LetterClassification::where('code', $validated['code'])
+                ->where('is_active', false);
 
-            // Jika punya parent, parent bukan leaf lagi
+            if (isset($validated['parent_id']) && $validated['parent_id'] !== null) {
+                $existingQuery->where('parent_id', $validated['parent_id']);
+            } else {
+                $existingQuery->whereNull('parent_id');
+            }
+
+            $existing = $existingQuery->first();
+
+            if ($existing !== null) {
+                $before = $existing->toArray();
+                $existing->update(array_merge($validated, ['is_active' => true]));
+                $node = $existing->fresh();
+
+                $audit->log(
+                    'classification.restored',
+                    'letter_classifications',
+                    $node->id,
+                    $before,
+                    $node->toArray()
+                );
+            } else {
+                // Node baru belum punya anak → selalu leaf
+                $validated['is_leaf'] = true;
+                $node = LetterClassification::create($validated);
+
+                $audit->log(
+                    'classification.created',
+                    'letter_classifications',
+                    $node->id,
+                    null,
+                    $node->toArray()
+                );
+            }
+
+            // Jika punya parent, pastikan parent bukan leaf lagi
             if ($node->parent_id !== null) {
                 LetterClassification::where('id', $node->parent_id)
                     ->update(['is_leaf' => false]);
             }
-
-            $audit->log(
-                'classification.created',
-                'letter_classifications',
-                $node->id,
-                null,
-                $node->toArray()
-            );
 
             return $node;
         });
@@ -181,6 +206,104 @@ class LetterClassificationController extends Controller
         return response()->json([
             'data'    => new LetterClassificationResource($classification->fresh()),
             'message' => 'Klasifikasi berhasil diperbarui.',
+        ]);
+    }
+
+    /**
+     * Daftar SEMUA klasifikasi lintas level (flat list) untuk keperluan admin.
+     *
+     * Berbeda dengan index() yang hanya menampilkan root (parent_id = null),
+     * endpoint ini mengembalikan SEMUA record termasuk child di level 2–4.
+     * Digunakan admin untuk mengelola dan men-debug klasifikasi yang tidak tampil
+     * di list utama karena bukan root.
+     *
+     * Filter opsional: ?type=substantif, ?level=2, ?is_active=0|1, ?search=keyword
+     */
+    public function allFlat(Request $request): JsonResponse
+    {
+        $query = LetterClassification::with('parent');
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('level')) {
+            $query->where('level', (int) $request->level);
+        }
+
+        // Filter is_active: default tampilkan semua (aktif & nonaktif)
+        if ($request->has('is_active')) {
+            $query->where('is_active', (bool) $request->is_active);
+        }
+
+        if ($request->filled('search')) {
+            $term = $request->search;
+            $query->where(function ($q) use ($term) {
+                $q->where('code', 'like', "%{$term}%")
+                  ->orWhere('name', 'like', "%{$term}%");
+            });
+        }
+
+        $classifications = $query->orderBy('level')->orderBy('code')->paginate(100);
+
+        return response()->json([
+            'data'    => LetterClassificationResource::collection($classifications),
+            'message' => 'Semua klasifikasi (semua level) berhasil diambil.',
+            'meta'    => [
+                'current_page' => $classifications->currentPage(),
+                'last_page'    => $classifications->lastPage(),
+                'per_page'     => $classifications->perPage(),
+                'total'        => $classifications->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Hapus permanen klasifikasi.
+     *
+     * Syarat: klasifikasi tidak boleh memiliki children (agar tidak merusak hierarki).
+     * Setelah dihapus, jika ada parent, periksa apakah parent masih punya anak lain —
+     * jika tidak, update is_leaf parent menjadi true.
+     */
+    public function destroy(int $id, AuditService $audit): JsonResponse
+    {
+        $classification = LetterClassification::findOrFail($id);
+
+        // Cegah penghapusan jika masih punya children
+        $childrenCount = LetterClassification::where('parent_id', $id)->count();
+        if ($childrenCount > 0) {
+            return response()->json([
+                'data'    => null,
+                'message' => 'Klasifikasi tidak dapat dihapus karena masih memiliki sub-klasifikasi.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($classification, $audit): void {
+            $parentId = $classification->parent_id;
+            $before   = $classification->toArray();
+
+            $audit->log(
+                'classification.deleted',
+                'letter_classifications',
+                $classification->id,
+                $before,
+                null
+            );
+
+            $classification->delete();
+
+            // Jika parent kehilangan semua anak, jadikan is_leaf = true
+            if ($parentId !== null) {
+                $siblingCount = LetterClassification::where('parent_id', $parentId)->count();
+                if ($siblingCount === 0) {
+                    LetterClassification::where('id', $parentId)->update(['is_leaf' => true]);
+                }
+            }
+        });
+
+        return response()->json([
+            'data'    => null,
+            'message' => 'Klasifikasi berhasil dihapus.',
         ]);
     }
 
