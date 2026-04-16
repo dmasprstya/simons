@@ -63,6 +63,56 @@ class LetterClassificationController extends Controller
     }
 
     /**
+     * Cari klasifikasi berdasarkan nama atau kode secara full-text di semua level.
+     *
+     * Hanya mengembalikan klasifikasi aktif (is_active = true).
+     * Digunakan oleh frontend search box di ClassificationPicker.
+     * Setiap hasil menyertakan chain ancestor agar frontend bisa menyinkronkan
+     * dropdown level 1–4 secara otomatis setelah user memilih.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $term = $request->query('q', '');
+
+        if (strlen(trim($term)) < 2) {
+            return response()->json(['data' => [], 'message' => 'Masukkan minimal 2 karakter.']);
+        }
+
+        $results = LetterClassification::where('is_active', true)
+            ->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                  ->orWhere('code', 'like', "%{$term}%");
+            })
+            ->orderBy('code')
+            ->limit(20)
+            ->get();
+
+        // Sertakan chain ancestor (level 1 → this) agar frontend bisa resolve hierarki
+        $mapped = $results->map(function (LetterClassification $item) {
+            $ancestors = [];
+            $current   = $item;
+
+            // Telusuri ke atas sampai root
+            while ($current->parent_id !== null) {
+                $current = LetterClassification::find($current->parent_id);
+                if (! $current) break;
+                array_unshift($ancestors, ['id' => $current->id, 'name' => $current->name, 'code' => $current->code, 'level' => $current->level]);
+            }
+
+            return [
+                'id'        => $item->id,
+                'code'      => $item->code,
+                'name'      => $item->name,
+                'level'     => $item->level,
+                'is_leaf'   => $item->is_leaf,
+                'ancestors' => $ancestors,
+            ];
+        });
+
+        return response()->json(['data' => $mapped, 'message' => 'Hasil pencarian klasifikasi.']);
+    }
+
+    /**
      * Tampilkan detail klasifikasi beserta relasi parent dan children-nya.
      */
     public function show(int $id): JsonResponse

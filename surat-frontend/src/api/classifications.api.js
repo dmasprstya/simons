@@ -9,6 +9,11 @@ export async function getRoots(params = {}) {
   return response.data;
 }
 
+export async function searchClassifications(q) {
+  const response = await api.get('/classifications/search', { params: { q } });
+  return response.data;
+}
+
 /**
  * Get Children — daftar sub-klasifikasi dari parent tertentu
  */

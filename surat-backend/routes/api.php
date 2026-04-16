@@ -41,6 +41,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         // Read — semua user
         Route::get('/',              [LetterClassificationController::class, 'index']);
         // Route statis HARUS didaftarkan sebelum route dinamis /{id}
+        Route::get('/search',        [LetterClassificationController::class, 'search']);
         Route::get('/{id}/children', [LetterClassificationController::class, 'children']);
         Route::get('/{id}',          [LetterClassificationController::class, 'show']);
         // Write — admin only
