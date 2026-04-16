@@ -27,8 +27,7 @@ import {
  *             Pengaturan Sequence, Kelola User, Klasifikasi, Audit Log, Laporan
  */
 
-const userMenuItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
+const userOnlyMenuItems = [
   { to: '/letters/take', label: 'Ambil Nomor', icon: HashtagIcon },
   { to: '/letters', label: 'Riwayat Surat', icon: DocumentTextIcon },
   { to: '/gap-requests', label: 'Request Gap', icon: DocumentArrowUpIcon },
@@ -71,10 +70,9 @@ function SidebarLink({ to, label, icon: Icon, collapsed }) {
       end
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group
-        ${
-          isActive
-            ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
-            : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
+        ${isActive
+          ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
+          : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
         }
         ${collapsed ? 'justify-center' : ''}`
       }
@@ -136,7 +134,16 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
               Menu Utama
             </p>
           )}
-          {userMenuItems.map((item) => (
+          {/* Menu Dashboard Dinamis sesuai Role */}
+          <SidebarLink 
+            to={isAdmin ? '/admin/dashboard' : '/dashboard'} 
+            label="Dashboard" 
+            icon={HomeIcon} 
+            collapsed={collapsed} 
+          />
+
+          {/* Menu khusus user biasa — disembunyikan dari admin */}
+          {!isAdmin && userOnlyMenuItems.map((item) => (
             <SidebarLink key={item.to} {...item} collapsed={collapsed} />
           ))}
 
@@ -144,7 +151,7 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
           {isAdmin && (
             <>
               <div className="my-6 border-t border-slate-100 mx-2" />
-              
+
               <button
                 type="button"
                 onClick={() => setIsAdminOpen(!isAdminOpen)}
@@ -157,8 +164,8 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
                     <span className="flex-1 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] group-hover:text-blue-600">
                       Administrasi
                     </span>
-                    <ChevronDownIcon 
-                      className={`h-3.5 w-3.5 text-slate-300 transition-transform duration-200 ${isAdminOpen ? 'rotate-180 text-blue-600' : ''}`} 
+                    <ChevronDownIcon
+                      className={`h-3.5 w-3.5 text-slate-300 transition-transform duration-200 ${isAdminOpen ? 'rotate-180 text-blue-600' : ''}`}
                     />
                   </>
                 )}
@@ -213,10 +220,9 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
             to="/profile"
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200
-              ${
-                isActive
-                  ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
+              ${isActive
+                ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
               }
               ${collapsed ? 'lg:justify-center' : ''}`
             }

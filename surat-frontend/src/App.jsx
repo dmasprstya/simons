@@ -37,13 +37,19 @@ import Profile from './pages/Profile';
 // 404
 import NotFoundPage from './pages/NotFoundPage';
 
+// 403
+import UnauthorizedPage from './pages/UnauthorizedPage';
+
 /**
  * Komponen root redirect — arahkan ke dashboard jika sudah login,
  * atau ke login jika belum.
  */
 function RootRedirect() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />;
+  const { isAuthenticated, user } = useAuthStore();
+  
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  return <Navigate to={user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'} replace />;
 }
 
 /**
@@ -76,11 +82,16 @@ function App() {
         {/* Protected routes — membutuhkan autentikasi, dibungkus UserLayout */}
         <Route element={<ProtectedRoute />}>
           <Route element={<UserLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/letters/take" element={<TakeNumberPage />} />
-            <Route path="/letters" element={<MyLettersPage />} />
-            <Route path="/gap-requests" element={<GapRequestPage />} />
+            {/* Route yang bisa diakses semua role */}
             <Route path="/profile" element={<Profile />} />
+
+            {/* Route khusus user biasa — admin tidak boleh mengakses */}
+            <Route element={<ProtectedRoute allowedRoles={['user']} />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/letters/take" element={<TakeNumberPage />} />
+              <Route path="/letters" element={<MyLettersPage />} />
+              <Route path="/gap-requests" element={<GapRequestPage />} />
+            </Route>
 
             {/* Admin routes — membutuhkan role admin */}
             <Route element={<AdminRoute />}>
@@ -95,6 +106,9 @@ function App() {
             </Route>
           </Route>
         </Route>
+
+        {/* Halaman unauthorized — role tidak diizinkan */}
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Catch-all — halaman 404 */}
         <Route path="*" element={<NotFoundPage />} />
