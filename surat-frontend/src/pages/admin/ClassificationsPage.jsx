@@ -349,6 +349,7 @@ export default function ClassificationsPage() {
         name: formData.name.trim(),
         type: formData.type,
         parent_id: editingParentId || null,
+        level: editingItem.level,
       });
       setShowEditModal(false);
       setEditingItem(null);
