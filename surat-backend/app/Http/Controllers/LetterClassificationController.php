@@ -6,8 +6,10 @@ use App\Http\Requests\StoreLetterClassificationRequest;
 use App\Http\Requests\UpdateLetterClassificationRequest;
 use App\Http\Resources\LetterClassificationResource;
 use App\Models\LetterClassification;
+use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LetterClassificationController extends Controller
 {
@@ -127,10 +129,40 @@ class LetterClassificationController extends Controller
 
     /**
      * Buat klasifikasi baru.
+     *
+     * Logika is_leaf:
+     * - Node baru selalu is_leaf = true (belum punya anak)
+     * - Jika punya parent_id, parent tersebut harus di-update menjadi is_leaf = false
+     *   karena kini punya minimal satu anak.
      */
-    public function store(StoreLetterClassificationRequest $request): JsonResponse
-    {
-        $classification = LetterClassification::create($request->validated());
+    public function store(
+        StoreLetterClassificationRequest $request,
+        AuditService $audit
+    ): JsonResponse {
+        $validated = $request->validated();
+
+        // Node baru belum punya anak → selalu leaf
+        $validated['is_leaf'] = true;
+
+        $classification = DB::transaction(function () use ($validated, $audit): LetterClassification {
+            $node = LetterClassification::create($validated);
+
+            // Jika punya parent, parent bukan leaf lagi
+            if ($node->parent_id !== null) {
+                LetterClassification::where('id', $node->parent_id)
+                    ->update(['is_leaf' => false]);
+            }
+
+            $audit->log(
+                'classification.created',
+                'letter_classifications',
+                $node->id,
+                null,
+                $node->toArray()
+            );
+
+            return $node;
+        });
 
         return response()->json([
             'data'    => new LetterClassificationResource($classification),

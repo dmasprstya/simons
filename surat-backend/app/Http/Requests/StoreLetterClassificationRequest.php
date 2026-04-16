@@ -30,6 +30,7 @@ class StoreLetterClassificationRequest extends FormRequest
             'type'      => 'required|in:substantif,fasilitatif',
             'parent_id' => 'nullable|exists:letter_classifications,id',
             'level'     => 'required|integer|between:1,4',
+            'is_leaf'   => 'sometimes|boolean',
         ];
     }
 
