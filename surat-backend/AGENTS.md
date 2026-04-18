@@ -17,24 +17,67 @@
 - Setelah selesai tiap fase: tampilkan checklist file yang dibuat/diubah, tunggu konfirmasi eksplisit sebelum lanjut
 
 ## Logika Gap — Baca Sebelum Menyentuh NumberingService
-Sistem membagi nomor surat menjadi blok. Setiap blok = gap_size nomor aktif + gap_size nomor cadangan (zona gap).
 
-Contoh konkret (default_start=1000, gap_size=10):
-- Blok 1 → aktif: 1000–1009 | zona gap: 1010–1019
-- Blok 2 → aktif: 1020–1029 | zona gap: 1030–1039
-- Blok 3 → aktif: 1040–1049 | zona gap: 1050–1059
+### Konsep Inti
+Nomor aktif dalam satu hari **tidak dibatasi**. Gap (loncatan nomor) hanya terjadi **sekali saat hari berganti**.
 
-Formula zona gap untuk blok ke-N (N dimulai dari 0):
-  aktif_start = default_start + N * (gap_size * 2)
-  aktif_end   = aktif_start + gap_size - 1
-  gap_start   = aktif_end + 1
-  gap_end     = gap_start + gap_size - 1
+### Contoh Konkret (default_start=1000, gap_size=10)
+```
+Senin   → nomor aktif: 1000, 1001, 1002, ... (tidak terbatas sepanjang hari)
+           misalnya hari ini terakhir: 1076
 
-acquireNumber() hanya boleh mengeluarkan nomor dalam range aktif_start–aktif_end.
-releaseGapNumber() mengeluarkan nomor dalam range gap_start–gap_end (untuk request gap yang diapprove).
-Jika nomor berikutnya jatuh di zona gap, lompati ke aktif_start blok berikutnya.
+Rollover terjadi saat pertama kali ambil nomor hari Selasa:
+  → arsipkan cadangan Senin: 1077–1086 → masuk tabel daily_gaps (date=Senin)
+  → nomor pertama Selasa: 1087
+
+Selasa  → nomor aktif: 1087, 1088, 1089, ... (tidak terbatas)
+           misalnya hari ini terakhir: 1102
+
+Rollover ke Rabu:
+  → arsipkan cadangan Selasa: 1103–1112 → masuk tabel daily_gaps (date=Selasa)
+  → nomor pertama Rabu: 1113
+```
+
+### Struktur GlobalSequence
+| Kolom | Keterangan |
+|---|---|
+| `last_number` | Nomor terakhir yang diterbitkan (absolut, bukan offset) |
+| `gap_size` | Jumlah nomor cadangan yang di-skip saat ganti hari |
+| `last_issued_date` | Tanggal terakhir nomor diterbitkan |
+
+> `next_start` sudah dihapus — tidak digunakan lagi.
+
+### Logika acquireNumber()
+```
+1. Lock GlobalSequence (FOR UPDATE)
+2. Jika last_issued_date BUKAN hari ini (ganti hari):
+   - gap_start = last_number + 1
+   - gap_end   = last_number + gap_size
+   - Arsipkan ke daily_gaps: { date=last_issued_date, gap_start, gap_end }
+   - candidate = last_number + gap_size + 1
+3. Jika last_issued_date = hari ini (hari sama):
+   - candidate = last_number + 1
+4. Update last_number = candidate, last_issued_date = today()
+5. Return candidate
+```
+
+### Logika releaseGapNumber()
+Nomor gap yang di-approve via GapRequest diterbitkan dengan validasi:
+1. Nomor harus ada di tabel `daily_gaps` untuk `gap_date` yang diminta (cek `gap_start <= number <= gap_end`)
+2. Nomor belum ada di tabel `letter_numbers`
+
+> Tidak ada kalkulasi posInBlock atau blockIndex — validasi cukup via tabel daily_gaps.
+
+### Logika ensureDayIsCurrent()
+Dipanggil controller saat halaman dibuka (tanpa menerbitkan nomor baru):
+```
+1. Lock GlobalSequence
+2. Jika last_issued_date null atau sudah hari ini → return (tidak perlu rollover)
+3. Arsipkan gap: { date=last_issued_date, gap_start=last_number+1, gap_end=last_number+gap_size }
+4. Update last_issued_date = today() (last_number tidak berubah)
+```
 
 ## Penanganan Error Kritis
 - Lock timeout / deadlock di NumberingService → throw NumberingLockException → controller return 409
-- Nomor gap sudah dipakai → throw GapAlreadyUsedException → controller return 422
+- Nomor gap sudah dipakai / tidak valid → throw GapAlreadyUsedException → controller return 422
 - User nonaktif → middleware return 403

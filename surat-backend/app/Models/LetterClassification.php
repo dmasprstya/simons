@@ -63,14 +63,6 @@ class LetterClassification extends Model
     }
 
     /**
-     * Semua record sequence harian untuk klasifikasi ini.
-     */
-    public function dailySequences(): HasMany
-    {
-        return $this->hasMany(DailySequence::class);
-    }
-
-    /**
      * Semua permintaan gap yang berkaitan dengan klasifikasi ini.
      */
     public function gapRequests(): HasMany

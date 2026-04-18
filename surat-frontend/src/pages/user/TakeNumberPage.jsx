@@ -171,106 +171,103 @@ export default function TakeNumberPage() {
             )}
           </div>
 
-          {/* Subject / Perihal */}
-          <div>
-            <label
-              htmlFor="subject"
-              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
-            >
-              Perihal <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="subject"
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              disabled={loading}
-              maxLength={255}
-              placeholder="Contoh: Undangan Rapat Koordinasi"
-              className={`${inputBaseClass} ${
-                validationErrors.subject
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-[#E2E8F0]'
-              }`}
-            />
-            <div className="flex items-center justify-between mt-1">
-              {validationErrors.subject ? (
-                <p className="text-xs text-red-600">{validationErrors.subject}</p>
-              ) : (
-                <span />
-              )}
-              <span className="text-[10px] text-[#94A3B8]">
-                {subject.length}/255
-              </span>
-            </div>
-          </div>
-
-          {/* Destination / Tujuan */}
-          <div>
-            <label
-              htmlFor="destination"
-              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
-            >
-              Tujuan <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="destination"
-              type="text"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              disabled={loading}
-              maxLength={255}
-              placeholder="Contoh: Kepala Dinas Pendidikan"
-              className={`${inputBaseClass} ${
-                validationErrors.destination
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-[#E2E8F0]'
-              }`}
-            />
-            <div className="flex items-center justify-between mt-1">
-              {validationErrors.destination ? (
-                <p className="text-xs text-red-600">{validationErrors.destination}</p>
-              ) : (
-                <span />
-              )}
-              <span className="text-[10px] text-[#94A3B8]">
-                {destination.length}/255
-              </span>
-            </div>
-          </div>
-
-          {/* Sifat Surat */}
-          <div>
-            <label
-              htmlFor="sifat_surat"
-              className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
-            >
-              Sifat Surat <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="sifat_surat"
-              value={sifatSurat}
-              onChange={(e) => setSifatSurat(e.target.value)}
-              disabled={loading}
-              className={`block w-full h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm text-[#0B1F3A]
-                transition-all duration-200
-                focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
-                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed
-                ${
-                  validationErrors.sifat_surat
+          {/* Subject and Purpose Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Subject / Perihal */}
+            <div>
+              <label
+                htmlFor="subject"
+                className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
+              >
+                Perihal <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="subject"
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                disabled={loading}
+                maxLength={255}
+                placeholder="Contoh: Undangan Rapat Koordinasi"
+                className={`${inputBaseClass} ${
+                  validationErrors.subject
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
                     : 'border-[#E2E8F0]'
                 }`}
-            >
-              <option value="">— Pilih Sifat Surat —</option>
+              />
+              <div className="flex items-center justify-between mt-1">
+                {validationErrors.subject ? (
+                  <p className="text-xs text-red-600">{validationErrors.subject}</p>
+                ) : (
+                  <span />
+                )}
+                <span className="text-[10px] text-[#94A3B8]">
+                  {subject.length}/255
+                </span>
+              </div>
+            </div>
+
+            {/* Destination / Tujuan */}
+            <div>
+              <label
+                htmlFor="destination"
+                className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
+              >
+                Tujuan <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="destination"
+                type="text"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                disabled={loading}
+                maxLength={255}
+                placeholder="Contoh: Kepala Dinas Pendidikan"
+                className={`${inputBaseClass} ${
+                  validationErrors.destination
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                    : 'border-[#E2E8F0]'
+                }`}
+              />
+              <div className="flex items-center justify-between mt-1">
+                {validationErrors.destination ? (
+                  <p className="text-xs text-red-600">{validationErrors.destination}</p>
+                ) : (
+                  <span />
+                )}
+                <span className="text-[10px] text-[#94A3B8]">
+                  {destination.length}/255
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Sifat Surat (Mail Properties) */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
+              Sifat Surat <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {SIFAT_SURAT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSifatSurat(opt.value)}
+                  disabled={loading}
+                  className={`
+                    px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 border
+                    ${sifatSurat === opt.value
+                      ? 'bg-[#1d3a6e] border-[#1d3a6e] text-white shadow-lg shadow-navy/20'
+                      : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#1d3a6e] hover:text-[#1d3a6e]'
+                    }
+                  `}
+                >
                   {opt.label}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
             {validationErrors.sifat_surat && (
-              <p className="mt-1 text-xs text-red-600">{validationErrors.sifat_surat}</p>
+              <p className="mt-1.5 text-xs text-red-600">{validationErrors.sifat_surat}</p>
             )}
           </div>
 

@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [error, setError] = useState(null);
 
   const latestTakenNumber = globalSeq?.last_number > 0
-    ? globalSeq.next_number - 1
+    ? globalSeq.last_number
     : '-';
 
   // Format tanggal hari ini dalam bahasa Indonesia

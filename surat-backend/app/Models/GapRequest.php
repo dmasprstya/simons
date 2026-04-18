@@ -37,8 +37,8 @@ class GapRequest extends Model
     protected function casts(): array
     {
         return [
-            'number'      => 'integer',
-            'gap_date'    => 'date',
+            'number' => 'integer',
+            'gap_date' => 'date',
             'reviewed_at' => 'datetime',
         ];
     }

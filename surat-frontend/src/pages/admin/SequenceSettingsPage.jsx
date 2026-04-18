@@ -8,51 +8,57 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
 /**
  * SequenceSettingsPage — Halaman pengaturan sequence (admin).
  *
- * Fitur:
- * - Input "Gap Size Global" (integer, min 1, max 100) + penjelasan + contoh visual
- * - Tombol "Simpan" → PATCH /sequences/gap
- * - Tabel riwayat sequence: Tanggal | Klasifikasi | Nomor Terakhir | Gap Size | Next Start
- * - Filter tabel: ClassificationPicker, date range
+ * Diperbarui: Menggunakan model Linear Daily Gap.
  */
 
 /**
- * GapVisualizer — visualisasi blok gap berdasarkan gap size
- * Menampilkan contoh konkret 3 blok pertama
+ * GapVisualizer — visualisasi gap harian
  */
 function GapVisualizer({ gapSize }) {
-  const defaultStart = 1000;
-  const blocks = [];
-
-  for (let n = 0; n < 3; n++) {
-    const activeStart = defaultStart + n * (gapSize * 2);
-    const activeEnd = activeStart + gapSize - 1;
-    const gapStart = activeEnd + 1;
-    const gapEnd = gapStart + gapSize - 1;
-
-    blocks.push({ n: n + 1, activeStart, activeEnd, gapStart, gapEnd });
-  }
+  const currentLast = 1076;
+  const gapStart = currentLast + 1;
+  const gapEnd = currentLast + gapSize;
+  const tomorrowStart = gapEnd + 1;
 
   return (
     <div className="bg-[#F7F9FC] rounded-lg p-4 space-y-3">
       <p className="text-[10px] font-medium text-[#64748B] uppercase tracking-widest">
-        Contoh Visual (default_start=1000, gap_size={gapSize})
+        Ilustrasi Linear Gap (gap_size={gapSize})
       </p>
-      <div className="space-y-2">
-        {blocks.map((block) => (
-          <div key={block.n} className="flex items-center gap-3 text-xs">
-            <span className="text-[10px] text-[#94A3B8] w-12 shrink-0">
-              Blok {block.n}
+      <div className="space-y-4">
+        {/* Hari Ini */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-[#94A3B8] uppercase">Hari Ini</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-1 rounded bg-[#ECFDF5] text-[#065F46] text-xs font-medium">
+              Nomor Terakhir: {currentLast}
             </span>
-            <div className="flex gap-1 flex-1">
-              <span className="inline-flex items-center px-2 py-1 rounded bg-[#ECFDF5] text-[#065F46] text-xs font-medium">
-                Aktif: {block.activeStart}–{block.activeEnd}
-              </span>
-              <span className="inline-flex items-center px-2 py-1 rounded bg-amber-50 text-amber-700 text-xs font-medium">
-                Gap: {block.gapStart}–{block.gapEnd}
+            <div className="h-px bg-[#E2E8F0] flex-1"></div>
+          </div>
+        </div>
+
+        {/* Rollover */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-amber-500 uppercase">Ganti Hari (Rollover)</span>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 border-l-2 border-dashed border-amber-200 ml-4 pl-4 py-1">
+              <span className="inline-flex items-center px-2 py-1 rounded bg-amber-50 text-amber-700 text-xs font-medium border border-amber-100 italic">
+                Gap Cadangan: {gapStart} – {gapEnd} ({gapSize} nomor)
               </span>
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Besok */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold text-[#94A3B8] uppercase">Besok</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-1 rounded bg-[#F0F9FF] text-[#0369A1] text-xs font-bold border border-[#BAE6FD]">
+              Nomor Berikutnya: {tomorrowStart}
+            </span>
+            <div className="h-px bg-[#E2E8F0] flex-1"></div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -81,20 +87,7 @@ export default function SequenceSettingsPage() {
   const [seqMeta, setSeqMeta] = useState(null);
 
   // === Filter state ===
-  const [filterDateFrom, setFilterDateFrom] = useState('');
-  const [filterDateTo, setFilterDateTo] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Build filter params
-  const buildParams = useCallback(
-    (page = 1) => {
-      const params = { page };
-      if (filterDateFrom) params.date_from = filterDateFrom;
-      if (filterDateTo) params.date_to = filterDateTo;
-      return params;
-    },
-    [filterDateFrom, filterDateTo]
-  );
 
   // Fetch riwayat sequence
   const fetchSequences = useCallback(
@@ -103,12 +96,11 @@ export default function SequenceSettingsPage() {
       setSeqError(null);
 
       try {
-        const response = await getSequences(buildParams(page));
+        const response = await getSequences({ page });
 
-        // API mengembalikan satu object GlobalSequence (bukan array/paginated),
-        // bungkus menjadi array agar Table dapat melakukan .map()
         const raw = response.data;
-        const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        // Backend mengembalikan object tunggal untuk global sequence saat ini
+        const arr = raw ? [raw] : [];
         setSequences(arr);
         setSeqMeta(response.meta || null);
 
@@ -119,7 +111,7 @@ export default function SequenceSettingsPage() {
         }
       } catch (err) {
         const message =
-          err.response?.data?.message || 'Gagal memuat riwayat sequence.';
+          err.response?.data?.message || 'Gagal memuat info sequence.';
         setSeqError(message);
         setSequences([]);
         setSeqMeta(null);
@@ -127,31 +119,12 @@ export default function SequenceSettingsPage() {
         setSeqLoading(false);
       }
     },
-    [buildParams, originalGapSize]
+    [originalGapSize]
   );
 
-  // Fetch saat mount dan saat filter/page berubah
   useEffect(() => {
     fetchSequences(currentPage);
   }, [fetchSequences, currentPage]);
-
-  // Handle ganti halaman
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  // Handle apply filter
-  const handleFilter = () => {
-    setCurrentPage(1);
-    fetchSequences(1);
-  };
-
-  // Handle reset filter
-  const handleResetFilter = () => {
-    setFilterDateFrom('');
-    setFilterDateTo('');
-    setCurrentPage(1);
-  };
 
   // Handle buka dialog konfirmasi reset
   const handleOpenReset = () => {
@@ -191,9 +164,8 @@ export default function SequenceSettingsPage() {
 
   // Handle simpan gap size
   const handleSaveGap = async () => {
-    // Validasi
-    if (!gapSize || gapSize < 1 || gapSize > 100) {
-      setSaveError('Gap size harus antara 1 dan 100.');
+    if (!gapSize || gapSize < 0 || gapSize > 100) {
+      setSaveError('Gap size harus antara 0 dan 100.');
       return;
     }
 
@@ -204,28 +176,26 @@ export default function SequenceSettingsPage() {
     try {
       await updateGap(gapSize);
       setOriginalGapSize(gapSize);
-      setSaveSuccess('Gap size berhasil diperbarui. Perubahan berlaku mulai hari berikutnya.');
+      setSaveSuccess('Gap size berhasil diperbarui.');
 
-      // Refresh tabel
       fetchSequences(currentPage);
-
       setTimeout(() => setSaveSuccess(null), 5000);
     } catch (err) {
       setSaveError(
-        err.response?.data?.message || 'Gagal menyimpan gap size. Silakan coba lagi.'
+        err.response?.data?.message || 'Gagal menyimpan gap size.'
       );
     } finally {
       setSaving(false);
     }
   };
 
-  // Kolom tabel riwayat sequence (GlobalSequence: last_issued_date, last_number, gap_size, next_start)
+  // Kolom tabel (GlobalSequence: last_issued_date, last_number, gap_size)
   const columns = [
     {
       key: 'last_issued_date',
       label: 'Tanggal Terakhir',
       render: (value) => {
-        if (!value) return <span className="text-xs text-[#94A3B8]">-</span>;
+        if (!value) return <span className="text-xs text-[#94A3B8]">Belum ada nomor</span>;
         const date = new Date(value + 'T00:00:00');
         return (
           <span className="text-xs text-[#64748B]">
@@ -247,18 +217,11 @@ export default function SequenceSettingsPage() {
     },
     {
       key: 'gap_size',
-      label: 'Gap Size',
+      label: 'Gap Size Harian',
       render: (value) => (
         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#EBF4FD] text-[#185FA5]">
           {value ?? '-'}
         </span>
-      ),
-    },
-    {
-      key: 'next_start',
-      label: 'Next Start',
-      render: (value) => (
-        <span className="font-semibold text-[#065F46] font-mono">{value ?? '-'}</span>
       ),
     },
   ];
@@ -273,270 +236,159 @@ export default function SequenceSettingsPage() {
   return (
     <div className="space-y-5">
       {/* Page header */}
-      <div>
-        <h1 className="text-base font-semibold text-[#0B1F3A]">Pengaturan Sequence</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
-          Atur gap size global dan lihat riwayat sequence per klasifikasi.
-        </p>
-      </div>
-
-      {/* ==================== BAGIAN ATAS — Gap Size Setting ==================== */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-5">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Gap Size Global</h2>
-        </div>
-
-        {/* Input gap size */}
-        <div className="max-w-xs">
-          <label
-            htmlFor="gap_size"
-            className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
-          >
-            Ukuran Gap (1 – 100)
-          </label>
-          <input
-            id="gap_size"
-            type="number"
-            min={1}
-            max={100}
-            value={gapSize}
-            onChange={(e) => setGapSize(parseInt(e.target.value, 10) || '')}
-            disabled={saving}
-            className={inputBaseClass}
-          />
-        </div>
-
-        {/* Penjelasan */}
-        <div className="flex items-start gap-3 rounded-lg bg-[#EBF4FD] border border-[#2A7FD4]/10 p-3">
-          <svg
-            className="h-4 w-4 text-[#2A7FD4] shrink-0 mt-0.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-            />
-          </svg>
-          <p className="text-xs text-[#185FA5]">
-            Perubahan gap size berlaku mulai <strong>hari berikutnya</strong> untuk
-            sequence baru. Sequence yang sudah dibuat hari ini tidak terpengaruh.
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-base font-semibold text-[#0B1F3A]">Pengaturan Sequence Global</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">
+            Kelola loncatan nomor (gap) harian dan reset titik awal penomoran.
           </p>
         </div>
+      </div>
 
-        {/* Contoh visual — hanya tampil jika gapSize valid */}
-        {gapSize >= 1 && gapSize <= 100 && (
-          <GapVisualizer gapSize={gapSize} />
-        )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* ==================== LEFT — Gap Size Setting ==================== */}
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
+            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Gap Size Global</h2>
+          </div>
 
-        {/* Save error */}
-        {saveError && <ErrorMessage error={saveError} />}
+          <p className="text-xs text-[#64748B] leading-relaxed">
+            Jumlah nomor yang akan <strong>dilompati</strong> secara otomatis ketika hari berganti.
+            Nomor yang dilompati ini akan tersimpan sebagai "Nomor Kosong" yang dapat diminta kembali.
+          </p>
 
-        {/* Save success */}
-        {saveSuccess && (
-          <div className="flex items-center gap-3 rounded-lg border border-[#065F46]/10 bg-[#ECFDF5] px-4 py-3">
-            <svg
-              className="h-4 w-4 text-[#065F46] shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+          <div className="space-y-4">
+            <div className="max-w-xs">
+              <label htmlFor="gap_size" className="block text-xs font-medium text-[#0B1F3A] mb-1">
+                Ukuran Gap (0 – 100)
+              </label>
+              <input
+                id="gap_size"
+                type="number"
+                min={0}
+                max={100}
+                value={gapSize}
+                onChange={(e) => setGapSize(parseInt(e.target.value, 10) || 0)}
+                disabled={saving}
+                className={inputBaseClass}
               />
-            </svg>
-            <p className="text-xs text-[#065F46]">{saveSuccess}</p>
+            </div>
+
+            <GapVisualizer gapSize={gapSize || 0} />
           </div>
-        )}
 
-        {/* Tombol simpan */}
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={handleSaveGap}
-          loading={saving}
-          disabled={gapSize === originalGapSize}
-        >
-          Simpan
-        </Button>
-      </div>
+          {/* Messages */}
+          {saveError && <ErrorMessage error={saveError} />}
+          {saveSuccess && (
+            <div className="rounded-lg border border-[#065F46]/10 bg-[#ECFDF5] px-4 py-3 text-xs text-[#065F46]">
+              {saveSuccess}
+            </div>
+          )}
 
-      {/* ==================== BAGIAN TENGAH — Reset Penomoran ==================== */}
-      <div className="bg-white rounded-xl border border-red-100 p-6 space-y-5">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-red-400"></span>
-          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Reset Penomoran</h2>
-        </div>
-
-        {/* Peringatan */}
-        <div className="flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 p-3">
-          <svg className="h-4 w-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
-          <p className="text-xs text-red-700">
-            Aksi ini <strong>tidak dapat dibatalkan</strong>. Zona gap yang sedang berjalan akan diarsipkan, lalu penomoran dimulai ulang dari nomor yang ditentukan.
-          </p>
-        </div>
-
-        {/* Input field */}
-        <div className="max-w-xs">
-          <label htmlFor="reset_next_start" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-            Nomor Awal Baru <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="reset_next_start"
-            type="number"
-            min={1}
-            value={resetNextStart}
-            onChange={(e) => setResetNextStart(parseInt(e.target.value, 10) || '')}
-            disabled={resetting}
-            className={inputBaseClass}
-          />
-        </div>
-
-        {/* Reset error */}
-        {resetError && !showResetConfirm && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-xs text-red-700">{resetError}</p>
-          </div>
-        )}
-
-        {/* Reset success */}
-        {resetSuccess && (
-          <div className="flex items-center gap-3 rounded-lg border border-[#065F46]/10 bg-[#ECFDF5] px-4 py-3">
-            <svg className="h-4 w-4 text-[#065F46] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-            <p className="text-xs text-[#065F46]">{resetSuccess}</p>
-          </div>
-        )}
-
-        {/* Tombol buka konfirmasi */}
-        {!showResetConfirm && (
-          <button
-            id="btn_open_reset_confirm"
-            onClick={handleOpenReset}
-            disabled={resetting || !resetNextStart}
-            className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          <Button
+            variant="primary"
+            onClick={handleSaveGap}
+            loading={saving}
+            disabled={gapSize === originalGapSize}
           >
-            Reset Penomoran
-          </button>
-        )}
+            Perbarui Gap Size
+          </Button>
+        </div>
 
-        {/* Dialog konfirmasi inline */}
-        {showResetConfirm && (
-          <div className="rounded-xl border border-red-300 bg-red-50 p-4 space-y-3">
-            <p className="text-xs text-red-800 font-semibold">
-              Ketik <code className="bg-red-100 px-1 py-0.5 rounded font-mono font-bold">RESET</code> untuk mengonfirmasi:
+        {/* ==================== RIGHT — Reset Penomoran ==================== */}
+        <div className="bg-white rounded-xl border border-red-100 p-6 space-y-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-red-400"></span>
+            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Reset Penomoran</h2>
+          </div>
+
+          <div className="rounded-lg bg-red-50 border border-red-100 p-4 space-y-2">
+            <p className="text-xs text-red-700 leading-relaxed font-medium">
+              Aksi berbahaya: Penomoran akan dimulai ulang dari nomor yang Anda tentukan. 
+              Gunakan hanya saat awal tahun atau pergantian buku register.
             </p>
-            <input
-              id="reset_confirm_text"
-              type="text"
-              placeholder="Ketik RESET di sini"
-              value={resetConfirmText}
-              onChange={(e) => setResetConfirmText(e.target.value)}
-              disabled={resetting}
-              className={`${inputBaseClass} border-red-300 focus:border-red-500 focus:ring-red-200`}
-            />
-            {resetError && (
-              <p className="text-xs text-red-700">{resetError}</p>
-            )}
-            <div className="flex gap-2">
-              <button
-                id="btn_confirm_reset"
-                onClick={handleConfirmReset}
-                disabled={resetConfirmText !== 'RESET' || resetting}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {resetting ? 'Mereset...' : '✓ Ya, Reset Sekarang'}
-              </button>
-              <button
-                id="btn_cancel_reset"
-                onClick={() => { setShowResetConfirm(false); setResetError(null); }}
-                disabled={resetting}
-                className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
-              >
-                Batal
-              </button>
-            </div>
           </div>
-        )}
+
+          <div className="max-w-xs">
+            <label htmlFor="reset_next_start" className="block text-xs font-medium text-[#0B1F3A] mb-1">
+              Mulai Dari Nomor
+            </label>
+            <input
+              id="reset_next_start"
+              type="number"
+              min={1}
+              value={resetNextStart}
+              onChange={(e) => setResetNextStart(parseInt(e.target.value, 10) || '')}
+              disabled={resetting}
+              className={inputBaseClass}
+            />
+          </div>
+
+          {resetError && !showResetConfirm && <ErrorMessage error={resetError} />}
+          {resetSuccess && (
+            <div className="rounded-lg border border-[#065F46]/10 bg-[#ECFDF5] px-4 py-3 text-xs text-[#065F46]">
+              {resetSuccess}
+            </div>
+          )}
+
+          {!showResetConfirm ? (
+            <Button
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50"
+              onClick={handleOpenReset}
+              disabled={resetting || !resetNextStart}
+            >
+              Reset Sequence
+            </Button>
+          ) : (
+            <div className="rounded-xl border border-red-300 bg-red-50 p-4 space-y-3">
+              <p className="text-xs text-red-800 font-semibold">
+                Ketik <span className="bg-red-100 px-1 py-0.5 rounded font-mono">RESET</span> untuk konfirmasi:
+              </p>
+              <input
+                id="reset_confirm_text"
+                type="text"
+                value={resetConfirmText}
+                onChange={(e) => setResetConfirmText(e.target.value)}
+                disabled={resetting}
+                className={`${inputBaseClass} border-red-300 focus:border-red-500`}
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="primary"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handleConfirmReset}
+                  disabled={resetConfirmText !== 'RESET' || resetting}
+                >
+                  {resetting ? 'Mereset...' : 'Ya, Reset'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowResetConfirm(false)}
+                  disabled={resetting}
+                >
+                  Batal
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* ==================== BAGIAN BAWAH — Tabel Riwayat Sequence ==================== */}
-      <div className="space-y-3">
+      {/* ==================== BOTTOM — Status Saat Ini ==================== */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Riwayat Sequence</h2>
+          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Status Sequence Aktif</h2>
         </div>
 
-        {/* Filter bar */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
-            {/* Date From */}
-            <div className="w-full sm:w-36">
-              <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-                Dari Tanggal
-              </label>
-              <input
-                type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
-                className={inputBaseClass}
-              />
-            </div>
-
-            {/* Date To */}
-            <div className="w-full sm:w-36">
-              <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-                Sampai Tanggal
-              </label>
-              <input
-                type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
-                className={inputBaseClass}
-              />
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={handleFilter}
-                className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors"
-              >
-                Filter
-              </button>
-              <button
-                onClick={handleResetFilter}
-                className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Error state */}
-        {seqError && <ErrorMessage error={seqError} />}
-
-        {/* Tabel sequence */}
         <Table
           columns={columns}
           data={sequences}
           loading={seqLoading}
-          emptyText="Belum ada data sequence."
+          emptyText="Gagal memuat data sequence."
         />
-
-        {/* Pagination */}
-        <Pagination meta={seqMeta} onPageChange={handlePageChange} />
       </div>
     </div>
   );

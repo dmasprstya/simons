@@ -17,6 +17,7 @@ import {
   ChevronDownIcon,
   QueueListIcon,
 } from '@heroicons/react/24/outline';
+import logo from '../../assets/logo.png';
 
 /**
  * Sidebar — Navigasi utama di sisi kiri.
@@ -115,8 +116,8 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
       >
         {/* Logo / Branding */}
         <div className={`flex items-center gap-3 px-6 py-6 pb-8 ${collapsed ? 'lg:justify-center lg:px-2' : ''}`}>
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-blue-600 text-white font-bold text-lg shadow-lg shadow-blue-600/30 shrink-0">
-            S
+          <div className="flex items-center justify-center h-12 w-12 rounded-xl overflow-hidden shadow-sm shrink-0 border border-slate-100/50">
+            <img src={logo} alt="Logo SIMONS" className="h-full w-full object-cover" />
           </div>
           {!collapsed && (
             <div className="lg:block">

@@ -14,55 +14,14 @@ use Illuminate\Support\Facades\Log;
 
 class NumberingService
 {
-    // ─── Kalkulasi Blok ──────────────────────────────────────────────────────
-
-    /**
-     * Menghitung batas aktif dan gap untuk blok ke-$blockIndex.
-     *
-     * Sistem membagi nomor surat menjadi blok. Setiap blok = gap_size nomor aktif
-     * + gap_size nomor cadangan (zona gap).
-     *
-     * Contoh (default_start=1000, gap_size=10):
-     *   Blok 0 (N=0) -> aktif: 1000-1009 | zona gap: 1010-1019
-     *   Blok 1 (N=1) -> aktif: 1020-1029 | zona gap: 1030-1039
-     *   Blok 2 (N=2) -> aktif: 1040-1049 | zona gap: 1050-1059
-     *
-     * Formula:
-     *   aktif_start = next_start + N * (gap_size * 2)
-     *   aktif_end   = aktif_start + gap_size - 1
-     *   gap_start   = aktif_end + 1
-     *   gap_end     = gap_start + gap_size - 1
-     *
-     * @param  int  $nextStart   Nilai next_start dari GlobalSequence (awal blok 0)
-     * @param  int  $gapSize     Jumlah nomor per zona (aktif = gap = gapSize)
-     * @param  int  $blockIndex  Indeks blok (0-based)
-     * @return array{aktifStart: int, aktifEnd: int, gapStart: int, gapEnd: int}
-     */
-    private function calculateBlock(int $nextStart, int $gapSize, int $blockIndex): array
-    {
-        // Menghitung batas aktif dan gap untuk blok ke-$blockIndex
-        // blockIndex 0 = blok pertama (aktif: 1000-1009, gap: 1010-1019)
-        $aktifStart = $nextStart + $blockIndex * ($gapSize * 2);
-        $aktifEnd   = $aktifStart + $gapSize - 1;
-        $gapStart   = $aktifEnd + 1;
-        $gapEnd     = $gapStart + $gapSize - 1;
-
-        return compact('aktifStart', 'aktifEnd', 'gapStart', 'gapEnd');
-    }
-
     /**
      * Terapkan pessimistic locking (SELECT ... FOR UPDATE) hanya jika driver MySQL.
-     *
-     * SQLite (digunakan saat testing in-memory) tidak mendukung row-level locking.
-     * Di produksi dengan MySQL, lockForUpdate() tetap aktif untuk mencegah race condition.
-     * Ini bukan workaround logika bisnis -- hanya adapter agar kode testable.
      *
      * @param  Builder  $query
      * @return Builder
      */
     private function withLock(Builder $query): Builder
     {
-        // Aktifkan row-level locking hanya di MySQL -- SQLite tidak support FOR UPDATE
         if (DB::getDriverName() === 'mysql') {
             return $query->lockForUpdate();
         }
@@ -70,19 +29,12 @@ class NumberingService
         return $query;
     }
 
-    // ─── Archive Gap Zone ─────────────────────────────────────────────────────
-
     /**
-     * Arsipkan satu zona gap ke tabel daily_gaps.
+     * Arsipkan zona gap ke tabel daily_gaps.
      *
-     * Menggunakan firstOrCreate dengan kunci (date, gap_start) sehingga aman
-     * dipanggil lebih dari sekali untuk zona yang sama (idempoten).
-     * Constraint unique composite (date, gap_start) menjamin tidak ada duplikasi
-     * bahkan jika dua thread memanggil ini bersamaan di bawah transaksi berbeda.
-     *
-     * @param  \Illuminate\Support\Carbon  $date      Tanggal zona gap
-     * @param  int                          $gapStart  Awal nomor zona gap
-     * @param  int                          $gapEnd    Akhir nomor zona gap
+     * @param  \Illuminate\Support\Carbon  $date
+     * @param  int                          $gapStart
+     * @param  int                          $gapEnd
      * @return void
      */
     private function archiveGapZone(\Illuminate\Support\Carbon $date, int $gapStart, int $gapEnd): void
@@ -93,178 +45,101 @@ class NumberingService
         );
     }
 
-    // ─── Acquire Number ──────────────────────────────────────────────────────
-
     /**
      * Mengambil (acquire) nomor surat berikutnya dari GlobalSequence.
+     * Mengikuti alur linear dengan gap saat ganti hari (rollover).
      *
-     * Menggunakan pessimistic locking (SELECT ... FOR UPDATE) untuk mencegah
-     * race condition saat multiple request tiba bersamaan.
-     *
-     * Retry manual untuk deadlock: retry dilakukan dengan memanggil DB::transaction
-     * baru (bukan menggunakan attempts=3 bawaan Laravel). Ini diperlukan agar
-     * kompatibel dengan SQLite testing di mana RefreshDatabase membungkus test dalam
-     * outer transaction -- menggunakan attempts>1 di Laravel menyebabkan ROLLBACK TO
-     * SAVEPOINT yang membatalkan INSERT dari getOrCreateSequence di savepoint yang sama.
-     *
-     * Logika lompat (skip) zona gap:
-     *   Jika kandidat nomor jatuh di zona gap (posInBlock >= gap_size),
-     *   langsung lompat ke aktif_start blok berikutnya.
-     *
-     * @return int  Nomor surat yang berhasil di-acquire (selalu dalam zona aktif)
-     *
-     * @throws NumberingLockException  Jika terjadi deadlock atau lock timeout
+     * @return int
+     * @throws NumberingLockException
      */
     public function acquireNumber(): int
     {
-        $attempts    = 0;
+        $attempts = 0;
         $maxAttempts = 3;
 
         while (true) {
             try {
                 return DB::transaction(function () {
-                    // Lock GlobalSequence row tunggal (id=1)
                     $seq = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
 
                     if (!$seq) {
-                        throw new NumberingLockException("GlobalSequence tidak ditemukan.");
+                        $seq = GlobalSequence::getInstance();
                     }
 
-                    // ─── Deteksi pergantian hari ──────────────────────────────
-                    // Jika last_issued_date ada dan bukan hari ini, berarti hari telah berganti.
-                    // Zona gap dari blok kemarin harus diarsipkan ke daily_gaps,
-                    // lalu sequence dilompat ke aktifStart blok baru hari ini.
-                    if ($seq->last_issued_date !== null && !$seq->last_issued_date->isToday()) {
-                        $blockSize = $seq->gap_size * 2;
+                    $isNewDay = $seq->last_issued_date !== null && 
+                                $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d');
 
-                        // Hitung indeks blok yang sedang berjalan saat hari terakhir
-                        // last_number sudah di-increment (+1) saat acquire terakhir, sehingga
-                        // posisi efektif kandidat kemarin = next_start + last_number - 1
-                        $lastIssuedOffset = $seq->last_number - 1; // -1 karena last_number sudah +1
-                        $oldBlockIndex    = (int) floor($lastIssuedOffset / $blockSize);
+                    if ($isNewDay) {
+                        // 1. Rollover: Terjadi ganti hari
+                        $gapStart = $seq->last_number + 1;
+                        $gapEnd   = $seq->last_number + $seq->gap_size;
 
-                        $oldBlock = $this->calculateBlock($seq->next_start, $seq->gap_size, $oldBlockIndex);
+                        // Arsipkan gap hari kemarin
+                        $this->archiveGapZone($seq->last_issued_date, $gapStart, $gapEnd);
 
-                        // Hitung zona gap blok kemarin
-                        $oldGapStart = $oldBlock['aktifEnd'] + 1;                   // = oldBlock['gapStart']
-                        $oldGapEnd   = $oldGapStart + $seq->gap_size - 1;           // = oldBlock['gapEnd']
+                        // Nomor kandidat hari ini melompati gap
+                        $candidate = $gapEnd + 1;
 
-                        // Arsipkan zona gap blok kemarin ke tabel daily_gaps
-                        $this->archiveGapZone($seq->last_issued_date, $oldGapStart, $oldGapEnd);
-
-                        Log::info('NumberingService: day rolled over', [
-                            'old_date'    => $seq->last_issued_date->toDateString(),
-                            'old_gap'     => "{$oldGapStart}–{$oldGapEnd}",
-                            'next_block'  => $oldBlockIndex + 1,
+                        Log::info('NumberingService: daily rollover gap applied', [
+                            'old_date' => $seq->last_issued_date->toDateString(),
+                            'gap' => "{$gapStart}–{$gapEnd}",
                         ]);
-
-                        // Lompat ke aktifStart blok berikutnya sebagai kandidat pertama hari ini
-                        $nextBlock = $this->calculateBlock($seq->next_start, $seq->gap_size, $oldBlockIndex + 1);
-                        $candidate = $nextBlock['aktifStart'];
-
-                        // Sinkronkan last_number dengan posisi kandidat baru (sebelum increment)
-                        $seq->last_number = $candidate - $seq->next_start;
-                    }
-                    // ─────────────────────────────────────────────────────────
-
-                    // Hitung nomor kandidat berikutnya berdasarkan last_number yang tersimpan
-                    $candidate = $seq->next_start + $seq->last_number;
-
-                    // Tentukan posisi dalam blok (setiap blok = gap_size aktif + gap_size cadangan)
-                    $blockSize  = $seq->gap_size * 2;
-                    $posInBlock = ($candidate - $seq->next_start) % $blockSize;
-
-                    // Jika candidate jatuh di zona gap, lompat ke aktif_start blok berikutnya
-                    // (guard reaktif: terjadi bila hari ini masih dalam blok yang sama)
-                    // Kondisi ini terjadi saat jumlah surat dalam 1 hari melebihi gap_size (overflow blok).
-                    if ($posInBlock >= $seq->gap_size) {
-                        $currentBlock = (int) floor(($candidate - $seq->next_start) / $blockSize);
-                        $overflowBlock = $this->calculateBlock($seq->next_start, $seq->gap_size, $currentBlock);
-
-                        // Arsipkan zona gap blok yang dilewati hari ini (overflow intra-hari)
-                        $issuedDate = $seq->last_issued_date ?? today();
-                        $this->archiveGapZone($issuedDate, $overflowBlock['gapStart'], $overflowBlock['gapEnd']);
-
-                        $nextBlock    = $this->calculateBlock($seq->next_start, $seq->gap_size, $currentBlock + 1);
-                        $candidate    = $nextBlock['aktifStart'];
-                        // Sinkronkan last_number dengan posisi baru (sebelum increment)
-                        $seq->last_number = $candidate - $seq->next_start;
+                    } else {
+                        // 2. Hari yang sama atau nomor pertama kali
+                        if ($seq->last_number === 0) {
+                            // First time use: start from default or provided initial
+                            $candidate = config('numbering.default_start', 1000);
+                        } else {
+                            $candidate = $seq->last_number + 1;
+                        }
                     }
 
-                    // Verifikasi nomor belum dipakai (guard terhadap race condition residual)
-                    $alreadyUsed = LetterNumber::where('number', $candidate)->exists();
-
-                    if ($alreadyUsed) {
+                    // Verifikasi nomor belum dipakai
+                    if (LetterNumber::where('number', $candidate)->exists()) {
                         throw new NumberingLockException("Nomor {$candidate} sudah digunakan.");
                     }
 
-                    // Increment last_number: posisi relatif dari next_start + 1 (untuk nomor selanjutnya)
-                    $seq->last_number = $candidate - $seq->next_start + 1;
-                    $seq->save();
-
-                    // Selalu catat tanggal terbit terakhir agar deteksi pergantian hari berfungsi
+                    // Update sequence
+                    $seq->last_number      = $candidate;
                     $seq->last_issued_date = today();
                     $seq->save();
 
                     return $candidate;
-                }); // satu attempt per DB::transaction
+                });
             } catch (\Illuminate\Database\QueryException $e) {
-                // Deadlock MySQL error code: 1213 -- retry hingga maxAttempts kali
                 if ($e->errorInfo[1] === 1213 && ++$attempts < $maxAttempts) {
-                    continue; // retry manual untuk deadlock
+                    continue;
                 }
-                // Deadlock melebihi batas atau error bukan deadlock
-                if ($e->errorInfo[1] === 1213) {
-                    throw new NumberingLockException("Deadlock saat mengambil nomor.");
-                }
-                throw $e;
+                throw new NumberingLockException("Database lock error.");
             }
         }
     }
 
-    // ─── Release Gap Number ──────────────────────────────────────────────────
-
     /**
      * Menerbitkan nomor dari zona gap berdasarkan GapRequest yang sudah diapprove.
      *
-     * Validasi dilakukan dalam 2 tahap:
-     *   1. Pastikan nomor target benar-benar berada di zona gap (bukan zona aktif)
-     *   2. Pastikan nomor tersebut belum pernah diterbitkan sebelumnya
-     *
-     * @param  GapRequest  $gapRequest  GapRequest dengan status 'approved'
-     * @return LetterNumber  Record LetterNumber yang baru dibuat
-     *
-     * @throws \RuntimeException        Jika GlobalSequence tidak ditemukan
-     * @throws GapAlreadyUsedException  Jika nomor bukan zona gap atau sudah diterbitkan
+     * @param  GapRequest  $gapRequest
+     * @return LetterNumber
+     * @throws GapAlreadyUsedException
      */
     public function releaseGapNumber(GapRequest $gapRequest): LetterNumber
     {
         return DB::transaction(function () use ($gapRequest) {
-            // Lock GlobalSequence row tunggal (id=1)
-            $sequence = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
+            // 1. Validasi nomor ada di tabel daily_gaps untuk tanggal tersebut
+            $isValidGap = DailyGap::where('date', $gapRequest->gap_date)
+                ->where('gap_start', '<=', $gapRequest->number)
+                ->where('gap_end', '>=', $gapRequest->number)
+                ->exists();
 
-            if (!$sequence) {
-                throw new \RuntimeException("GlobalSequence tidak ditemukan.");
+            if (!$isValidGap) {
+                throw new GapAlreadyUsedException("Nomor {$gapRequest->number} bukan nomor gap yang valid untuk tanggal tersebut.");
             }
 
-            // Hitung apakah nomor target benar-benar di zona gap
-            $blockSize  = $sequence->gap_size * 2;
-            $relative   = $gapRequest->number - $sequence->next_start;
-            $posInBlock = $relative % $blockSize;
-
-            // posInBlock valid zona gap: gap_size <= posInBlock < blockSize
-            if ($posInBlock < $sequence->gap_size || $posInBlock >= $blockSize) {
-                throw new GapAlreadyUsedException("Nomor {$gapRequest->number} bukan nomor zona gap yang valid.");
-            }
-
-            // Cek nomor belum pernah diterbitkan sebagai LetterNumber
-            $exists = LetterNumber::where('number', $gapRequest->number)->exists();
-
-            if ($exists) {
+            // 2. Pastikan belum digunakan
+            if (LetterNumber::where('number', $gapRequest->number)->exists()) {
                 throw new GapAlreadyUsedException("Nomor gap {$gapRequest->number} sudah diterbitkan.");
             }
 
-            // Fetch kode klasifikasi untuk formatted_number
             $classification = \App\Models\LetterClassification::find($gapRequest->classification_id);
 
             return LetterNumber::create([
@@ -272,163 +147,117 @@ class NumberingService
                 'classification_id' => $gapRequest->classification_id,
                 'number'            => $gapRequest->number,
                 'formatted_number'  => LetterNumber::buildFormattedNumber(
-                                           $classification->code,
-                                           $gapRequest->number
-                                       ),
-                'issued_date'       => $gapRequest->gap_date,
-                'subject'           => 'Gap request #' . $gapRequest->id,
-                'destination'       => '-',
-                'status'            => 'active',
+                    $classification->code,
+                    $gapRequest->number
+                ),
+                'issued_date'  => $gapRequest->gap_date,
+                'subject'      => 'Gap request #' . $gapRequest->id,
+                'destination'  => '-',
+                'status'       => 'active',
             ]);
         });
     }
 
-    // ─── Sequence Info ───────────────────────────────────────────────────────
-
     /**
-     * Mengembalikan informasi state GlobalSequence saat ini beserta detail blok aktif.
-     *
-     * Digunakan oleh admin untuk memantau posisi nomor surat global:
-     *   - Nomor berikutnya yang akan diterbitkan
-     *   - Rentang zona aktif dan zona gap blok saat ini
-     *
-     * @return array<string, mixed>
+     * Memberikan info sequence saat ini.
      */
     public function getSequenceInfo(): array
     {
         $seq = GlobalSequence::getInstance();
-        $blockSize  = $seq->gap_size * 2;
-        $current    = $seq->next_start + $seq->last_number;
-        $blockIndex = (int) floor(($current - $seq->next_start) / $blockSize);
-        $block      = $this->calculateBlock($seq->next_start, $seq->gap_size, $blockIndex);
+        
+        $nextNumber = 0;
+        if ($seq->last_number === 0) {
+            $nextNumber = config('numbering.default_start', 1000);
+        } else {
+            // Check if rollover would happen
+            $isNewDay = $seq->last_issued_date !== null && 
+                        $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d');
+            
+            $nextNumber = $isNewDay ? $seq->last_number + $seq->gap_size + 1 : $seq->last_number + 1;
+        }
 
         return [
-            'next_number'         => $current,
-            'gap_size'            => $seq->gap_size,
-            'next_start'          => $seq->next_start,
-            'last_number'         => $seq->last_number,
-            'current_block_aktif' => $block['aktifStart'] . '–' . $block['aktifEnd'],
-            'current_block_gap'   => $block['gapStart'] . '–' . $block['gapEnd'],
-            'updated_at'          => $seq->updated_at,
+            'next_number'      => $nextNumber,
+            'last_number'      => $seq->last_number,
+            'gap_size'         => $seq->gap_size,
+            'last_issued_date' => $seq->last_issued_date,
+            'updated_at'       => $seq->updated_at,
         ];
     }
 
-    // ─── Ensure Day Is Current ────────────────────────────────────────────────
-
     /**
-     * Cek dan lakukan rollover zona gap jika hari telah berganti, tanpa menerbitkan nomor baru.
-     *
-     * Dipanggil oleh controller (misal GapNumberController, DailySequenceController)
-     * saat user membuka halaman yang membutuhkan data zona gap terkini.
-     * Dengan ini, zona gap hari sebelumnya langsung tersedia meski belum ada nomor
-     * baru yang diterbitkan pada hari ini.
-     *
-     * Jika server mati semalam dan baru nyala pagi ini, pemanggilan method ini
-     * sudah cukup untuk menjamin daily_gaps terisi sebelum user melihat daftar nomor kosong.
-     *
-     * @return void
+     * Cek dan lakukan rollover tanpa ambil nomor.
      */
     public function ensureDayIsCurrent(): void
     {
         DB::transaction(function () {
             $seq = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
 
-            // Jika belum ada record atau last_issued_date belum ada, belum ada nomor yang pernah diterbitkan
             if (!$seq || $seq->last_issued_date === null) {
                 return;
             }
 
-            // Jika last_issued_date sudah hari ini, tidak perlu rollover
-            if ($seq->last_issued_date->isToday()) {
+            $isNewDay = $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d');
+
+            if (!$isNewDay) {
                 return;
             }
 
-            // Hari telah berganti — arsipkan zona gap hari terakhir
-            $blockSize = $seq->gap_size * 2;
-            $lastIssuedOffset = $seq->last_number - 1;
-            $oldBlockIndex    = (int) floor($lastIssuedOffset / $blockSize);
-            $oldBlock         = $this->calculateBlock($seq->next_start, $seq->gap_size, $oldBlockIndex);
+            // Ganti hari: arsipkan gap (jika ada nomor yang sudah digunakan)
+            if ($seq->last_number > 0) {
+                $gapStart = $seq->last_number + 1;
+                $gapEnd   = $seq->last_number + $seq->gap_size;
 
-            $this->archiveGapZone($seq->last_issued_date, $oldBlock['gapStart'], $oldBlock['gapEnd']);
+                $this->archiveGapZone($seq->last_issued_date, $gapStart, $gapEnd);
 
-            Log::info('NumberingService@ensureDayIsCurrent: gap archived', [
-                'old_date' => $seq->last_issued_date->toDateString(),
-                'gap'      => "{$oldBlock['gapStart']}–{$oldBlock['gapEnd']}",
-            ]);
+                Log::info('NumberingService@ensureDayIsCurrent: rollover applied', [
+                    'old_date' => $seq->last_issued_date->toDateString(),
+                    'gap' => "{$gapStart}–{$gapEnd}",
+                ]);
+            }
+
+            $seq->last_issued_date = today();
+            $seq->save();
         });
     }
 
-    // ─── Reset Sequence ───────────────────────────────────────────────────────
-
     /**
-     * Mereset sequence penomoran ke titik awal baru.
-     *
-     * Alur reset:
-     *   1. Lock GlobalSequence row tunggal (pessimistic lock).
-     *   2. Arsipkan zona gap blok yang sedang berjalan (jika ada nomor yang pernah diterbitkan).
-     *   3. Set next_start ke nilai baru, last_number ke 0, dan opsional perbarui gap_size.
-     *   4. Hapus last_issued_date agar logika pergantian hari dimulai ulang.
-     *
-     * Only can be called by admin. Caught and logged via AuditService in controller.
-     *
-     * @param  int  $nextStart  New starting number (new next_start)
-     * @return array<string, mixed>  GlobalSequence state after reset
-     *
-     * @throws NumberingLockException  If deadlock occurs during lock
+     * Reset sequence.
      */
-    public function resetSequence(int $nextStart): array
+    public function resetSequence(int $startNumber): array
     {
-        return DB::transaction(function () use ($nextStart) {
+        return DB::transaction(function () use ($startNumber) {
             $seq = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
 
             if (!$seq) {
-                throw new NumberingLockException("GlobalSequence tidak ditemukan.");
+                $seq = GlobalSequence::getInstance();
             }
 
-            // Archive the gap zone of the current block before reset
+            // Sebelum reset, arsipkan gap berjalan jika ada
             if ($seq->last_issued_date !== null && $seq->last_number > 0) {
-                $blockSize        = $seq->gap_size * 2;
-                $lastOffset       = $seq->last_number - 1;
-                $currentBlockIdx  = (int) floor($lastOffset / $blockSize);
-                $currentBlock     = $this->calculateBlock($seq->next_start, $seq->gap_size, $currentBlockIdx);
-
-                $this->archiveGapZone(
-                    $seq->last_issued_date,
-                    $currentBlock['gapStart'],
-                    $currentBlock['gapEnd']
-                );
+                $this->archiveGapZone($seq->last_issued_date, $seq->last_number + 1, $seq->last_number + $seq->gap_size);
             }
 
-            $seq->next_start       = $nextStart;
-            $seq->last_number      = 0;
-            $seq->last_issued_date = null;
-
+            $seq->last_number = 0; // Will start from $startNumber on next acquire
+            // We can't actually set 'start' in GlobalSequence if next_start is deleted,
+            // so we might need to handle this manually or store start somewhere.
+            // But per AGENTS.md, we just use last_number.
+            // If we want to start from $startNumber, we can set last_number = $startNumber - 1.
+            $seq->last_number = $startNumber - 1;
+            $seq->last_issued_date = today();
             $seq->save();
 
-            return [
-                'next_start'  => $seq->next_start,
-                'gap_size'    => $seq->gap_size,
-                'last_number' => $seq->last_number,
-                'next_number' => $seq->next_start,
-            ];
+            return $this->getSequenceInfo();
         });
     }
 
-    // ─── Update Gap Size ─────────────────────────────────────────────────────
-
     /**
-     * Memperbarui ukuran zona gap pada GlobalSequence.
-     *
-     * Perubahan gap_size memengaruhi kalkulasi blok berikutnya — tidak berlaku
-     * retroaktif terhadap nomor yang sudah diterbitkan.
-     *
-     * @param  int  $newGapSize  Ukuran gap baru (jumlah nomor per zona)
-     * @return void
+     * Update gap size.
      */
     public function updateGapSize(int $newGapSize): void
     {
         DB::transaction(function () use ($newGapSize) {
-            $seq           = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
+            $seq = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
             $seq->gap_size = $newGapSize;
             $seq->save();
         });

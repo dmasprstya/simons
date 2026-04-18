@@ -117,7 +117,7 @@ export default function ProfilePage() {
 
     fetch();
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
 
   // ─── Section 1 handlers ──────────────────────────────────────────────────
   const handleFileChange = (e) => {

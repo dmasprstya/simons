@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import Button from '../../components/ui/Button';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import logo from '../../assets/logo.png';
 
 /**
  * LoginPage — Halaman login dengan form email + password.
@@ -85,10 +86,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-[#2A7FD4] text-white font-bold text-xl shadow-lg shadow-[#2A7FD4]/20 mb-4">
-            S
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-xl overflow-hidden shadow-lg mb-4 border border-slate-200/50">
+            <img src={logo} alt="Logo SIMONS" className="h-full w-full object-cover" />
           </div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">SIMONS</h1>
+          <h1 className="text-2xl font-extrabold text-[#0B1F3A] tracking-tight">SIMONS</h1>
           <p className="text-sm text-[#64748B] mt-1">Sistem Informasi Manajemen Penomoran Surat</p>
         </div>
 
@@ -118,7 +119,7 @@ export default function LoginPage() {
                     passwordRef.current?.focus();
                   }
                 }}
-                placeholder="nama@contoh.com"
+                placeholder="Masukkan email"
                 disabled={loading}
                 autoComplete="email"
                 className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-[#0B1F3A] placeholder-[#94A3B8]

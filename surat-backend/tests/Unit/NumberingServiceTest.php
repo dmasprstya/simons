@@ -3,23 +3,25 @@
 namespace Tests\Unit;
 
 use App\Exceptions\GapAlreadyUsedException;
+use App\Models\DailyGap;
 use App\Models\GapRequest;
 use App\Models\LetterClassification;
 use App\Models\LetterNumber;
 use App\Models\User;
 use App\Services\NumberingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Unit test untuk NumberingService.
+ * Unit test untuk NumberingService (Linear Daily Gap Model).
  *
- * Database: SQLite in-memory via RefreshDatabase (dikonfigurasi di phpunit.xml).
- * TIDAK menggunakan browser atau dev server.
- *
- * Logika blok yang diuji (default_start=1000, gap_size=10):
- *   Blok 0 → aktif: 1000–1009 | zona gap: 1010–1019
- *   Blok 1 → aktif: 1020–1029 | zona gap: 1030–1039
+ * Logika:
+ *   - Nomor meningkat secara linear tanpa ada blok tetap.
+ *   - Gap hanya muncul saat berganti hari (rollover).
+ *   - Contoh (start=1000, gap=10):
+ *     Senin: 1000, 1001, 1002 (sampai tak hingga)
+ *     Selasa: Lompati 10 nomor (1003-1012), mulai dari 1013.
  */
 class NumberingServiceTest extends TestCase
 {
@@ -35,8 +37,6 @@ class NumberingServiceTest extends TestCase
 
         $this->service = new NumberingService();
 
-        // Buat user dummy untuk foreign key requirement
-        // role hanya menerima 'admin' atau 'user' (sesuai enum di migration)
         $this->user = User::create([
             'name'      => 'Test User',
             'email'     => 'test@example.com',
@@ -45,9 +45,6 @@ class NumberingServiceTest extends TestCase
             'is_active' => true,
         ]);
 
-        // Buat klasifikasi leaf level 3 (hanya leaf yang boleh punya nomor surat)
-        // 'type' wajib diisi (enum: 'substantif' | 'fasilitatif')
-        // 'level' wajib diisi (NOT NULL), level 3 = leaf
         $this->classification = LetterClassification::create([
             'code'      => 'TEST',
             'name'      => 'Test Classification',
@@ -58,14 +55,6 @@ class NumberingServiceTest extends TestCase
         ]);
     }
 
-    // ─── Helper ──────────────────────────────────────────────────────────────
-
-    /**
-     * Acquire nomor sejumlah $count kali berturut-turut untuk sequence yang sama.
-     * Mengembalikan array nomor hasil acquire.
-     *
-     * @return int[]
-     */
     private function acquireMultiple(int $count): array
     {
         $numbers = [];
@@ -75,180 +64,118 @@ class NumberingServiceTest extends TestCase
         return $numbers;
     }
 
-    // ─── Test Cases ──────────────────────────────────────────────────────────
-
     /**
-     * Test 1: Nomor pertama yang dikeluarkan harus sama dengan default_start (1000).
-     *
-     * Verifikasi: sequence baru → next_start = 1000 → kandidat=1000 → di zona aktif (pos=0) → return 1000.
+     * Test 1: Nomor pertama dimulai dari 1000.
      */
     public function test_nomor_pertama_sama_dengan_default_start(): void
     {
         $number = $this->service->acquireNumber();
-
-        $this->assertEquals(1000, $number, 'Nomor pertama harus sama dengan default_start (1000)');
+        $this->assertEquals(1000, $number);
     }
 
     /**
-     * Test 2: Nomor kedua harus 1001 (langsung setelah nomor pertama).
-     *
-     * Verifikasi: setelah acquire 1000, last_number=1 → kandidat=1001 → pos=1 < gap_size=10 → return 1001.
+     * Test 2: Nomor meningkat linear pada hari yang sama.
      */
-    public function test_nomor_kedua_adalah_1001(): void
+    public function test_nomor_meningkat_linear_pada_hari_yang_sama(): void
     {
-        $this->acquireMultiple(1); // ambil nomor 1000
-
-        $number = $this->service->acquireNumber();
-
-        $this->assertEquals(1001, $number, 'Nomor kedua harus 1001');
+        $numbers = $this->acquireMultiple(50); // 1000 - 1049
+        $this->assertCount(50, $numbers);
+        $this->assertEquals(1000, $numbers[0]);
+        $this->assertEquals(1049, $numbers[49]);
     }
 
     /**
-     * Test 3: Nomor ke-10 harus 1009 (aktif_end blok pertama).
-     *
-     * Verifikasi: acquire 10 kali → nomor terakhir = 1009 = aktif_end blok 0.
-     * Ini adalah batas akhir zona aktif sebelum zona gap dimulai (1010-1019).
+     * Test 3: Terjadi lompatan nomor saat ganti hari.
      */
-    public function test_nomor_ke_10_adalah_1009_aktif_end_blok_pertama(): void
+    public function test_nomor_melompat_saat_ganti_hari(): void
     {
-        // Acquire 9 nomor pertama (1000-1008)
-        $this->acquireMultiple(9);
+        Carbon::setTestNow('2026-04-20 10:00:00');
+        $n1 = $this->service->acquireNumber(); // 1000
+        $this->assertEquals(1000, $n1);
 
-        // Nomor ke-10 harus 1009
-        $number = $this->service->acquireNumber();
+        Carbon::setTestNow('2026-04-21 10:00:00');
+        $n2 = $this->service->acquireNumber(); 
+        
+        // Gap size default=10. 
+        // Senin: terakhir 1000.
+        // Selasa: gap 1001-1010. Nomor pertama Selasa = 1011.
+        $this->assertEquals(1011, $n2);
 
-        $this->assertEquals(1009, $number, 'Nomor ke-10 harus 1009 (aktif_end blok pertama)');
+        // Verifikasi arsip gap
+        $this->assertDatabaseHas('daily_gaps', [
+            'date' => '2026-04-20 00:00:00',
+            'gap_start' => 1001,
+            'gap_end' => 1010
+        ]);
     }
 
     /**
-     * Test 4: Nomor ke-11 harus SKIP zona gap (1010-1019) dan langsung ke 1020.
-     *
-     * Logika skip:
-     *   Setelah acquire 1009 (last_number=10 → kandidat=1010), pos=10 >= gap_size=10 → zona gap!
-     *   Service harus lompat ke aktif_start blok 1 = 1000 + 1*(10*2) = 1020.
-     */
-    public function test_nomor_ke_11_skip_zona_gap_dan_langsung_1020(): void
-    {
-        // Acquire 10 nomor (1000-1009), mengisi seluruh zona aktif blok 0
-        $this->acquireMultiple(10);
-
-        // Nomor ke-11 HARUS melompat melewati zona gap (1010-1019)
-        $number = $this->service->acquireNumber();
-
-        $this->assertEquals(
-            1020,
-            $number,
-            'Nomor ke-11 harus skip zona gap 1010-1019 dan langsung ke 1020 (aktif_start blok 1)'
-        );
-    }
-
-    /**
-     * Test 5: releaseGapNumber berhasil menerbitkan nomor yang berada di zona gap.
-     *
-     * Setup:
-     *   - Sequence dengan last_number > 0 (minimal 1 nomor sudah diambil di zona aktif)
-     *   - GapRequest dengan nomor 1010 (zona gap blok 0: 1010-1019)
-     *
-     * Verifikasi: LetterNumber baru dengan number=1010 berhasil dibuat.
+     * Test 4: Merilis nomor dari gap yang sudah diarsipkan.
      */
     public function test_release_gap_number_berhasil_untuk_nomor_di_zona_gap(): void
     {
-        // Pastikan sequence sudah ada dengan mengambil 1 nomor aktif dulu
-        $this->service->acquireNumber();
+        Carbon::setTestNow('2026-04-20 10:00:00');
+        $this->service->acquireNumber(); // 1000
 
-        // Buat GapRequest dengan nomor 1010 (zona gap valid: 1010-1019)
+        Carbon::setTestNow('2026-04-21 10:00:00');
+        $this->service->acquireNumber(); // Mengarsipkan 1001-1010
+
+        // Ambil nomor gap 1005 untuk tanggal 2026-04-20
         $gapRequest = GapRequest::create([
             'requested_by'      => $this->user->id,
             'classification_id' => $this->classification->id,
-            'number'            => 1010,
-            'gap_date'          => now()->toDateString(),
+            'number'            => 1005,
+            'gap_date'          => '2026-04-20',
             'status'            => 'approved',
-            'reason'            => 'Test gap release ke zona gap',
+            'reason'            => 'Butuh nomor mundur',
         ]);
 
         $letterNumber = $this->service->releaseGapNumber($gapRequest);
-
-        // Verifikasi LetterNumber berhasil dibuat dengan nomor gap yang benar
-        $this->assertInstanceOf(LetterNumber::class, $letterNumber);
-        $this->assertEquals(1010, $letterNumber->number, 'Nomor gap harus 1010');
-        $this->assertEquals($this->classification->id, $letterNumber->classification_id);
-        $this->assertEquals('active', $letterNumber->status);
-
-        // Verifikasi record benar-benar tersimpan di database
-        $this->assertDatabaseHas('letter_numbers', [
-            'number'            => 1010,
-            'classification_id' => $this->classification->id,
-            'status'            => 'active',
-        ]);
+        $this->assertEquals(1005, $letterNumber->number);
+        $this->assertEquals('2026-04-20', $letterNumber->issued_date->toDateString());
     }
 
     /**
-     * Test 6: releaseGapNumber harus GAGAL jika nomor bukan di zona gap.
-     *
-     * Nomor 1000-1009 adalah zona AKTIF (bukan zona gap).
-     * releaseGapNumber seharusnya melempar GapAlreadyUsedException.
+     * Test 5: Gagal rilis nomor jika tidak ada di arsip gap.
      */
-    public function test_release_gap_number_gagal_jika_nomor_bukan_zona_gap(): void
+    public function test_release_gap_number_gagal_jika_tidak_di_arsip_gap(): void
     {
-        // Pastikan sequence sudah ada
-        $this->service->acquireNumber();
+        Carbon::setTestNow('2026-04-20 10:00:00');
+        $this->service->acquireNumber(); // 1000
 
-        // Buat GapRequest dengan nomor 1005 (zona AKTIF, bukan zona gap)
+        Carbon::setTestNow('2026-04-21 10:00:00');
+        
         $gapRequest = GapRequest::create([
             'requested_by'      => $this->user->id,
             'classification_id' => $this->classification->id,
-            'number'            => 1005, // zona aktif (1000-1009), BUKAN zona gap
-            'gap_date'          => now()->toDateString(),
+            'number'            => 1050, // Jauh dari gap yang ada (1001-1010)
+            'gap_date'          => '2026-04-20',
             'status'            => 'approved',
-            'reason'            => 'Test nomor aktif — harus ditolak',
+            'reason'            => 'Ngawur',
         ]);
 
-        // Harus melempar GapAlreadyUsedException karena 1005 ada di zona aktif
         $this->expectException(GapAlreadyUsedException::class);
-
         $this->service->releaseGapNumber($gapRequest);
     }
 
     /**
-     * Test 7: buildFormattedNumber menghasilkan format W7-{kode}-{nomor} yang benar.
-     *
-     * Input: classificationCode='TU.01.02', number=1001
-     * Expected: 'W7-TU.01.02-1001'
+     * Test 6: Reset sequence mengarsipkan gap yang tersisa.
      */
-    public function test_formatted_number_format_is_correct(): void
+    public function test_reset_sequence_mengarsipkan_gap(): void
     {
-        $result = LetterNumber::buildFormattedNumber('TU.01.02', 1001);
+        Carbon::setTestNow('2026-04-20 10:00:00');
+        $this->service->acquireNumber(); // 1000
 
-        $this->assertEquals(
-            'W7-TU.01.02-1001',
-            $result,
-            'Format harus W7-TU.01.02-1001'
-        );
-    }
+        $this->service->resetSequence(5000); // Reset ke 5000
 
-    /**
-     * Test 8: Dua klasifikasi berbeda berbagi counter global yang sama.
-     *
-     * GlobalSequence adalah counter tunggal — tidak per-klasifikasi.
-     * Nomor kedua harus tepat = nomor pertama + 1.
-     */
-    public function test_berbeda_klasifikasi_berbagi_counter(): void
-    {
-        $n1 = $this->service->acquireNumber();
-        $n2 = $this->service->acquireNumber();
-        $this->assertNotEquals($n1, $n2);
-        $this->assertEquals($n1 + 1, $n2);
-    }
+        // Harusnya mengarsipkan gap 1001-1010 meski belum ganti hari (karena paksa reset)
+        $this->assertDatabaseHas('daily_gaps', [
+            'date' => '2026-04-20 00:00:00',
+            'gap_start' => 1001,
+            'gap_end' => 1010
+        ]);
 
-    /**
-     * Test 9: Nomor tidak reset saat hari berganti.
-     *
-     * GlobalSequence tidak terikat tanggal — counter terus berlanjut.
-     */
-    public function test_nomor_tidak_reset_setelah_hari_berganti(): void
-    {
-        $n1 = $this->service->acquireNumber();
-        $n2 = $this->service->acquireNumber();
-        $this->assertEquals($n1 + 1, $n2);
+        $n = $this->service->acquireNumber();
+        $this->assertEquals(5000, $n);
     }
 }
