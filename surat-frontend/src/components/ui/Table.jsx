@@ -97,7 +97,7 @@ export default function Table({
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className="px-3 py-2 text-xs text-[#0B1F3A] whitespace-nowrap"
+                    className="px-3 py-2 text-xs text-[#0B1F3A]"
                   >
                     {col.render
                       ? col.render(row[col.key], row)

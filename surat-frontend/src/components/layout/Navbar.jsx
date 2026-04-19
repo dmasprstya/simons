@@ -100,28 +100,31 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
       className={`
         fixed top-0 right-0 h-[64px] bg-white/80 backdrop-blur-md
         border-b border-slate-100 shadow-[0_1px_0_0_rgba(0,0,0,0.04)]
-        flex items-center justify-between px-6 md:px-8 z-20
+        flex items-center justify-between px-4 md:px-8 z-20
         transition-all duration-300
         left-0
         ${sidebarCollapsed ? 'lg:left-[68px]' : 'lg:left-[260px]'}
       `}
     >
       {/* ── Kiri — Hamburger + Breadcrumb ── */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
         {/* Hamburger for mobile */}
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="lg:hidden p-2 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-navy transition-colors"
+          className="lg:hidden p-2 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-navy transition-colors shrink-0"
           aria-label="Toggle menu"
         >
           <Bars3Icon className="h-5 w-5" />
         </button>
 
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
+        <nav 
+          className="flex items-center gap-1.5 text-[13px] md:text-sm overflow-x-auto no-scrollbar whitespace-nowrap py-1" 
+          aria-label="Breadcrumb"
+        >
           {breadcrumbs.map((crumb, index) => (
-            <div key={index} className="flex items-center gap-1.5">
+            <div key={index} className="flex items-center gap-1.5 shrink-0">
               {index > 0 && (
                 <ChevronRightIcon className="h-3.5 w-3.5 text-slate-300 shrink-0" />
               )}

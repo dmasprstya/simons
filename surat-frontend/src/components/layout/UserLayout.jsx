@@ -59,7 +59,7 @@ export default function UserLayout() {
           ${collapsed ? 'lg:ml-[68px]' : 'lg:ml-[260px]'}
         `}
       >
-        <div className="p-10">
+        <div className="p-4 md:p-8 lg:p-10">
           <Outlet />
         </div>
       </main>

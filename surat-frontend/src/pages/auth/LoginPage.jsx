@@ -94,7 +94,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card Login */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-6 sm:p-8">
           <h2 className="text-base font-semibold text-primary mb-1">Masuk ke akun Anda</h2>
           <p className="text-sm text-slate-500 mb-6">Masukkan email dan password untuk melanjutkan.</p>
 

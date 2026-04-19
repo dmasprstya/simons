@@ -299,13 +299,13 @@ export default function ReportsPage() {
           </div>
 
           {/* Export buttons */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Button
               variant="secondary"
               onClick={() => onExport('csv')}
               loading={exporting === 'csv'}
               disabled={!!exporting}
-              className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20 backdrop-blur-sm shadow-sm"
+              className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20 backdrop-blur-sm shadow-sm justify-center"
             >
               {exporting === 'csv' ? 'Menyiapkan...' : '📥 Export CSV'}
             </Button>
@@ -313,7 +313,7 @@ export default function ReportsPage() {
               onClick={() => onExport('pdf')}
               loading={exporting === 'pdf'}
               disabled={!!exporting}
-              className="!bg-[var(--color-secondary)] !text-[#1B2F6E] hover:opacity-90 shadow-md font-bold px-6"
+              className="!bg-[var(--color-secondary)] !text-[#1B2F6E] hover:opacity-90 shadow-md font-bold px-6 justify-center"
             >
               {exporting === 'pdf' ? 'Menyiapkan...' : '📄 Download PDF'}
             </Button>
@@ -325,13 +325,13 @@ export default function ReportsPage() {
       {exportError && <ErrorMessage error={exportError} />}
 
       {/* Refined Filter Bar */}
-      <div className="bg-white rounded-[var(--radius-card)] shadow-[var(--shadow-soft)] border border-[#E2E8F0] p-6 lg:p-8">
-        <div className="flex items-center gap-2 mb-8">
+      <div className="bg-white rounded-[var(--radius-card)] shadow-[var(--shadow-soft)] border border-[#E2E8F0] p-5 md:p-8">
+        <div className="flex items-center gap-2 mb-6 md:mb-8">
           <div className="w-1.5 h-6 bg-[var(--color-secondary)] rounded-full"></div>
           <h2 className="text-sm font-black text-[#1B2F6E] uppercase tracking-widest">Parameter Laporan</h2>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-10">
           {/* Left Side: Classification (7 cols) */}
           <div className="lg:col-span-12 xl:col-span-7 space-y-3">
             <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1">
@@ -419,13 +419,13 @@ export default function ReportsPage() {
       <div className="space-y-8">
         {/* Stat Cards */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
           </div>
         ) : summary ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <StatCard
               icon="📄"
               label="Total Surat"

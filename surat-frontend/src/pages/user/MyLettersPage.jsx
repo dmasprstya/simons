@@ -210,7 +210,7 @@ export default function MyLettersPage() {
 
       {/* Filter bar */}
       <Card padding="md" className="border-slate-200 overflow-visible">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* KIRI: Klasifikasi */}
           <div className="space-y-2.5">
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">

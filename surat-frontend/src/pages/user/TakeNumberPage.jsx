@@ -298,16 +298,16 @@ export default function TakeNumberPage() {
         {resultData && (
           <div className="space-y-4">
             {/* Detail nomor surat terformat (W7-{kode}-{nomor}) */}
-            <div className="bg-primary-light rounded-2xl p-5 text-center">
-              <p className="text-xs text-primary font-bold uppercase tracking-widest opacity-70">
+            <div className="bg-primary-light rounded-2xl p-4 md:p-5 text-center">
+              <p className="text-[10px] md:text-xs text-primary font-bold uppercase tracking-widest opacity-70">
                 Nomor Surat
               </p>
-              <p className="text-3xl font-bold text-primary mt-2 font-mono tracking-wide">
+              <p className="text-2xl md:text-3xl font-bold text-primary mt-2 font-mono tracking-wide break-all">
                 {displayLetterNumber(resultData)}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-xl p-3">
                 <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Tanggal</p>
                 <p className="text-sm font-bold text-navy mt-0.5">{resultData.issued_date}</p>
