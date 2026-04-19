@@ -21,9 +21,11 @@ import EmptyState from '../../components/ui/EmptyState';
  */
 function SkeletonCard() {
   return (
-    <div className="bg-[#F7F9FC] rounded-lg p-3 animate-pulse">
-      <div className="h-3 bg-[#E2E8F0] rounded w-1/2 mb-3" />
-      <div className="h-6 bg-[#E2E8F0] rounded w-1/3" />
+    <div className="bg-white rounded-[var(--radius-card)] border border-[#F1F5F9] p-6 shadow-sm animate-pulse">
+      <div className="w-12 h-12 bg-[#F1F5F9] rounded-2xl mb-4" />
+      <div className="h-3 bg-[#F1F5F9] rounded w-1/3 mb-3" />
+      <div className="h-8 bg-[#F1F5F9] rounded w-1/2 mb-4" />
+      <div className="h-2 bg-[#F1F5F9] rounded w-3/4" />
     </div>
   );
 }
@@ -33,12 +35,15 @@ function SkeletonCard() {
  */
 function SkeletonTable() {
   return (
-    <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 animate-pulse space-y-3">
-      <div className="h-3 bg-[#E2E8F0] rounded w-1/3 mb-4" />
+    <div className="bg-white rounded-[var(--radius-card)] border border-[#E2E8F0] p-8 animate-pulse space-y-6 shadow-sm">
+      <div className="h-4 bg-[#F1F5F9] rounded w-1/4 mb-6" />
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-4">
-          <div className="h-3 bg-[#E2E8F0] rounded flex-1" />
-          <div className="h-3 bg-[#E2E8F0] rounded w-16" />
+        <div key={i} className="space-y-2">
+          <div className="flex justify-between">
+            <div className="h-3 bg-[#F1F5F9] rounded w-1/2" />
+            <div className="h-3 bg-[#F1F5F9] rounded w-12" />
+          </div>
+          <div className="h-2 bg-[#F1F5F9] rounded w-full" />
         </div>
       ))}
     </div>
@@ -50,58 +55,66 @@ function SkeletonTable() {
  */
 function StatCard({ icon, label, value, subtext }) {
   return (
-    <div className="bg-[#F7F9FC] rounded-lg p-3 transition-all hover:bg-[#EBF4FD]/50">
-      <div className="flex items-start gap-3">
-        <span className="text-lg mt-0.5">{icon}</span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs text-[#64748B] uppercase tracking-wide">
-            {label}
-          </p>
-          <p className="text-xl font-semibold text-[#0B1F3A] mt-0.5">
-            {value ?? '-'}
-          </p>
-          {subtext && (
-            <p className="text-[10px] text-[#94A3B8] mt-0.5">{subtext}</p>
-          )}
+    <div className="bg-white rounded-[var(--radius-card)] p-6 border border-[#F1F5F9] shadow-[var(--shadow-soft)] transition-all hover:scale-[1.02] active:scale-[0.98]">
+      <div className="flex items-start justify-between">
+        <div className="w-12 h-12 bg-[#F8FAFC] rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-[#F1F5F9]">
+          {icon}
         </div>
+      </div>
+      <div className="mt-4">
+        <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-[0.1em]">
+          {label}
+        </p>
+        <p className="text-3xl font-extrabold text-[#1B2F6E] mt-1.5 tracking-tight">
+          {value ?? '-'}
+        </p>
+        {subtext && (
+          <p className="text-[11px] font-medium text-[#94A3B8] mt-2 flex items-center gap-1.5">
+            <span className="w-1 h-1 bg-[#CBD5E1] rounded-full"></span>
+            {subtext}
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
 /**
- * BarChart — chart bar sederhana menggunakan CSS (tanpa library chart)
- * Menampilkan data sebagai horizontal bars dengan label dan value
+ * BarChart — chart bar sederhana menggunakan CSS
  */
 function SimpleBarChart({ data = [], labelKey = 'label', valueKey = 'count', title }) {
   if (!data || data.length === 0) return null;
 
-  // Cari nilai maksimum untuk skala bar
   const maxValue = Math.max(...data.map((item) => item[valueKey] || 0), 1);
 
   return (
-    <div className="bg-white rounded-xl border border-[#E2E8F0] p-5">
-      {title && (
-        <h3 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold mb-4">{title}</h3>
-      )}
-      <div className="space-y-3">
-        {data.map((item, index) => {
+    <div className="bg-white rounded-[var(--radius-card)] border border-[#E2E8F0] shadow-[var(--shadow-soft)] p-8 h-full">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-sm font-extrabold text-[#1B2F6E] uppercase tracking-[0.05em]">{title}</h3>
+        <div className="flex gap-1">
+          <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] opacity-20"></div>
+          <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] opacity-40"></div>
+          <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] opacity-60"></div>
+        </div>
+      </div>
+      <div className="space-y-6">
+        {data.slice(0, 10).map((item, index) => {
           const value = item[valueKey] || 0;
           const percentage = (value / maxValue) * 100;
 
           return (
-            <div key={index}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-[#0B1F3A] truncate max-w-[60%]">
+            <div key={index} className="group">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-[#475569] group-hover:text-[#1B2F6E] transition-colors line-clamp-1">
                   {item[labelKey] || '-'}
                 </span>
-                <span className="text-xs font-semibold text-[#0B1F3A]">
+                <span className="text-xs font-extrabold text-[#1B2F6E] bg-[#F1F5F9] px-2 py-0.5 rounded-md">
                   {value}
                 </span>
               </div>
-              <div className="h-2 bg-[#F7F9FC] rounded-full overflow-hidden">
+              <div className="h-2.5 bg-[#F8FAFC] rounded-full overflow-hidden border border-[#F1F5F9]/50 shadow-inner">
                 <div
-                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
                   style={{
                     width: `${percentage}%`,
                     background: `linear-gradient(90deg, ${getBarColor(index)})`,
@@ -121,14 +134,12 @@ function SimpleBarChart({ data = [], labelKey = 'label', valueKey = 'count', tit
  */
 function getBarColor(index) {
   const colors = [
-    '#0B1F3A, #1A3558', // navy
-    '#2A7FD4, #5BA2E0', // accent blue
-    '#065F46, #34d399', // emerald
-    '#f59e0b, #fbbf24', // amber
-    '#185FA5, #5BA2E0', // blue
-    '#06b6d4, #22d3ee', // cyan
-    '#f97316, #fb923c', // orange
-    '#14b8a6, #2dd4bf', // teal
+    '#1B2F6E, #2A469D', // primary blue
+    '#F5B800, #FFD600', // secondary gold
+    '#0EA5E9, #38BDF8', // sky
+    '#6366F1, #818CF8', // indigo
+    '#F43F5E, #FB7185', // rose
+    '#10B981, #34D399', // emerald
   ];
   return colors[index % colors.length];
 }
@@ -138,33 +149,42 @@ function getBarColor(index) {
  */
 function BreakdownTable({ data = [], labelKey = 'label', valueKey = 'count', title, emptyText }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
-      {title && (
-        <div className="px-5 py-3 border-b border-[#E2E8F0]">
-          <h3 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">{title}</h3>
-        </div>
-      )}
+    <div className="bg-white rounded-[var(--radius-card)] border border-[#E2E8F0] shadow-[var(--shadow-soft)] overflow-hidden flex flex-col">
+      <div className="px-8 py-5 border-b border-[#F1F5F9] bg-[#F8FAFC]/50">
+        <h3 className="text-sm font-extrabold text-[#1B2F6E] uppercase tracking-wider">{title}</h3>
+      </div>
 
-      {data.length === 0 ? (
-        <div className="px-5 py-8 text-center">
-          <span className="text-2xl block mb-2">📊</span>
-          <p className="text-xs text-[#94A3B8]">{emptyText || 'Tidak ada data.'}</p>
-        </div>
-      ) : (
-        <div className="divide-y divide-[#E2E8F0]">
-          {data.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between px-5 py-2.5 hover:bg-[#F7F9FC] transition-colors"
-            >
-              <span className="text-xs text-[#0B1F3A] truncate">
-                {item[labelKey] || '-'}
-              </span>
-              <span className="text-xs font-bold text-[#0B1F3A] tabular-nums ml-4">
-                {item[valueKey] || 0}
-              </span>
-            </div>
-          ))}
+      <div className="flex-1">
+        {data.length === 0 ? (
+          <div className="px-8 py-12 text-center">
+            <span className="text-3xl block mb-3 opacity-50">📊</span>
+            <p className="text-xs font-semibold text-[#94A3B8]">{emptyText || 'Tidak ada data.'}</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-[#F1F5F9]">
+            {data.slice(0, 10).map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between px-8 py-4 hover:bg-[#F8FAFC] transition-all group"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#CBD5E1] group-hover:bg-[var(--color-primary)] transition-colors shrink-0"></span>
+                  <span className="text-xs font-bold text-[#475569] group-hover:text-[#1B2F6E] truncate transition-colors">
+                    {item[labelKey] || '-'}
+                  </span>
+                </div>
+                <span className="text-[13px] font-black text-[#1B2F6E] tabular-nums ml-4 bg-[#F1F5F9] min-w-[32px] h-6 flex items-center justify-center rounded-lg shadow-sm border border-[#E2E8F0]/30 px-2">
+                  {item[valueKey] || 0}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {data.length > 10 && (
+        <div className="px-8 py-3 bg-[#F8FAFC]/50 border-t border-[#F1F5F9] text-center">
+          <p className="text-[10px] font-bold text-[#94A3B8] uppercase">Menampilkan Top 10</p>
         </div>
       )}
     </div>
@@ -251,84 +271,71 @@ export default function ReportsPage() {
   const divisionBreakdown = summary?.per_division ?? summary?.by_division ?? [];
 
   const inputBaseClass = `
-    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
-    px-3 text-sm text-[#0B1F3A]
+    block w-full h-11 rounded-[var(--radius-input)] border border-[#E2E8F0] bg-[#F8FAFC]
+    px-4 text-sm text-[#1B2F6E] font-medium
     transition-all duration-200
-    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5
   `;
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="bg-[#0B1F3A] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-semibold text-white">📊 Laporan & Export</h1>
-          <p className="text-white/50 text-sm mt-0.5">
-            Ringkasan data surat dan export laporan.
-          </p>
-        </div>
+    <div className="space-y-8 pb-10">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden bg-[var(--color-primary)] rounded-[var(--radius-card)] p-8 shadow-lg shadow-primary/10">
+        {/* Subtle decorative circles */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-[var(--color-secondary)]/10 rounded-full -ml-24 -mb-24 blur-3xl pointer-events-none" />
+        
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div className="hidden sm:flex w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl items-center justify-center text-3xl shadow-inner border border-white/20">
+              📊
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Laporan & Analitik</h1>
+              <p className="text-white/60 text-sm font-medium mt-1">
+                Visualisasi data penomoran dan ekspor laporan berkala.
+              </p>
+            </div>
+          </div>
 
-        {/* Export buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onExport('csv')}
-            loading={exporting === 'csv'}
-            disabled={!!exporting}
-            className="!bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
-          >
-            {exporting === 'csv' ? 'Menyiapkan...' : '📥 Export CSV'}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onExport('pdf')}
-            loading={exporting === 'pdf'}
-            disabled={!!exporting}
-            className="!bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
-          >
-            {exporting === 'pdf' ? 'Menyiapkan...' : '📄 Export PDF'}
-          </Button>
+          {/* Export buttons */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => onExport('csv')}
+              loading={exporting === 'csv'}
+              disabled={!!exporting}
+              className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20 backdrop-blur-sm shadow-sm"
+            >
+              {exporting === 'csv' ? 'Menyiapkan...' : '📥 Export CSV'}
+            </Button>
+            <Button
+              onClick={() => onExport('pdf')}
+              loading={exporting === 'pdf'}
+              disabled={!!exporting}
+              className="!bg-[var(--color-secondary)] !text-[#1B2F6E] hover:opacity-90 shadow-md font-bold px-6"
+            >
+              {exporting === 'pdf' ? 'Menyiapkan...' : '📄 Download PDF'}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Export error */}
       {exportError && <ErrorMessage error={exportError} />}
 
-      {/* Filter bar */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-3">
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
-          {/* Date From */}
-          <div className="w-full sm:w-36">
-            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-              Dari Tanggal
-            </label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className={inputBaseClass}
-            />
-          </div>
-
-          {/* Date To */}
-          <div className="w-full sm:w-36">
-            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-              Sampai Tanggal
-            </label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className={inputBaseClass}
-            />
-          </div>
-
-          {/* Classification */}
-          <div className="w-full sm:w-auto sm:flex-1 sm:min-w-[200px]">
-            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-              Klasifikasi
+      {/* Refined Filter Bar */}
+      <div className="bg-white rounded-[var(--radius-card)] shadow-[var(--shadow-soft)] border border-[#E2E8F0] p-6 lg:p-8">
+        <div className="flex items-center gap-2 mb-8">
+          <div className="w-1.5 h-6 bg-[var(--color-secondary)] rounded-full"></div>
+          <h2 className="text-sm font-black text-[#1B2F6E] uppercase tracking-widest">Parameter Laporan</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Left Side: Classification (7 cols) */}
+          <div className="lg:col-span-12 xl:col-span-7 space-y-3">
+            <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1">
+              A. Filter Klasifikasi Surat
             </label>
             <ClassificationPicker
               value={classificationId}
@@ -336,110 +343,171 @@ export default function ReportsPage() {
             />
           </div>
 
-          {/* Divisi */}
-          <div className="w-full sm:w-36">
-            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-              Divisi
-            </label>
-            <input
-              type="text"
-              value={division}
-              onChange={(e) => setDivision(e.target.value)}
-              placeholder="Nama divisi..."
-              className={inputBaseClass}
-            />
-          </div>
+          {/* Right Side: Division, Dates, Actions (5 cols) */}
+          <div className="lg:col-span-12 xl:col-span-5 flex flex-col">
+            <div className="space-y-6 flex-1">
+              <div>
+                <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1 mb-2">
+                  B. Cari Divisi / Unit Kerja
+                </label>
+                <input
+                  type="text"
+                  value={division}
+                  onChange={(e) => setDivision(e.target.value)}
+                  placeholder="Masukkan nama divisi..."
+                  className={inputBaseClass}
+                />
+              </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-2 pt-1">
-            <button onClick={handleFilter} className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors">
-              Filter
-            </button>
-            <button onClick={handleResetFilter} className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors">
-              Reset
-            </button>
+              <div className="space-y-3">
+                <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1">
+                  C. Rentang Waktu
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] text-[#94A3B8] font-bold ml-1">Tgl Mulai</span>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className={inputBaseClass}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] text-[#94A3B8] font-bold ml-1">Tgl Akhir</span>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className={inputBaseClass}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions (At the bottom of right side) */}
+            <div className="flex gap-3 mt-10 pt-6 border-t border-[#F1F5F9]">
+              <Button
+                variant="outline"
+                loading={loading}
+                onClick={handleResetFilter}
+                className="flex-1 h-12"
+              >
+                Reset Filter
+              </Button>
+              <Button
+                variant="primary"
+                loading={loading}
+                onClick={handleFilter}
+                className="flex-[2] h-12"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Tampilkan Laporan
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Error */}
+      {/* Error report load */}
       {error && <ErrorMessage error={error} />}
 
-      {/* Summary cards */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
-      ) : summary ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            icon="📄"
-            label="Total Surat"
-            value={totalLetters}
-            subtext={`${dateFrom} — ${dateTo}`}
-          />
-          <StatCard
-            icon="🏷️"
-            label="Klasifikasi"
-            value={classificationBreakdown.length}
-            subtext="Jumlah klasifikasi yang digunakan"
-          />
-          <StatCard
-            icon="🏢"
-            label="Divisi"
-            value={divisionBreakdown.length}
-            subtext="Jumlah divisi yang mengirim surat"
-          />
-        </div>
-      ) : null}
-
-      {/* Charts / Breakdown */}
-      {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <SkeletonTable />
-          <SkeletonTable />
-        </div>
-      ) : summary ? (
-        <>
-          {/* Bar chart — Total surat per hari */}
-          {dailyBreakdown.length > 0 && (
-            <SimpleBarChart
-              data={dailyBreakdown}
-              labelKey="date"
-              valueKey="count"
-              title="📅 Total Surat per Hari"
+      {/* Summary Content */}
+      <div className="space-y-8">
+        {/* Stat Cards */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        ) : summary ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <StatCard
+              icon="📄"
+              label="Total Surat"
+              value={totalLetters}
+              subtext={`Periode ${dateFrom} - ${dateTo}`}
             />
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* Breakdown per klasifikasi */}
-            <BreakdownTable
-              data={classificationBreakdown}
-              labelKey="classification"
-              valueKey="count"
-              title="🏷️ Breakdown per Klasifikasi"
-              emptyText="Belum ada data klasifikasi dalam rentang waktu ini."
+            <StatCard
+              icon="🏷️"
+              label="Klasifikasi"
+              value={classificationBreakdown.length}
+              subtext="Klasifikasi digunakan"
             />
-
-            {/* Breakdown per divisi */}
-            <BreakdownTable
-              data={divisionBreakdown}
-              labelKey="division"
-              valueKey="count"
-              title="🏢 Breakdown per Divisi"
-              emptyText="Belum ada data divisi dalam rentang waktu ini."
+            <StatCard
+              icon="🏢"
+              label="Divisi"
+              value={divisionBreakdown.length}
+              subtext="Divisi berkontribusi"
             />
           </div>
-        </>
-      ) : !error ? (
-        <EmptyState
-          icon="📊"
-          title="Belum ada data laporan"
-          description="Gunakan filter di atas untuk melihat ringkasan data surat."
-        />
-      ) : null}
+        ) : null}
+
+        {/* Detailed Breakdown */}
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <SkeletonTable />
+            <div className="space-y-8">
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          </div>
+        ) : summary ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Primary Chart: Daily Trend */}
+            <div className="lg:col-span-12 xl:col-span-7">
+              {dailyBreakdown.length > 0 ? (
+                <SimpleBarChart
+                  data={dailyBreakdown}
+                  labelKey="date"
+                  valueKey="count"
+                  title="📅 Tren Surat per Hari"
+                />
+              ) : (
+                <div className="bg-white rounded-[var(--radius-card)] border border-[#E2E8F0] p-10 text-center flex flex-col items-center justify-center min-h-[300px]">
+                  <span className="text-4xl mb-4">📈</span>
+                  <h3 className="text-[#1B2F6E] font-bold">Tren Harian Kosong</h3>
+                  <p className="text-sm text-[#64748B] max-w-xs mt-1">Belum ada data surat yang terekam pada periode yang dipilih.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar Tables */}
+            <div className="lg:col-span-12 xl:col-span-5 space-y-8">
+              <BreakdownTable
+                data={classificationBreakdown}
+                labelKey="classification"
+                valueKey="count"
+                title="🏷️ Top Klasifikasi"
+                emptyText="Data klasifikasi tidak tersedia."
+              />
+
+              <BreakdownTable
+                data={divisionBreakdown}
+                labelKey="division"
+                valueKey="count"
+                title="🏢 Top Kontributor (Divisi)"
+                emptyText="Data divisi tidak tersedia."
+              />
+            </div>
+          </div>
+        ) : !error ? (
+          <div className="bg-white rounded-[var(--radius-card)] border border-dashed border-[#CBD5E1] p-20 flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-[#F1F5F9] rounded-full flex items-center justify-center text-3xl mb-4">
+              📊
+            </div>
+            <h3 className="text-lg font-bold text-[#1B2F6E]">Siap Menganalisis Data</h3>
+            <p className="text-[#64748B] text-sm mt-2 max-w-sm">
+              Klik tombol filter di atas untuk menarik ringkasan data dan menghasilkan laporan visual.
+            </p>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
+

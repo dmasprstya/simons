@@ -75,12 +75,12 @@ function TreeRow({
             <span
               className={`inline-block h-2 w-2 rounded-full ${
                 level === 1
-                  ? 'bg-[#0B1F3A]'
+                  ? 'bg-primary'
                   : level === 2
-                  ? 'bg-[#2A7FD4]'
+                  ? 'bg-secondary'
                   : level === 3
-                  ? 'bg-[#94A3B8]'
-                  : 'bg-[#64748B]'
+                  ? 'bg-slate-400'
+                  : 'bg-slate-300'
               }`}
             />
 
@@ -436,7 +436,7 @@ export default function ClassificationsPage() {
     block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
     px-3 text-sm text-[#0B1F3A]
     transition-all duration-200
-    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/20
   `;
 
   // === Render form fields ===
@@ -563,14 +563,13 @@ export default function ClassificationsPage() {
             </select>
           </div>
 
-          {/* Filter actions */}
           <div className="flex gap-2 pt-1">
-            <button onClick={handleFilter} className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors">
+            <Button variant="primary" size="sm" onClick={handleFilter}>
               Filter
-            </button>
-            <button onClick={handleResetFilter} className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors">
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleResetFilter}>
               Reset
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -657,19 +656,19 @@ export default function ClassificationsPage() {
       {/* Legend */}
       <div className="flex items-center gap-6 text-[10px] text-[#94A3B8]">
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-[#0B1F3A]" />
+          <span className="inline-block h-2 w-2 rounded-full bg-primary" />
           Level 1
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-[#2A7FD4]" />
+          <span className="inline-block h-2 w-2 rounded-full bg-secondary" />
           Level 2
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-[#94A3B8]" />
+          <span className="inline-block h-2 w-2 rounded-full bg-slate-400" />
           Level 3
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-[#64748B]" />
+          <span className="inline-block h-2 w-2 rounded-full bg-slate-300" />
           Level 4
         </div>
       </div>
@@ -725,7 +724,7 @@ export default function ClassificationsPage() {
           {renderFormFields()}
           <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-[#E2E8F0]">
             <Button
-              variant="secondary"
+              variant="outline"
               size="md"
               onClick={() => {
                 setShowEditModal(false);

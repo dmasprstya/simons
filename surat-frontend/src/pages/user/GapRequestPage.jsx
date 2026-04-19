@@ -286,13 +286,12 @@ export default function GapRequestPage() {
               Nomor Gap <span className="text-red-500">*</span>
             </label>
             <div
-              className={`flex items-center h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm ${
-                validationErrors.number
+              className={`flex items-center h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm ${validationErrors.number
                   ? 'border-red-300'
                   : selectedNumber
-                  ? 'border-[#2A7FD4]'
-                  : 'border-[#E2E8F0]'
-              }`}
+                    ? 'border-[#2A7FD4]'
+                    : 'border-[#E2E8F0]'
+                }`}
             >
               {selectedNumber ? (
                 <>
@@ -339,11 +338,10 @@ export default function GapRequestPage() {
               className={`block w-full min-h-[80px] resize-none rounded-lg border bg-[#F7F9FC] px-3 py-2 text-sm text-[#0B1F3A]
                 transition-all duration-200
                 focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
-                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed ${
-                validationErrors.reason
+                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed ${validationErrors.reason
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
                   : 'border-[#E2E8F0]'
-              }`}
+                }`}
             />
             <div className="flex items-center justify-between mt-1">
               {validationErrors.reason ? (
@@ -352,13 +350,12 @@ export default function GapRequestPage() {
                 <span />
               )}
               <span
-                className={`text-[10px] ${
-                  reason.length >= REASON_MAX
+                className={`text-[10px] ${reason.length >= REASON_MAX
                     ? 'text-red-500 font-medium'
                     : reason.length >= REASON_MAX * 0.9
-                    ? 'text-amber-500'
-                    : 'text-[#94A3B8]'
-                }`}
+                      ? 'text-amber-500'
+                      : 'text-[#94A3B8]'
+                  }`}
               >
                 {reason.length}/{REASON_MAX}
               </span>
@@ -500,11 +497,10 @@ export default function GapRequestPage() {
                                 type="button"
                                 onClick={() => handleSelectNumber(item)}
                                 title={`Zona gap: ${item.gap_start} – ${item.gap_end}`}
-                                className={`px-3 py-1 rounded-md text-xs font-mono font-semibold border transition-all duration-150 ${
-                                  selectedNumber === item.number
+                                className={`px-3 py-1 rounded-md text-xs font-mono font-semibold border transition-all duration-150 ${selectedNumber === item.number
                                     ? 'bg-[#2A7FD4] text-white border-[#2A7FD4] shadow-sm'
                                     : 'bg-white text-[#2A7FD4] border-[#BFDBFE] hover:bg-[#2A7FD4] hover:text-white hover:border-[#2A7FD4]'
-                                }`}
+                                  }`}
                               >
                                 {selectedNumber === item.number ? `✓ ${item.number}` : item.number}
                               </button>

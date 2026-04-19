@@ -13,9 +13,9 @@
 
 const paddingMap = {
   none: '',
-  sm:   'p-4',
-  md:   'p-6',
-  lg:   'p-8',
+  sm: 'p-4',
+  md: 'p-6',
+  lg: 'p-8',
 };
 
 export default function Card({

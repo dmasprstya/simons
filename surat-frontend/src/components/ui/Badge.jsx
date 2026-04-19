@@ -9,13 +9,13 @@
  */
 
 const variantClasses = {
-  /* Status 'Active' — light blue pill sesuai blueprint */
-  active:  'bg-blue-50 text-blue-600 ring-1 ring-blue-100',
+  /* Status 'Active' — theme primary light pill */
+  active: 'bg-primary-light text-primary ring-1 ring-primary/10',
   /* Umum */
   success: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100',
   warning: 'bg-amber-50  text-amber-700  ring-1 ring-amber-100',
-  danger:  'bg-red-50    text-red-600    ring-1 ring-red-100',
-  info:    'bg-blue-50   text-blue-600   ring-1 ring-blue-100',
+  danger: 'bg-red-50    text-red-600    ring-1 ring-red-100',
+  info: 'bg-primary-light text-primary ring-1 ring-primary/10',
   default: 'bg-slate-100 text-slate-500  ring-1 ring-slate-200',
 };
 

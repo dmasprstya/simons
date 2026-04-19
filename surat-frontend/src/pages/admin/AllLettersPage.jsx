@@ -181,7 +181,7 @@ export default function AllLettersPage() {
     block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
     px-3 text-sm text-[#0B1F3A]
     transition-all duration-200
-    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/20
   `;
 
   return (
@@ -293,18 +293,12 @@ export default function AllLettersPage() {
 
           {/* Filter action buttons */}
           <div className="flex gap-2 pt-1">
-            <button
-              onClick={handleFilter}
-              className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors"
-            >
+            <Button variant="primary" size="sm" onClick={handleFilter}>
               Filter
-            </button>
-            <button
-              onClick={handleResetFilter}
-              className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors"
-            >
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleResetFilter}>
               Reset
-            </button>
+            </Button>
           </div>
         </div>
       </div>

@@ -13,19 +13,19 @@ import {
  * Digunakan untuk menampilkan breadcrumb dan update document.title.
  */
 const routeMap = {
-  '/dashboard':              { label: 'Dashboard',             title: 'Dashboard' },
-  '/letters/take':           { label: 'Ambil Nomor',           title: 'Ambil Nomor',           parent: '/dashboard' },
-  '/letters':                { label: 'Riwayat Surat',         title: 'Riwayat Surat' },
-  '/gap-requests':           { label: 'Gap Request',           title: 'Gap Request' },
-  '/profile':                { label: 'Profil Saya',           title: 'Profil Saya' },
-  '/admin/dashboard':        { label: 'Dashboard Admin',       title: 'Dashboard Admin',       section: 'Admin' },
-  '/admin/letters':          { label: 'Semua Surat',           title: 'Semua Surat',           section: 'Admin' },
-  '/admin/gap-requests':     { label: 'Kelola Gap',            title: 'Kelola Gap',            section: 'Admin' },
-  '/admin/sequences':        { label: 'Pengaturan Sequence',   title: 'Pengaturan Sequence',   section: 'Admin' },
-  '/admin/users':            { label: 'Kelola User',           title: 'Kelola User',           section: 'Admin' },
-  '/admin/classifications':  { label: 'Klasifikasi',           title: 'Klasifikasi',           section: 'Admin' },
-  '/admin/audit-logs':       { label: 'Audit Log',             title: 'Audit Log',             section: 'Admin' },
-  '/admin/reports':          { label: 'Laporan',               title: 'Laporan',               section: 'Admin' },
+  '/dashboard': { label: 'Dashboard', title: 'Dashboard' },
+  '/letters/take': { label: 'Ambil Nomor', title: 'Ambil Nomor', parent: '/dashboard' },
+  '/letters': { label: 'Riwayat Surat', title: 'Riwayat Surat' },
+  '/gap-requests': { label: 'Gap Request', title: 'Gap Request' },
+  '/profile': { label: 'Profil Saya', title: 'Profil Saya' },
+  '/admin/dashboard': { label: 'Dashboard Admin', title: 'Dashboard Admin', section: 'Admin' },
+  '/admin/letters': { label: 'Semua Surat', title: 'Semua Surat', section: 'Admin' },
+  '/admin/gap-requests': { label: 'Kelola Gap', title: 'Kelola Gap', section: 'Admin' },
+  '/admin/sequences': { label: 'Pengaturan Sequence', title: 'Pengaturan Sequence', section: 'Admin' },
+  '/admin/users': { label: 'Kelola User', title: 'Kelola User', section: 'Admin' },
+  '/admin/classifications': { label: 'Klasifikasi', title: 'Klasifikasi', section: 'Admin' },
+  '/admin/audit-logs': { label: 'Audit Log', title: 'Audit Log', section: 'Admin' },
+  '/admin/reports': { label: 'Laporan', title: 'Laporan', section: 'Admin' },
 };
 
 /**
@@ -35,10 +35,10 @@ const routeMap = {
  * Auto-update document.title berdasarkan halaman aktif.
  */
 export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
-  const user      = useAuthStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.logout);
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [loggingOut, setLoggingOut] = useState(false);
 
   // Update document title berdasarkan route aktif
@@ -128,7 +128,7 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
               {crumb.to ? (
                 <Link
                   to={crumb.to}
-                  className="text-slate-400 hover:text-blue-600 font-medium transition-colors"
+                  className="text-slate-400 hover:text-primary font-medium transition-colors"
                 >
                   {crumb.label}
                 </Link>
@@ -163,14 +163,14 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
               className="w-8 h-8 rounded-xl object-cover border border-slate-100 shadow-sm"
             />
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md shadow-blue-600/20">
+            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-sm font-bold shadow-md shadow-primary/20">
               {(user?.name || 'U').charAt(0).toUpperCase()}
             </div>
           )}
 
           {/* Nama & divisi */}
           <div className="text-left">
-            <p className="text-sm font-bold text-navy leading-tight group-hover:text-blue-600 transition-colors">
+            <p className="text-sm font-bold text-navy leading-tight group-hover:text-primary transition-colors">
               {user?.name || 'User'}
             </p>
             {divisionLabel && (

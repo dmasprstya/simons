@@ -102,10 +102,10 @@ export default function DashboardPage() {
       label: 'Pengambil',
       render: (value) => (
         <div className="min-w-0">
-          <p className="text-xs font-medium text-[#0B1F3A] truncate">
+          <p className="text-xs font-medium text-primary truncate">
             {value?.name || '-'}
           </p>
-          <p className="text-[10px] text-[#94A3B8] truncate">
+          <p className="text-[10px] text-slate-400 truncate">
             {value?.division || '-'}
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
+        <span className="bg-primary-light text-primary px-2 py-0.5 rounded text-xs font-bold">
           {displayClassification(value)}
         </span>
       ),
@@ -170,12 +170,12 @@ export default function DashboardPage() {
         style={{ background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)' }}
       >
         {/* Decorative elements */}
-        <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="absolute top-1/2 -left-10 h-32 w-32 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute top-1/2 -left-10 h-32 w-32 rounded-full bg-secondary/10 blur-3xl" />
 
         <div className="relative">
           <h1 className="text-2xl font-bold text-white tracking-tight">
-            Selamat datang, <span className="text-blue-400">{user?.name || 'User'}</span> 👋
+            Selamat datang, <span className="text-secondary">{user?.name || 'User'}</span> 👋
           </h1>
           <p className="text-slate-400 text-sm mt-1 font-medium">{today}</p>
         </div>
@@ -199,8 +199,8 @@ export default function DashboardPage() {
         {/* Stat Cards (Left Column) */}
         <div className="lg:col-span-4 space-y-4">
           {[
-            { label: 'Hari Ini', value: userStats.today, icon: '📅', color: 'bg-blue-50 text-blue-600' },
-            { label: 'Bulan Ini', value: userStats.month, icon: '📊', color: 'bg-indigo-50 text-indigo-600' },
+            { label: 'Hari Ini', value: userStats.today, icon: '📅', color: 'bg-primary-light text-primary' },
+            { label: 'Bulan Ini', value: userStats.month, icon: '📊', color: 'bg-primary-light text-primary' },
             { label: 'Total Aktif', value: userStats.active, icon: '✅', color: 'bg-emerald-50 text-emerald-600' },
             { label: 'Total Surat', value: userStats.total, icon: '📂', color: 'bg-slate-50 text-slate-600' }
           ].map((stat, idx) => (
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                     className="flex items-center justify-between py-3.5 gap-4 group"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-navy tracking-tight font-mono group-hover:text-blue-600 transition-colors">
+                      <p className="text-sm font-bold text-navy tracking-tight font-mono group-hover:text-primary transition-colors">
                         {displayLetterNumber(letter)}
                       </p>
                       <p className="text-[11px] text-slate-500 truncate mt-0.5">

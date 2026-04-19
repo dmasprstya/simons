@@ -89,14 +89,14 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-xl overflow-hidden shadow-lg mb-4 border border-slate-200/50">
             <img src={logo} alt="Logo SIMONS" className="h-full w-full object-cover" />
           </div>
-          <h1 className="text-2xl font-extrabold text-[#0B1F3A] tracking-tight">SIMONS</h1>
-          <p className="text-sm text-[#64748B] mt-1">Sistem Informasi Manajemen Penomoran Surat</p>
+          <h1 className="text-2xl font-extrabold text-primary tracking-tight">SIMONS</h1>
+          <p className="text-sm text-slate-500 mt-1">Sistem Informasi Manajemen Penomoran Surat</p>
         </div>
 
         {/* Card Login */}
         <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-8">
-          <h2 className="text-base font-semibold text-[#0B1F3A] mb-1">Masuk ke akun Anda</h2>
-          <p className="text-sm text-[#64748B] mb-6">Masukkan email dan password untuk melanjutkan.</p>
+          <h2 className="text-base font-semibold text-primary mb-1">Masuk ke akun Anda</h2>
+          <p className="text-sm text-slate-500 mb-6">Masukkan email dan password untuk melanjutkan.</p>
 
           {/* Error Message */}
           <ErrorMessage error={error} />
@@ -105,7 +105,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {/* Email */}
             <div>
-              <label htmlFor="login-email" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1.5">
+              <label htmlFor="login-email" className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-1.5">
                 Email
               </label>
               <input
@@ -122,8 +122,8 @@ export default function LoginPage() {
                 placeholder="Masukkan email"
                 disabled={loading}
                 autoComplete="email"
-                className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-[#0B1F3A] placeholder-[#94A3B8]
-                  focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20 focus:border-[#2A7FD4] focus:bg-white
+                className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-primary placeholder-[#94A3B8]
+                  focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary focus:bg-white
                   disabled:bg-[#F7F9FC] disabled:cursor-not-allowed
                   transition-all duration-200"
               />
@@ -131,7 +131,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="login-password" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1.5">
+              <label htmlFor="login-password" className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -144,8 +144,8 @@ export default function LoginPage() {
                   placeholder="Masukkan password"
                   disabled={loading}
                   autoComplete="current-password"
-                  className="w-full h-10 px-3 pr-10 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-[#0B1F3A] placeholder-[#94A3B8]
-                    focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20 focus:border-[#2A7FD4] focus:bg-white
+                  className="w-full h-10 px-3 pr-10 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-primary placeholder-[#94A3B8]
+                    focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary focus:bg-white
                     disabled:bg-[#F7F9FC] disabled:cursor-not-allowed
                     transition-all duration-200"
                 />

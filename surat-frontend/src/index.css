@@ -11,40 +11,51 @@
   }
 
   /* Normalise heading colour to navy */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply text-navy;
   }
 }
 
 /* ── CSS Custom Properties ───────────────────────────────── */
 :root {
-  --color-primary:       #4D7CFF;
-  --color-primary-dark:  #2D68FF;
-  --color-primary-light: #EEF3FF;
-  --color-navy:          #1B2559;
-  --color-muted:         #A3AED0;
-  --color-success:       #01B574;
-  --color-bg:            #F8FAFC;
-  --color-card:          #FFFFFF;
+  --color-primary: #1B2F6E;
+  --color-primary-dark: #142352;
+  --color-primary-light: #E8EAF1;
+  --color-secondary: #F5B800;
+  --color-secondary-dark: #D49E00;
+  --color-secondary-light: #FFF7E0;
+  --color-navy: #1B2F6E;
+  --color-muted: #A3AED0;
+  --color-success: #01B574;
+  --color-bg: #F8FAFC;
+  --color-card: #FFFFFF;
 
-  --radius-card:   20px;
-  --radius-btn:    12px;
-  --radius-input:  15px;
-  --radius-3xl:    24px;
+  --radius-card: 20px;
+  --radius-btn: 12px;
+  --radius-input: 15px;
+  --radius-3xl: 24px;
 
-  --shadow-soft:  0 10px 15px -3px rgba(0,0,0,0.05);
-  --shadow-card:  40px 40px 40px 0px rgba(112,144,176,0.08);
+  --shadow-soft: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  --shadow-card: 40px 40px 40px 0px rgba(112, 144, 176, 0.08);
 }
 
 /* ── Sidebar Scrollbar ───────────────────────────────────── */
 @layer base {
+
   /* Smooth thin scrollbar for sidebar nav */
   .sidebar-scroll::-webkit-scrollbar {
     width: 4px;
   }
+
   .sidebar-scroll::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .sidebar-scroll::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 9999px;

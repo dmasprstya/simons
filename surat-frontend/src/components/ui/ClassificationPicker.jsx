@@ -15,7 +15,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
 
   // State for the current path: array of { id, name, code, is_leaf }
   const [path, setPath] = useState([]);
-  
+
   // Loading state
   const [loading, setLoading] = useState(false);
 
@@ -115,7 +115,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
   const handleSearchSelect = useCallback(async (item) => {
     setShowResults(false);
     setSearchQuery('');
-    
+
     // ancestors + item itself
     const fullPath = [...(item.ancestors || []), item];
     setPath(fullPath);
@@ -123,9 +123,9 @@ export default function ClassificationPicker({ value, onChange, disabled = false
 
     // Pre-cache children for ancestors so breadcrumb navigation works smoothly
     item.ancestors?.forEach(anc => {
-       if (!childrenMap[anc.id]) {
-         getChildren(anc.id).then(res => setChildren(anc.id, res.data || []));
-       }
+      if (!childrenMap[anc.id]) {
+        getChildren(anc.id).then(res => setChildren(anc.id, res.data || []));
+      }
     });
   }, [childrenMap, setChildren, onChange]);
 
@@ -139,7 +139,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
 
   const currentParentId = path.length > 0 ? path[path.length - 1].id : null;
   const currentOptions = currentParentId ? (childrenMap[currentParentId] || []) : roots;
-  
+
   // If the last item in path is a leaf, we are in "selected" state
   const isLeafSelected = path.length > 0 && path[path.length - 1].is_leaf;
 
@@ -148,8 +148,8 @@ export default function ClassificationPicker({ value, onChange, disabled = false
       {/* Search Bar */}
       <div ref={searchRef} className="relative">
         <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[#94A3B8]">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-[#94A3B8]">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
             </svg>
           </span>
@@ -159,12 +159,12 @@ export default function ClassificationPicker({ value, onChange, disabled = false
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => searchResults.length > 0 && setShowResults(true)}
             disabled={disabled}
-            placeholder="Cari berdasarkan nama atau kode..."
-            className="block w-full h-10 rounded-xl border border-[#E2E8F0] bg-[#F7F9FC] pl-10 pr-3 text-sm text-[#0B1F3A] focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#2A7FD4]/10 transition-all duration-200"
+            placeholder="Cari kode atau klasifikasi..."
+            className="block w-full h-11 rounded-[var(--radius-input)] border border-[#E2E8F0] bg-[#F8FAFC] pl-11 pr-4 text-sm font-medium text-[#1B2F6E] focus:border-[var(--color-primary)] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--color-primary)]/5 transition-all duration-200"
           />
           {searchLoading && (
-            <span className="absolute inset-y-0 right-3 flex items-center">
-              <svg className="h-4 w-4 animate-spin text-[#2A7FD4]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <span className="absolute inset-y-0 right-4 flex items-center">
+              <svg className="h-4 w-4 animate-spin text-[var(--color-primary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
@@ -174,19 +174,21 @@ export default function ClassificationPicker({ value, onChange, disabled = false
 
         {/* Search Results */}
         {showResults && (
-          <ul className="absolute z-50 mt-2 w-full rounded-xl border border-[#E2E8F0] bg-white shadow-xl max-h-72 overflow-y-auto py-2">
+          <ul className="absolute z-50 mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white shadow-2xl max-h-72 overflow-y-auto py-2 backdrop-blur-lg">
             {searchResults.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-[#94A3B8] italic text-center">No results found.</li>
+              <li className="px-5 py-4 text-sm text-[#94A3B8] italic text-center">Tidak ada hasil ditemukan.</li>
             ) : (
               searchResults.map((item) => (
                 <li
                   key={item.id}
                   onMouseDown={() => handleSearchSelect(item)}
-                  className="px-4 py-2.5 cursor-pointer hover:bg-[#F0F7FF] transition-colors duration-150 border-b border-slate-50 last:border-0"
+                  className="px-5 py-3.5 cursor-pointer hover:bg-[#F8FAFC] transition-colors duration-150 border-b border-slate-50 last:border-0 group"
                 >
-                  <div className="text-sm font-semibold text-[#0B1F3A]">{item.name}</div>
-                  <div className="text-[11px] text-[#64748B] flex items-center gap-1 mt-0.5">
-                    {item.ancestors?.map((a) => a.name).join(' › ')} {item.ancestors?.length > 0 && '›'} <span className="text-navy">{item.name}</span>
+                  <div className="text-sm font-bold text-[#1B2F6E] group-hover:text-[var(--color-primary)]">{item.name}</div>
+                  <div className="text-[11px] text-[#94A3B8] flex items-center gap-1 mt-1 font-medium">
+                    <span className="text-[var(--color-secondary-dark)] font-bold">{item.code}</span>
+                    <span className="mx-1">•</span>
+                    {item.ancestors?.map((a) => a.name).join(' › ')} {item.ancestors?.length > 0 && '›'} <span className="text-[#1B2F6E]">{item.name}</span>
                   </div>
                 </li>
               ))
@@ -196,27 +198,30 @@ export default function ClassificationPicker({ value, onChange, disabled = false
       </div>
 
       {/* Breadcrumb Path */}
-      <div className="flex items-center justify-between bg-slate-50/50 border border-slate-200 rounded-xl p-2 px-3 min-h-[44px]">
-        <div className="flex flex-wrap items-center text-sm font-medium">
+      <div className="flex items-center justify-between bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-2.5 px-4 min-h-[48px]">
+        <div className="flex flex-wrap items-center text-[13px] font-bold">
           <button
             type="button"
             onClick={() => handleBreadcrumbClick(0)}
             disabled={disabled}
-            className={`transition-colors duration-200 ${path.length === 0 ? 'text-navy font-bold' : 'text-slate-400 hover:text-navy'}`}
+            className={`transition-colors duration-200 ${path.length === 0 ? 'text-[var(--color-primary)]' : 'text-[#94A3B8] hover:text-[var(--color-primary)]'}`}
           >
-            Klasifikasi
+            Root
           </button>
-          
+
           {path.map((node, i) => (
             <div key={node.id} className="flex items-center">
-              <span className="mx-2 text-slate-300">›</span>
+              <span className="mx-2.5 text-[#CBD5E1]">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
               <button
                 type="button"
                 onClick={() => handleBreadcrumbClick(i + 1)}
                 disabled={disabled || (i === path.length - 1 && isLeafSelected)}
-                className={`transition-colors duration-200 max-w-[150px] truncate ${
-                  i === path.length - 1 ? 'text-navy font-bold' : 'text-slate-400 hover:text-navy'
-                }`}
+                className={`transition-colors duration-200 max-w-[150px] truncate ${i === path.length - 1 ? 'text-[var(--color-primary)]' : 'text-[#94A3B8] hover:text-[var(--color-primary)]'
+                  }`}
               >
                 {node.name}
               </button>
@@ -229,37 +234,37 @@ export default function ClassificationPicker({ value, onChange, disabled = false
             type="button"
             onClick={() => handleBreadcrumbClick(0)}
             disabled={disabled}
-            className="p-1 px-2 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-all duration-200"
-            title="Reset"
+            className="p-1.5 rounded-lg text-[#CBD5E1] hover:text-[#EF4444] hover:bg-[#FEF2F2] transition-all duration-200"
+            title="Reset Pilihan"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         )}
       </div>
 
       {/* Options Panel */}
-      <div className="border border-[#E2E8F0] rounded-xl overflow-hidden bg-white shadow-sm">
+      <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden bg-white shadow-sm transition-all duration-300">
         {loading ? (
-          <div className="flex flex-col items-center justify-center p-12 space-y-3">
-             <div className="w-8 h-8 border-4 border-[#2A7FD4]/20 border-t-[#2A7FD4] rounded-full animate-spin"></div>
-             <p className="text-sm text-slate-400">Loading classifications...</p>
+          <div className="flex flex-col items-center justify-center p-16 space-y-4">
+            <div className="w-10 h-10 border-4 border-[var(--color-primary)]/10 border-t-[var(--color-primary)] rounded-full animate-spin"></div>
+            <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-[0.2em]">Memuat Data...</p>
           </div>
         ) : isLeafSelected ? (
-          <div className="p-8 text-center bg-blue-50/30">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full mb-3">
-               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-               </svg>
+          <div className="p-10 text-center bg-[#F8FAFC]">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mb-4 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <h4 className="text-lg font-bold text-navy">{path[path.length - 1].name}</h4>
-            <p className="text-sm text-slate-500 mt-1">Classification selected</p>
+            <p className="text-[11px] font-extrabold text-[#94A3B8] uppercase tracking-widest mb-1">Terpilih</p>
+            <h4 className="text-xl font-black text-[#1B2F6E] tracking-tight">{path[path.length - 1].name}</h4>
           </div>
         ) : (
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-72 overflow-y-auto custom-scrollbar">
             {currentOptions.length === 0 ? (
-               <div className="p-8 text-center text-slate-400 text-sm">No sub-classifications available.</div>
+              <div className="p-12 text-center text-[#94A3B8] text-sm font-medium">Tidak ada sub-klasifikasi tersedia.</div>
             ) : (
               currentOptions.map((item) => (
                 <button
@@ -267,25 +272,27 @@ export default function ClassificationPicker({ value, onChange, disabled = false
                   type="button"
                   onClick={() => handleItemSelect(item)}
                   disabled={disabled}
-                  className="w-full flex items-center justify-between px-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors duration-150 text-left group"
+                  className="w-full flex items-center justify-between px-5 py-4 border-b border-[#F8FAFC] last:border-0 hover:bg-[#F8FAFC] transition-all duration-150 text-left group"
                 >
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-bold text-[#2A7FD4] uppercase tracking-wider mb-0.5">
+                    <span className="text-[11px] font-black text-[var(--color-secondary-dark)] uppercase tracking-wider mb-1">
                       {item.code}
                     </span>
-                    <span className="text-sm font-medium text-[#0B1F3A] group-hover:text-[#2A7FD4]">
+                    <span className="text-sm font-bold text-[#1B2F6E] group-hover:text-[var(--color-primary)] transition-colors">
                       {item.name}
                     </span>
                   </div>
-                  
+
                   {item.is_leaf ? (
-                    <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-md border border-emerald-100">
-                      Select
+                    <span className="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg border border-emerald-100 shadow-sm group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 transition-all">
+                      Pilih
                     </span>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-300 group-hover:text-[#2A7FD4] transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#CBD5E1] group-hover:text-[var(--color-primary)] group-hover:bg-white transition-all shadow-sm group-hover:shadow-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
                   )}
                 </button>
               ))

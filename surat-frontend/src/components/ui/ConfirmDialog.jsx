@@ -46,7 +46,7 @@ export default function ConfirmDialog({
 
       {/* Tombol aksi */}
       <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0] mt-2">
-        <Button variant="secondary" size="md" onClick={onClose} disabled={loading}>
+        <Button variant="outline" size="md" onClick={onClose} disabled={loading}>
           Batal
         </Button>
         <Button variant="danger" size="md" onClick={onConfirm} loading={loading}>

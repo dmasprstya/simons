@@ -16,19 +16,21 @@ import LoadingSpinner from './LoadingSpinner';
 
 const variantClasses = {
   primary:
-    'bg-[#0B1F3A] text-white hover:bg-[#1E4A7A] focus:ring-[#2A7FD4] shadow-sm',
+    'bg-primary text-white hover:bg-primary-dark focus:ring-primary shadow-lg shadow-primary/20',
   secondary:
-    'bg-white text-[#64748B] border border-[#E2E8F0] hover:bg-[#F7F9FC] hover:text-[#0B1F3A] focus:ring-[#2A7FD4] shadow-sm',
+    'bg-secondary text-primary hover:bg-secondary-dark focus:ring-secondary shadow-md font-bold',
+  outline:
+    'bg-white text-primary border-2 border-primary/20 hover:border-primary hover:bg-primary/5 focus:ring-primary',
   danger:
-    'bg-[#FEF2F2] text-[#991B1B] hover:bg-red-100 focus:ring-red-400 border-0',
+    'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 focus:ring-red-400',
   ghost:
-    'bg-transparent text-[#64748B] hover:bg-[#F7F9FC] hover:text-[#0B1F3A] focus:ring-[#2A7FD4]',
+    'bg-transparent text-slate-500 hover:bg-slate-100 hover:text-primary focus:ring-slate-400',
 };
 
 const sizeClasses = {
-  sm: 'px-2 py-1 text-xs rounded gap-1.5',
-  md: 'px-4 py-2 text-sm rounded-lg gap-2',
-  lg: 'px-6 py-2.5 text-sm rounded-lg gap-2.5 h-10',
+  sm: 'px-3 py-1.5 text-xs rounded-lg gap-1.5',
+  md: 'px-5 py-2.5 text-sm rounded-lg gap-2',
+  lg: 'px-7 py-3 text-base rounded-xl gap-3 h-12',
 };
 
 export default function Button({

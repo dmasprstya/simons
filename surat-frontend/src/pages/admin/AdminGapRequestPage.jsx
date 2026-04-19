@@ -236,18 +236,22 @@ export default function AdminGapRequestPage() {
         if (row.status !== 'pending') return null;
 
         return (
-          <div className="flex items-center gap-1.5">
-            <button
-              className="bg-[#ECFDF5] text-[#065F46] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-emerald-100 transition-colors"
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="!bg-emerald-50 !text-emerald-700 !border-emerald-100 hover:!bg-emerald-100"
               onClick={() => {
                 setApproveError(null);
                 setApproveTarget(row);
               }}
             >
               Setujui
-            </button>
-            <button
-              className="bg-[#FEF2F2] text-[#991B1B] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-red-100 transition-colors"
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="!bg-red-50 !text-red-700 !border-red-100 hover:!bg-red-100"
               onClick={() => {
                 setRejectError(null);
                 setRejectReason('');
@@ -255,7 +259,7 @@ export default function AdminGapRequestPage() {
               }}
             >
               Tolak
-            </button>
+            </Button>
           </div>
         );
       },
@@ -286,7 +290,7 @@ export default function AdminGapRequestPage() {
                   whitespace-nowrap border-b-2 py-2.5 px-4 text-xs font-medium transition-colors
                   ${
                     isActive
-                      ? 'border-[#2A7FD4] text-[#2A7FD4]'
+                      ? 'border-primary text-primary'
                       : 'border-transparent text-[#64748B] hover:border-[#E2E8F0] hover:text-[#0B1F3A]'
                   }
                 `}
@@ -380,7 +384,7 @@ export default function AdminGapRequestPage() {
               placeholder="Jelaskan alasan penolakan..."
               className={`block w-full min-h-[80px] resize-none rounded-lg border bg-[#F7F9FC] px-3 py-2 text-sm text-[#0B1F3A]
                 transition-all duration-200
-                focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+                focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/20
                 disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed ${
                 rejectError
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
@@ -395,7 +399,7 @@ export default function AdminGapRequestPage() {
           {/* Tombol aksi */}
           <div className="flex justify-end gap-3 pt-2 border-t border-[#E2E8F0]">
             <Button
-              variant="secondary"
+              variant="outline"
               size="md"
               onClick={() => {
                 setRejectTarget(null);

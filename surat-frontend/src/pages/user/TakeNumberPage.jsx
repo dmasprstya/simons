@@ -50,9 +50,9 @@ export default function TakeNumberPage() {
   // Opsi dropdown Sifat Surat — nilai enum sesuai backend
   const SIFAT_SURAT_OPTIONS = [
     { value: 'sangat_segera', label: 'Sangat Segera' },
-    { value: 'segera',        label: 'Segera' },
-    { value: 'biasa',         label: 'Biasa' },
-    { value: 'rahasia',       label: 'Rahasia' },
+    { value: 'segera', label: 'Segera' },
+    { value: 'biasa', label: 'Biasa' },
+    { value: 'rahasia', label: 'Rahasia' },
   ];
 
   // Validasi form sebelum submit
@@ -135,10 +135,10 @@ export default function TakeNumberPage() {
   };
 
   const inputBaseClass = `
-    block w-full h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm text-[#0B1F3A]
+    block w-full h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm text-primary
     transition-all duration-200
-    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
-    disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed
+    focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/20
+    disabled:bg-[#F7F9FC] disabled:text-slate-400 disabled:cursor-not-allowed
   `;
 
   return (
@@ -156,7 +156,7 @@ export default function TakeNumberPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* ClassificationPicker */}
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-2">
               Klasifikasi Surat <span className="text-red-500">*</span>
             </label>
             <ClassificationPicker
@@ -177,7 +177,7 @@ export default function TakeNumberPage() {
             <div>
               <label
                 htmlFor="subject"
-                className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
+                className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-1"
               >
                 Perihal <span className="text-red-500">*</span>
               </label>
@@ -189,11 +189,10 @@ export default function TakeNumberPage() {
                 disabled={loading}
                 maxLength={255}
                 placeholder="Contoh: Undangan Rapat Koordinasi"
-                className={`${inputBaseClass} ${
-                  validationErrors.subject
+                className={`${inputBaseClass} ${validationErrors.subject
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
                     : 'border-[#E2E8F0]'
-                }`}
+                  }`}
               />
               <div className="flex items-center justify-between mt-1">
                 {validationErrors.subject ? (
@@ -211,7 +210,7 @@ export default function TakeNumberPage() {
             <div>
               <label
                 htmlFor="destination"
-                className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
+                className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-1"
               >
                 Tujuan <span className="text-red-500">*</span>
               </label>
@@ -223,11 +222,10 @@ export default function TakeNumberPage() {
                 disabled={loading}
                 maxLength={255}
                 placeholder="Contoh: Kepala Dinas Pendidikan"
-                className={`${inputBaseClass} ${
-                  validationErrors.destination
+                className={`${inputBaseClass} ${validationErrors.destination
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
                     : 'border-[#E2E8F0]'
-                }`}
+                  }`}
               />
               <div className="flex items-center justify-between mt-1">
                 {validationErrors.destination ? (
@@ -244,7 +242,7 @@ export default function TakeNumberPage() {
 
           {/* Sifat Surat (Mail Properties) */}
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-2">
               Sifat Surat <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -257,8 +255,8 @@ export default function TakeNumberPage() {
                   className={`
                     px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 border
                     ${sifatSurat === opt.value
-                      ? 'bg-[#1d3a6e] border-[#1d3a6e] text-white shadow-lg shadow-navy/20'
-                      : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#1d3a6e] hover:text-[#1d3a6e]'
+                      ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
+                      : 'bg-white border-[#E2E8F0] text-slate-500 hover:border-primary hover:text-primary'
                     }
                   `}
                 >
@@ -300,11 +298,11 @@ export default function TakeNumberPage() {
         {resultData && (
           <div className="space-y-4">
             {/* Detail nomor surat terformat (W7-{kode}-{nomor}) */}
-            <div className="bg-blue-50 rounded-2xl p-5 text-center">
-              <p className="text-xs text-blue-500 font-bold uppercase tracking-widest">
+            <div className="bg-primary-light rounded-2xl p-5 text-center">
+              <p className="text-xs text-primary font-bold uppercase tracking-widest opacity-70">
                 Nomor Surat
               </p>
-              <p className="text-3xl font-bold text-navy mt-2 font-mono tracking-wide">
+              <p className="text-3xl font-bold text-primary mt-2 font-mono tracking-wide">
                 {displayLetterNumber(resultData)}
               </p>
             </div>
@@ -334,9 +332,9 @@ export default function TakeNumberPage() {
                   {/* Tampilkan label yang mudah dibaca dari nilai enum */}
                   {{
                     sangat_segera: 'Sangat Segera',
-                    segera:        'Segera',
-                    biasa:         'Biasa',
-                    rahasia:       'Rahasia',
+                    segera: 'Segera',
+                    biasa: 'Biasa',
+                    rahasia: 'Rahasia',
                   }[resultData.sifat_surat] ?? resultData.sifat_surat}
                 </p>
               </div>
@@ -345,7 +343,7 @@ export default function TakeNumberPage() {
             {/* Tombol aksi */}
             <div className="flex gap-3 pt-2 border-t border-[#E2E8F0]">
               <Button
-                variant="primary"
+                variant="secondary"
                 size="md"
                 className="flex-1"
                 onClick={resetForm}
@@ -353,7 +351,7 @@ export default function TakeNumberPage() {
                 Ambil Nomor Lagi
               </Button>
               <Button
-                variant="secondary"
+                variant="primary"
                 size="md"
                 className="flex-1"
                 onClick={() => navigate('/letters')}

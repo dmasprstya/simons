@@ -301,25 +301,22 @@ export default function UsersPage() {
       key: 'actions',
       label: 'Aksi',
       render: (_, row) => (
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => openEditModal(row)}
-            className="bg-[#EBF4FD] text-[#185FA5] border-0 rounded px-2 py-1 text-xs font-medium hover:bg-[#D6EBFC] transition-colors"
           >
             Edit
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className={row.is_active ? '!bg-red-50 !text-red-700 !border-red-100 hover:!bg-red-100' : '!bg-emerald-50 !text-emerald-700 !border-emerald-100 hover:!bg-emerald-100'}
             onClick={() => openToggleConfirm(row)}
-            className={`border-0 rounded px-2 py-1 text-xs font-medium transition-colors ${
-              row.is_active
-                ? 'bg-[#FEF2F2] text-[#991B1B] hover:bg-red-100'
-                : 'bg-[#ECFDF5] text-[#065F46] hover:bg-emerald-100'
-            }`}
           >
             {row.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-          </button>
+          </Button>
         </div>
       ),
     },
@@ -329,7 +326,7 @@ export default function UsersPage() {
     block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
     px-3 text-sm text-[#0B1F3A]
     transition-all duration-200
-    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/20
   `;
 
   const inputErrorClass = `
@@ -532,14 +529,13 @@ export default function UsersPage() {
             </select>
           </div>
 
-          {/* Filter actions */}
           <div className="flex gap-2 pt-1">
-            <button onClick={handleFilter} className="bg-[#2A7FD4] text-white rounded-lg h-9 px-4 text-xs font-semibold hover:bg-[#2571BF] transition-colors">
+            <Button variant="primary" size="sm" onClick={handleFilter}>
               Filter
-            </button>
-            <button onClick={handleResetFilter} className="border border-[#E2E8F0] rounded-lg h-9 px-4 text-xs text-[#64748B] hover:bg-[#F7F9FC] transition-colors">
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleResetFilter}>
               Reset
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -603,7 +599,7 @@ export default function UsersPage() {
           {renderFormFields(true)}
           <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-[#E2E8F0]">
             <Button
-              variant="secondary"
+              variant="outline"
               size="md"
               onClick={() => {
                 setShowEditModal(false);

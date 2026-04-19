@@ -227,10 +227,7 @@ export default function SequenceSettingsPage() {
   ];
 
   const inputBaseClass = `
-    block w-full h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC]
-    px-3 text-sm text-[#0B1F3A]
-    transition-all duration-200
-    focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
+    focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/20
   `;
 
   return (
@@ -249,8 +246,8 @@ export default function SequenceSettingsPage() {
         {/* ==================== LEFT — Gap Size Setting ==================== */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Gap Size Global</h2>
+            <span className="h-2 w-2 rounded-full bg-primary"></span>
+            <h2 className="text-xs uppercase tracking-widest text-primary font-bold">Gap Size Global</h2>
           </div>
 
           <p className="text-xs text-[#64748B] leading-relaxed">
@@ -357,7 +354,7 @@ export default function SequenceSettingsPage() {
               <div className="flex gap-2">
                 <Button
                   variant="primary"
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="!bg-red-600 hover:!bg-red-700 !text-white !shadow-red-200"
                   onClick={handleConfirmReset}
                   disabled={resetConfirmText !== 'RESET' || resetting}
                 >
@@ -379,8 +376,8 @@ export default function SequenceSettingsPage() {
       {/* ==================== BOTTOM — Status Saat Ini ==================== */}
       <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[#2A7FD4]"></span>
-          <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Status Sequence Aktif</h2>
+          <span className="h-2 w-2 rounded-full bg-primary"></span>
+          <h2 className="text-xs uppercase tracking-widest text-primary font-bold">Status Sequence Aktif</h2>
         </div>
 
         <Table

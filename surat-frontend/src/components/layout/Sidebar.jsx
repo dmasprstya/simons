@@ -72,8 +72,8 @@ function SidebarLink({ to, label, icon: Icon, collapsed }) {
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group
         ${isActive
-          ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
-          : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
+          ? 'bg-primary text-white font-medium shadow-md shadow-primary/20'
+          : 'text-slate-500 hover:bg-primary-light hover:text-primary'
         }
         ${collapsed ? 'justify-center' : ''}`
       }
@@ -121,8 +121,8 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
           </div>
           {!collapsed && (
             <div className="lg:block">
-              <h1 className="text-xl font-extrabold text-[#1B2559] tracking-tight leading-tight">SIMONS</h1>
-              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Management System</p>
+              <h1 className="text-xl font-extrabold text-primary tracking-tight leading-tight">SIMONS</h1>
+              <p className="text-[11px] font-bold text-secondary uppercase tracking-wider">Management System</p>
             </div>
           )}
         </div>
@@ -136,11 +136,11 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
             </p>
           )}
           {/* Menu Dashboard Dinamis sesuai Role */}
-          <SidebarLink 
-            to={isAdmin ? '/admin/dashboard' : '/dashboard'} 
-            label="Dashboard" 
-            icon={HomeIcon} 
-            collapsed={collapsed} 
+          <SidebarLink
+            to={isAdmin ? '/admin/dashboard' : '/dashboard'}
+            label="Dashboard"
+            icon={HomeIcon}
+            collapsed={collapsed}
           />
 
           {/* Menu khusus user biasa — disembunyikan dari admin */}
@@ -159,14 +159,14 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
                 className={`flex items-center gap-3 w-full px-3 mb-2 transition-all duration-200 group
                   ${collapsed ? 'justify-center' : ''}`}
               >
-                <QueueListIcon className={`h-5 w-5 shrink-0 ${isAdminOpen ? 'text-blue-600' : 'text-slate-400'}`} />
+                <QueueListIcon className={`h-5 w-5 shrink-0 ${isAdminOpen ? 'text-primary' : 'text-slate-400'}`} />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] group-hover:text-blue-600">
+                    <span className="flex-1 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] group-hover:text-primary">
                       Administrasi
                     </span>
                     <ChevronDownIcon
-                      className={`h-3.5 w-3.5 text-slate-300 transition-transform duration-200 ${isAdminOpen ? 'rotate-180 text-blue-600' : ''}`}
+                      className={`h-3.5 w-3.5 text-slate-300 transition-transform duration-200 ${isAdminOpen ? 'rotate-180 text-primary' : ''}`}
                     />
                   </>
                 )}
@@ -203,13 +203,13 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
                 className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-100 shadow-sm"
               />
             ) : (
-              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-blue-50 text-blue-600 text-sm font-bold shrink-0 border border-blue-100">
+              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary-light text-primary text-sm font-bold shrink-0 border border-primary-light/50">
                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
             )}
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-sm font-bold text-[#1B2559] truncate">{user?.name || 'User'}</p>
+                <p className="text-sm font-bold text-primary truncate">{user?.name || 'User'}</p>
                 <p className="text-[11px] font-medium text-slate-400 truncate mt-0.5">
                   {divisionLabel}
                 </p>
@@ -222,8 +222,8 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200
               ${isActive
-                ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
+                ? 'bg-primary text-white font-medium shadow-md shadow-primary/20'
+                : 'text-slate-500 hover:bg-primary-light hover:text-primary'
               }
               ${collapsed ? 'lg:justify-center' : ''}`
             }

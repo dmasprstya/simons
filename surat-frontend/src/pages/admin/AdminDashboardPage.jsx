@@ -30,7 +30,7 @@ function SummaryCard({ icon, label, value, subtext }) {
   return (
     <Card hover>
       <div className="flex items-start gap-4">
-        <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-blue-50 text-2xl shrink-0">
+        <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary-light text-primary text-2xl shrink-0">
           {icon}
         </div>
         <div className="min-w-0 flex-1">
@@ -91,10 +91,10 @@ export default function AdminDashboardPage() {
       label: 'Pengambil',
       render: (value) => (
         <div className="min-w-0">
-          <p className="text-xs font-medium text-[#0B1F3A] truncate">
+          <p className="text-xs font-medium text-primary truncate">
             {value?.name || '-'}
           </p>
-          <p className="text-[10px] text-[#94A3B8] truncate">
+          <p className="text-[10px] text-slate-400 truncate">
             {value?.division || '-'}
           </p>
         </div>
@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
       key: 'classification',
       label: 'Klasifikasi',
       render: (value) => (
-        <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
+        <span className="bg-primary-light text-primary px-2 py-0.5 rounded text-xs font-bold">
           {value?.code || '-'}
         </span>
       ),
@@ -178,14 +178,14 @@ export default function AdminDashboardPage() {
       render: (value) => {
         // Mapping aksi ke badge warna
         const actionColors = {
-          create: 'bg-[#ECFDF5] text-[#065F46]',
-          update: 'bg-[#EBF4FD] text-[#185FA5]',
-          delete: 'bg-[#FEF2F2] text-[#991B1B]',
-          void: 'bg-[#FEF2F2] text-[#991B1B]',
-          approve: 'bg-[#ECFDF5] text-[#065F46]',
+          create: 'bg-emerald-50 text-emerald-700',
+          update: 'bg-primary-light text-primary',
+          delete: 'bg-red-50 text-red-700',
+          void: 'bg-red-50 text-red-700',
+          approve: 'bg-emerald-50 text-emerald-700',
           reject: 'bg-amber-50 text-amber-700',
-          login: 'bg-[#EBF4FD] text-[#185FA5]',
-          logout: 'bg-[#F7F9FC] text-[#64748B]',
+          login: 'bg-primary-light text-primary',
+          logout: 'bg-slate-100 text-slate-600',
         };
 
         const colorClass = actionColors[value] || 'bg-[#F7F9FC] text-[#64748B]';
@@ -214,7 +214,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Welcome banner */}
       <div className="relative overflow-hidden rounded-3xl p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        style={{ background: 'linear-gradient(135deg, #4D7CFF 0%, #6366F1 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #1B2F6E 0%, #0F172A 100%)' }}
       >
         <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-white/10 blur-xl" />
