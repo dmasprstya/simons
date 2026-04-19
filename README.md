@@ -5,7 +5,7 @@
 ![MySQL](https://img.shields.io/badge/Database-MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![Vite](https://img.shields.io/badge/Bundler-Vite_5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 
-Aplikasi penomoran surat resmi berbasis **Permenkumham No. 5 Tahun 2022**. SIMONS mengotomasi proses pengambilan, pencatatan, dan pelaporan nomor surat dengan sistem blok & gap yang menjamin ketersediaan nomor cadangan dan konsistensi penomoran antar hari.
+Aplikasi penomoran surat resmi berbasis **Permenkumham No. 5 Tahun 2022**. SIMONS mengotomasi proses pengambilan, pencatatan, dan pelaporan nomor surat dengan sistem **Linear Daily Gap Rollover** yang menjamin ketersediaan nomor cadangan (gap) setiap pergantian hari dan konsistensi penomoran yang profesional. Menggunakan branding warna resmi Kemenkumham (**Kemenkumham Blue & Gold**).
 
 ---
 
@@ -22,7 +22,7 @@ Aplikasi penomoran surat resmi berbasis **Permenkumham No. 5 Tahun 2022**. SIMON
 - [Panduan Penggunaan](#-panduan-penggunaan)
   - [Untuk User Biasa](#-untuk-user-biasa)
   - [Untuk Admin](#-untuk-admin)
-- [Cara Kerja Penomoran (Blok & Gap)](#-cara-kerja-penomoran-blok--gap)
+- [Cara Kerja Penomoran (Linear Daily Gap)](#-cara-kerja-penomoran-linear-daily-gap)
 - [Struktur Halaman](#-struktur-halaman)
 - [API Reference](#-api-reference)
 - [Penanganan Error](#-penanganan-error)
@@ -37,17 +37,17 @@ Aplikasi penomoran surat resmi berbasis **Permenkumham No. 5 Tahun 2022**. SIMON
 
 | Fitur | Deskripsi |
 |-------|-----------|
-| 🔢 **Penomoran Otomatis** | Pengambilan nomor surat berurutan dengan sistem blok & gap |
-| 📂 **Klasifikasi Hierarki** | 3 level klasifikasi surat sesuai Permenkumham (Tree View) |
+| 🔢 **Penomoran Otomatis** | Pengambilan nomor surat berurutan secara linear dengan sistem daily gap rollover |
+| 📂 **Klasifikasi Hierarki** | 3 level klasifikasi surat sesuai Permenkumham (Tree View/Breadcrumb) |
 | 📋 **Riwayat Surat** | Pencarian, filter, dan pelacakan semua surat yang diterbitkan |
 | 🔄 **Gap Request** | Permintaan nomor dari zona cadangan (gap) dengan approval admin |
-| 📊 **Dashboard & Laporan** | Statistik real-time, grafik, dan ekspor data (CSV/JSON) |
+| 📊 **Dashboard & Laporan** | Statistik real-time, grafik, dan ekspor data (PDF/CSV/JSON) |
 | 👥 **Manajemen User** | CRUD user, toggle aktif/nonaktif, role-based access |
 | 🔍 **Audit Log** | Pencatatan otomatis setiap aksi penting (JSON diff) |
-| ⏰ **Scheduled Job** | Persiapan sequence harian otomatis (23:55 tiap malam) |
+| 🔄 **Rollover Harian** | Pengarsipan nomor gap otomatis saat pertama kali ambil nomor di hari baru |
 | 🔐 **Autentikasi Aman** | Bearer token via Laravel Sanctum |
 | 🚫 **Void Surat** | Pembatalan surat yang sudah diterbitkan |
-| 🌙 **Dark/Light Mode** | Tampilan responsif dan modern |
+| 🎨 **Premium Branding** | UI Modern dengan palet warna resmi Kemenkumham |
 
 ---
 
@@ -226,7 +226,7 @@ Setelah menjalankan `php artisan migrate --seed`, akun berikut tersedia:
 5. Klik **Ambil Nomor** — sistem akan memberikan nomor secara otomatis
 6. Nomor yang diterbitkan ditampilkan di layar
 
-> 💡 Nomor surat dialokasikan secara berurutan dalam zona aktif. Jika zona aktif habis, sistem otomatis melompat ke blok berikutnya.
+> 💡 Nomor surat dialokasikan secara berurutan secara linear. Jika berganti hari, sistem otomatis melompati sejumlah nomor (gap size) sebagai cadangan yang dapat diminta melalui fitur Request Gap.
 
 #### 4. Riwayat Surat Saya (`/letters`)
 - Melihat semua surat yang pernah Anda ambil
@@ -290,45 +290,35 @@ Admin memiliki semua akses user biasa, ditambah fitur berikut:
 
 #### 8. Laporan (`/admin/reports`)
 - **Summary**: ringkasan statistik surat (per klasifikasi, per user, per periode)
-- **Export**: unduh data dalam format **CSV** atau **JSON**
+- **Export**: unduh data dalam format **PDF** (dengan branding Kemenkumham), **CSV** atau **JSON**
 - Filter periode laporan
 
 ---
 
-## 🔢 Cara Kerja Penomoran (Blok & Gap)
+## 🔢 Cara Kerja Penomoran (Linear Daily Gap)
 
-Sistem membagi nomor surat menjadi **blok**. Setiap blok terdiri dari N nomor **aktif** + N nomor **cadangan** (zona gap).
+Sistem menggunakan alur penomoran **Linear** yang diselingi oleh **Gap** setiap kali terjadi pergantian hari (rollover). Hal ini memastikan setiap hari memiliki blok nomor cadangan yang bisa diminta (request) untuk surat tertanggal mundur.
 
-### Visualisasi Blok
+### Logika Rollover
 
-Dengan konfigurasi default: `default_start = 1000`, `gap_size = 10`:
+1.  **Pengambilan Nomor**: Nomor diterbitkan secara berurutan (`last_number + 1`).
+2.  **Deteksi Hari**: Saat pengambilan nomor pertama di hari yang baru, sistem melakukan **Rollover**:
+    -   Mengarsipkan nomor cadangan (gap) sebanyak `gap_size`.
+    -   `gap_start` = `last_number + 1`.
+    -   `gap_end` = `last_number + gap_size`.
+    -   Nomor baru untuk hari tersebut dimulai dari `gap_end + 1`.
+3.  **Arsip Gap**: Range gap (`gap_start` s/d `gap_end`) disimpan di tabel `daily_gaps` dengan referensi tanggal hari sebelumnya.
 
-```
-                        ┌─────── Blok 0 ───────┐  ┌─────── Blok 1 ───────┐  ┌─────── Blok 2 ───────┐
-Nomor:                  1000 ──────── 1009       1020 ──────── 1029       1040 ──────── 1049
-                        │   Zona Aktif   │       │   Zona Aktif   │       │   Zona Aktif   │
-                                   1010 ── 1019          1030 ── 1039          1050 ── 1059
-                                   │ Zona Gap  │         │ Zona Gap  │         │ Zona Gap  │
-```
+### Visualisasi (default_start=1000, gap_size=10)
 
-| Blok | Nomor Aktif | Zona Gap |
-|------|-------------|----------|
-| 0 | 1000 – 1009 | 1010 – 1019 |
-| 1 | 1020 – 1029 | 1030 – 1039 |
-| 2 | 1040 – 1049 | 1050 – 1059 |
+| Hari | Aktivitas | Range Nomor Aktif | Zona Gap Terarsip |
+| :--- | :--- | :--- | :--- |
+| **Senin** | Ambil surat terakhir: 1076 | 1000 – 1076 | - |
+| **Selasa** | Ambil surat pertama (Rollover) | **1087** – ... | 1077 – 1086 (Date: Senin) |
+| **Selasa** | Ambil surat terakhir: 1102 | 1087 – 1102 | - |
+| **Rabu** | Ambil surat pertama (Rollover) | **1113** – ... | 1103 – 1112 (Date: Selasa) |
 
-### Formula
-
-Untuk blok ke-N (N dimulai dari 0):
-
-```
-aktif_start = default_start + N × (gap_size × 2)
-aktif_end   = aktif_start + gap_size − 1
-gap_start   = aktif_end + 1
-gap_end     = gap_start + gap_size − 1
-```
-
-### Aturan
+### Aturan Bisnis
 
 | Fungsi | Perilaku |
 |--------|----------|
@@ -440,7 +430,7 @@ Semua endpoint menggunakan prefix `/api` dan mengembalikan format JSON:
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
 | GET | `/api/reports/summary` | Ringkasan statistik |
-| GET | `/api/reports/export` | Export data (CSV/JSON) |
+| GET | `/api/reports/export` | Export data (PDF/CSV/JSON) |
 
 ### 🔍 Audit Log (`/api/audit-logs`) — Admin Only
 | Method | Endpoint | Deskripsi |
@@ -645,7 +635,7 @@ aplikasi/
 | Zustand | 5.0 | State management (ringan) |
 | Axios | 1.14 | HTTP client + interceptor |
 | React Router | 7.14 | Client-side routing |
-| Tailwind CSS | 3.4 | Utility-first CSS framework |
+| Tailwind CSS | 3.4 | Utility-first CSS (Kemenkumham Palette) |
 | Headless UI | 2.2 | Accessible UI primitives |
 | Heroicons | 2.2 | Icon SVG library |
 

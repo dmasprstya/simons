@@ -18,31 +18,25 @@ Pastikan konfigurasi database di `.env` sudah benar (DB_HOST, DB_DATABASE, DB_US
 
 ---
 
-## Cara Kerja Penomoran
+## Cara Kerja Penomoran (Linear Daily Gap)
 
-Nomor surat dibagi dalam blok. Setiap blok = N nomor aktif + N nomor cadangan (zona gap).
+Sistem menggunakan alur penomoran **Linear** yang diselingi oleh **Gap** setiap kali terjadi pergantian hari (rollover).
 
-**Default:** `gap_size=10`, `start=1000`
+### Konsep Inti:
+1.  **Pengambilan Nomor**: Nomor diterbitkan secara berurutan (`last_number + 1`).
+2.  **Rollover (Ganti Hari)**: Saat pengambilan nomor pertama di hari baru:
+    -   Sistem melompati nomor cadangan sebanyak `gap_size`.
+    -   Nomor yang dilompati diarsipkan ke tabel `daily_gaps` (sebagai zona gap hari sebelumnya).
+    -   Nomor baru hari ini dimulai setelah zona gap tersebut.
 
-| Blok | Nomor Aktif  | Zona Gap    |
-|------|-------------|-------------|
-| 1    | 1000–1009   | 1010–1019   |
-| 2    | 1020–1029   | 1030–1039   |
-| 3    | 1040–1049   | 1050–1059   |
+### Visualisasi (gap_size=10, last_number_senin=1076):
+- **Selasa**: Nomor pertama adalah **1087** (1077-1086 masuk gap Senin).
+- **Rabu**: Jika Selasa terakhir 1102, maka nomor pertama Rabu adalah **1113** (1103-1112 masuk gap Selasa).
 
-**Formula zona gap untuk blok ke-N (N dimulai dari 0):**
-```
-aktif_start = default_start + N × (gap_size × 2)
-aktif_end   = aktif_start + gap_size − 1
-gap_start   = aktif_end + 1
-gap_end     = gap_start + gap_size − 1
-```
-
-**Aturan nomor:**
-- `acquireNumber()` hanya mengeluarkan nomor dalam range `aktif_start–aktif_end`.
-- `releaseGapNumber()` mengeluarkan nomor dalam range `gap_start–gap_end` (untuk request gap yang disetujui admin).
-- Jika nomor berikutnya jatuh di zona gap, sistem otomatis melompat ke `aktif_start` blok berikutnya.
-- Nomor gap **hanya bisa diterbitkan** melalui proses persetujuan admin (`POST /api/gap-requests` → `PATCH /api/gap-requests/{id}/approve`).
+### Aturan:
+- `acquireNumber()`: Mengambil nomor berurutan + otomatis rollover.
+- `releaseGapNumber()`: Menerbitkan nomor dari `daily_gaps` (khusus request gap).
+- Pessimistic locking digunakan untuk mencegah nomor ganda.
 
 ---
 
@@ -129,7 +123,7 @@ Suite mencakup: AuthTest, NumberingServiceTest, GapRequestTest, LetterNumberTest
 | Method | Endpoint                | Deskripsi                     |
 |--------|-------------------------|-------------------------------|
 | GET    | `/api/reports/summary`  | Ringkasan statistik surat     |
-| GET    | `/api/reports/export`   | Ekspor data surat (CSV/JSON)  |
+| GET    | `/api/reports/export`   | Ekspor data surat (PDF/CSV/JSON) |
 
 ### 🔍 Audit Log (`/api/audit-logs`) — Admin only
 | Method | Endpoint                 | Deskripsi           |
