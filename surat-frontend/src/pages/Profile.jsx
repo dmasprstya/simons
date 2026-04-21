@@ -98,7 +98,7 @@ export default function ProfilePage() {
           setNip(data.nip ?? '');
           setEmail(data.email ?? '');
           setRole(data.role ?? '');
-          setCurrentPhoto(data.profile_photo ?? null);
+          setCurrentPhoto(data.photo_url || data.profile_photo || null);
         }
       } catch {
         /* authStore sudah memiliki data dasar dari login */
@@ -108,7 +108,7 @@ export default function ProfilePage() {
           setNip(user?.nip ?? '');
           setEmail(user?.email ?? '');
           setRole(user?.role ?? '');
-          setCurrentPhoto(user?.profile_photo ?? null);
+          setCurrentPhoto(user?.photo_url || user?.profile_photo || null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -120,7 +120,7 @@ export default function ProfilePage() {
   }, [user]);
 
   // ─── Section 1 handlers ──────────────────────────────────────────────────
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -140,35 +140,37 @@ export default function ProfilePage() {
       return;
     }
 
-    // Baca sebagai base64 lalu kirim
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result;
-      setPhotoUploading(true);
-      try {
-        const res = await uploadPhoto(base64);
-        const data = res.data?.data ?? res.data;
-        const newPhoto = data?.profile_photo ?? base64;
-        setCurrentPhoto(newPhoto);
-        syncStore({ profile_photo: newPhoto });
-        toast.success('Foto profil berhasil diperbarui.');
-      } catch (err) {
-        setPhotoError(err.response?.data?.message ?? 'Gagal mengunggah foto.');
-      } finally {
-        setPhotoUploading(false);
-        e.target.value = '';
-      }
-    };
-    reader.readAsDataURL(file);
+    setPhotoUploading(true);
+    try {
+      const res = await uploadPhoto(file);
+      // Response berisi UserResource lengkap — sync seluruh user ke store
+      const userData = res.data?.data ?? res.data;
+      const newPhoto = userData?.photo_url || userData?.profile_photo || null;
+      setCurrentPhoto(newPhoto);
+      // Sync seluruh user agar Navbar & Sidebar ikut terupdate
+      syncStore(userData);
+      toast.success('Foto profil berhasil diperbarui.');
+    } catch (err) {
+      setPhotoError(err.response?.data?.message ?? 'Gagal mengunggah foto.');
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleDeletePhoto = async () => {
     setPhotoDeleting(true);
     setPhotoError(null);
     try {
-      await deletePhoto();
+      const res = await deletePhoto();
+      const userData = res.data?.data ?? res.data;
       setCurrentPhoto(null);
-      syncStore({ profile_photo: null });
+      // Sync seluruh user agar Navbar & Sidebar ikut terupdate
+      if (userData && typeof userData === 'object' && userData.id) {
+        syncStore(userData);
+      } else {
+        syncStore({ photo_url: null, profile_photo: null });
+      }
       toast.success('Foto profil berhasil dihapus.');
     } catch (err) {
       setPhotoError(err.response?.data?.message ?? 'Gagal menghapus foto.');

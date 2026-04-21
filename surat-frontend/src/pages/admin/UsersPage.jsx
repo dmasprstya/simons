@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUsers } from '../../hooks/useUsers';
+import { useAuthStore } from '../../store/authStore';
 import { useToast } from '../../hooks/useToast';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
@@ -33,6 +34,7 @@ export default function UsersPage() {
     handleToggleActive,
   } = useUsers();
   const toast = useToast();
+  const { user: currentUser, updateProfile } = useAuthStore();
 
   // === Filter state ===
   const [search, setSearch] = useState('');
@@ -60,6 +62,8 @@ export default function UsersPage() {
     role: 'user',
   });
   const [formErrors, setFormErrors] = useState({});
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   // Build params dari filter
   const buildParams = useCallback(
@@ -154,6 +158,8 @@ export default function UsersPage() {
     });
     setFormErrors({});
     setActionError(null);
+    setPhotoFile(null);
+    setPhotoPreview(null);
     setShowAddModal(true);
   };
 
@@ -170,8 +176,11 @@ export default function UsersPage() {
         password_confirmation: formData.password_confirmation,
         division: formData.division.trim(),
         role: formData.role,
+        photo: photoFile ?? undefined,
       });
       setShowAddModal(false);
+      setPhotoFile(null);
+      setPhotoPreview(null);
       toast.success('User baru berhasil dibuat.');
     } catch {
       toast.error('Gagal membuat user baru.');
@@ -192,6 +201,9 @@ export default function UsersPage() {
     });
     setFormErrors({});
     setActionError(null);
+    setPhotoFile(null);
+    // Tampilkan foto yang sudah ada sebagai preview awal
+    setPhotoPreview(user.photo_url || null);
     setShowEditModal(true);
   };
 
@@ -201,15 +213,25 @@ export default function UsersPage() {
     if (!editingUser) return;
 
     try {
-      await handleUpdateUser(editingUser.id, {
+      const response = await handleUpdateUser(editingUser.id, {
         name: formData.name.trim(),
         nip: formData.nip.trim(),
         email: formData.email.trim(),
         division: formData.division.trim(),
         role: formData.role,
+        photo: photoFile ?? undefined,
       });
+
+      // SYNC STORE: Jika yang diedit adalah diri sendiri, update authStore
+      const updatedUser = response.data?.data ?? response.data;
+      if (updatedUser && currentUser && updatedUser.id === currentUser.id) {
+        updateProfile(updatedUser);
+      }
+
       setShowEditModal(false);
       setEditingUser(null);
+      setPhotoFile(null);
+      setPhotoPreview(null);
       toast.success('Data user berhasil diperbarui.');
     } catch {
       toast.error('Gagal memperbarui data user.');
@@ -226,7 +248,14 @@ export default function UsersPage() {
     if (!togglingUser) return;
 
     try {
-      await handleToggleActive(togglingUser.id);
+      const response = await handleToggleActive(togglingUser.id);
+
+      // SYNC STORE: Jika yang di-toggle adalah diri sendiri
+      const updatedUser = response.data?.data ?? response.data;
+      if (updatedUser && currentUser && updatedUser.id === currentUser.id) {
+        updateProfile(updatedUser);
+      }
+
       setShowConfirm(false);
       setTogglingUser(null);
       toast.success('Status user berhasil diubah.');
@@ -254,8 +283,21 @@ export default function UsersPage() {
     {
       key: 'name',
       label: 'Nama',
-      render: (value) => (
-        <span className="font-medium text-[#0B1F3A] text-xs">{value || '-'}</span>
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          {row.photo_url ? (
+            <img
+              src={row.photo_url}
+              alt={value}
+              className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-[#E2E8F0]"
+            />
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-[#1B2F6E]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#1B2F6E]">
+              {value?.charAt(0)?.toUpperCase() || '?'}
+            </div>
+          )}
+          <span className="font-medium text-[#0B1F3A] text-xs">{value || '-'}</span>
+        </div>
       ),
     },
     {
@@ -337,132 +379,178 @@ export default function UsersPage() {
   `;
 
   // === Render form fields (shared antara add & edit) ===
-  const renderFormFields = (isEdit = false) => (
-    <div className="space-y-4">
-      {/* Nama */}
-      <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-          Nama <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={handleInputChange('name')}
-          placeholder="Masukkan nama lengkap"
-          className={formErrors.name ? inputErrorClass : inputBaseClass}
-        />
-        {formErrors.name && (
-          <p className="mt-1 text-xs text-red-600">{formErrors.name}</p>
-        )}
-      </div>
+  const renderFormFields = (isEdit = false) => {
+    const handlePhotoChange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    };
 
-      {/* Email */}
-      <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-          NIP <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={formData.nip}
-          onChange={handleInputChange('nip')}
-          placeholder="Masukkan NIP"
-          className={formErrors.nip ? inputErrorClass : inputBaseClass}
-        />
-        {formErrors.nip && (
-          <p className="mt-1 text-xs text-red-600">{formErrors.nip}</p>
-        )}
-      </div>
-
-      {/* Email */}
-      <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-          Email <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange('email')}
-          placeholder="contoh@email.com"
-          className={formErrors.email ? inputErrorClass : inputBaseClass}
-        />
-        {formErrors.email && (
-          <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>
-        )}
-      </div>
-
-      {/* Password — hanya tampil saat tambah user baru */}
-      {!isEdit && (
-        <>
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-              Password <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              placeholder="Minimal 8 karakter"
-              className={formErrors.password ? inputErrorClass : inputBaseClass}
-            />
-            {formErrors.password && (
-              <p className="mt-1 text-xs text-red-600">{formErrors.password}</p>
+    return (
+      <div className="space-y-4">
+        {/* Foto Profil */}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
+            Foto Profil
+          </label>
+          <div className="flex items-center gap-4">
+            {photoPreview ? (
+              <img
+                src={photoPreview}
+                alt="Preview"
+                className="w-16 h-16 rounded-full object-cover border-2 border-[#1B2F6E]/20"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-[#1B2F6E]/10 flex items-center justify-center text-2xl text-[#1B2F6E]/40">
+                👤
+              </div>
             )}
+            <div className="flex-1">
+              <label
+                htmlFor="photo-upload"
+                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] px-3 py-1.5 text-xs font-medium text-[#0B1F3A] hover:bg-white hover:border-primary transition-colors"
+              >
+                <span>📷</span>
+                {photoPreview ? 'Ganti Foto' : 'Pilih Foto'}
+              </label>
+              <input
+                id="photo-upload"
+                type="file"
+                accept="image/jpg,image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={handlePhotoChange}
+              />
+              <p className="mt-1 text-[10px] text-[#64748B]">JPG, PNG, atau WEBP. Maks 2MB.</p>
+            </div>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-              Konfirmasi Password <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="password"
-              value={formData.password_confirmation}
-              onChange={handleInputChange('password_confirmation')}
-              placeholder="Ulangi password"
-              className={formErrors.password_confirmation ? inputErrorClass : inputBaseClass}
-            />
-            {formErrors.password_confirmation && (
-              <p className="mt-1 text-xs text-red-600">{formErrors.password_confirmation}</p>
-            )}
-          </div>
-        </>
-      )}
+        {/* Nama */}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+            Nama <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={handleInputChange('name')}
+            placeholder="Masukkan nama lengkap"
+            className={formErrors.name ? inputErrorClass : inputBaseClass}
+          />
+          {formErrors.name && (
+            <p className="mt-1 text-xs text-red-600">{formErrors.name}</p>
+          )}
+        </div>
 
-      {/* Divisi */}
-      <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-          Divisi <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={formData.division}
-          onChange={handleInputChange('division')}
-          placeholder="Nama divisi"
-          className={formErrors.division ? inputErrorClass : inputBaseClass}
-        />
-        {formErrors.division && (
-          <p className="mt-1 text-xs text-red-600">{formErrors.division}</p>
+        {/* NIP */}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+            NIP <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.nip}
+            onChange={handleInputChange('nip')}
+            placeholder="Masukkan NIP"
+            className={formErrors.nip ? inputErrorClass : inputBaseClass}
+          />
+          {formErrors.nip && (
+            <p className="mt-1 text-xs text-red-600">{formErrors.nip}</p>
+          )}
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange('email')}
+            placeholder="contoh@email.com"
+            className={formErrors.email ? inputErrorClass : inputBaseClass}
+          />
+          {formErrors.email && (
+            <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>
+          )}
+        </div>
+
+        {/* Password — hanya tampil saat tambah user baru */}
+        {!isEdit && (
+          <>
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange('password')}
+                placeholder="Minimal 8 karakter"
+                className={formErrors.password ? inputErrorClass : inputBaseClass}
+              />
+              {formErrors.password && (
+                <p className="mt-1 text-xs text-red-600">{formErrors.password}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+                Konfirmasi Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={formData.password_confirmation}
+                onChange={handleInputChange('password_confirmation')}
+                placeholder="Ulangi password"
+                className={formErrors.password_confirmation ? inputErrorClass : inputBaseClass}
+              />
+              {formErrors.password_confirmation && (
+                <p className="mt-1 text-xs text-red-600">{formErrors.password_confirmation}</p>
+              )}
+            </div>
+          </>
         )}
-      </div>
 
-      {/* Role */}
-      <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-          Role
-        </label>
-        <select
-          value={formData.role}
-          onChange={handleInputChange('role')}
-          className={inputBaseClass}
-        >
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
+        {/* Divisi */}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+            Divisi <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.division}
+            onChange={handleInputChange('division')}
+            placeholder="Nama divisi"
+            className={formErrors.division ? inputErrorClass : inputBaseClass}
+          />
+          {formErrors.division && (
+            <p className="mt-1 text-xs text-red-600">{formErrors.division}</p>
+          )}
+        </div>
 
-      {/* Action error dari API */}
-      {actionError && <ErrorMessage error={actionError} />}
-    </div>
-  );
+        {/* Role */}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+            Role
+          </label>
+          <select
+            value={formData.role}
+            onChange={handleInputChange('role')}
+            className={inputBaseClass}
+          >
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        {/* Action error dari API */}
+        {actionError && <ErrorMessage error={actionError} />}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">

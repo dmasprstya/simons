@@ -30,6 +30,7 @@ class StoreUserRequest extends FormRequest
             'password' => 'required|min:8',
             'division' => 'required|string|max:100',
             'role'     => 'required|in:admin,user',
+            'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ];
     }
 
@@ -55,6 +56,9 @@ class StoreUserRequest extends FormRequest
             'division.max'      => 'Divisi maksimal 100 karakter.',
             'role.required'     => 'Role wajib dipilih.',
             'role.in'           => 'Role harus admin atau user.',
+            'photo.image'       => 'File foto harus berupa gambar.',
+            'photo.mimes'       => 'Format foto: jpg, jpeg, png, atau webp.',
+            'photo.max'         => 'Ukuran foto maksimal 2MB.',
         ];
     }
 }

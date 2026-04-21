@@ -8,9 +8,16 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use App\Services\AuditService;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly AuditService $auditService
+    ) {}
+
     /**
      * Daftar semua user dengan filter role dan division.
      *
@@ -74,7 +81,20 @@ class UserController extends Controller
         // Hash password sebelum simpan ke database
         $validated['password'] = bcrypt($validated['password']);
 
+        // Simpan foto profil ke storage public jika diunggah
+        if ($request->hasFile('photo')) {
+            $validated['photo_path'] = $request->file('photo')->store('photos/users', 'public');
+        }
+        unset($validated['photo']);
+
         $user = User::create($validated);
+
+        $this->auditService->log(
+            action:    'user.create',
+            tableName: 'users',
+            recordId:  $user->id,
+            newData:   $user->toArray(),
+        );
 
         return response()->json([
             'data'    => new UserResource($user),
@@ -110,7 +130,25 @@ class UserController extends Controller
             $validated['password'] = bcrypt($validated['password']);
         }
 
+        // Ganti foto profil jika ada file baru — hapus file lama terlebih dahulu
+        if ($request->hasFile('photo')) {
+            if ($user->photo_path) {
+                Storage::disk('public')->delete($user->photo_path);
+            }
+            $validated['photo_path'] = $request->file('photo')->store('photos/users', 'public');
+        }
+        unset($validated['photo']);
+
+        $oldData = $user->getRawOriginal();
         $user->update($validated);
+
+        $this->auditService->log(
+            action:    'user.update',
+            tableName: 'users',
+            recordId:  $user->id,
+            oldData:   $oldData,
+            newData:   $user->fresh()->toArray(),
+        );
 
         return response()->json([
             'data'    => new UserResource($user->fresh()),
@@ -136,7 +174,16 @@ class UserController extends Controller
             ], 422);
         }
 
+        $oldData = $user->getRawOriginal();
         $user->update(['is_active' => ! $user->is_active]);
+
+        $this->auditService->log(
+            action:    'user.toggle_active',
+            tableName: 'users',
+            recordId:  $user->id,
+            oldData:   $oldData,
+            newData:   $user->fresh()->toArray(),
+        );
 
         $statusLabel = $user->fresh()->is_active ? 'diaktifkan' : 'dinonaktifkan';
 

@@ -1,20 +1,27 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
+use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly AuditService $auditService
+    ) {}
+
     /**
      * Tampilkan profil user yang sedang login.
      */
     public function show(): JsonResponse
     {
         return response()->json([
-            'data'    => new \App\Http\Resources\UserResource(Auth::user()),
+            'data'    => new UserResource(Auth::user()),
             'message' => 'Profil berhasil diambil.',
         ]);
     }
@@ -25,15 +32,37 @@ class ProfileController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
+        $user = Auth::user();
+
         $request->validate([
             'name'     => 'required|string|max:100',
             'division' => 'required|string|max:100',
+            'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        Auth::user()->update($request->only('name', 'division'));
+        $validated = $request->only('name', 'division');
+
+        // Ganti foto profil jika ada file baru
+        if ($request->hasFile('photo')) {
+            if ($user->photo_path) {
+                Storage::disk('public')->delete($user->photo_path);
+            }
+            $validated['photo_path'] = $request->file('photo')->store('photos/users', 'public');
+        }
+
+        $oldData = $user->getRawOriginal();
+        $user->update($validated);
+
+        $this->auditService->log(
+            action:    'profile.update',
+            tableName: 'users',
+            recordId:  $user->id,
+            oldData:   $oldData,
+            newData:   $user->fresh()->toArray(),
+        );
 
         return response()->json([
-            'data'    => new \App\Http\Resources\UserResource(Auth::user()->fresh()),
+            'data'    => new UserResource($user->fresh()),
             'message' => 'Profil berhasil diperbarui.',
         ]);
     }
@@ -48,15 +77,27 @@ class ProfileController extends Controller
             'password'         => 'required|string|min:8|confirmed',
         ]);
 
-        if (! Hash::check($request->current_password, Auth::user()->password)) {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'Password lama tidak sesuai.',
             ], 422);
         }
 
-        Auth::user()->update([
-            'password' => Hash::make($request->password),
+        $oldData = $user->getRawOriginal();
+        $user->update([
+            'password' => $request->password, // hashed via cast
         ]);
+
+        $this->auditService->log(
+            action:    'profile.change_password',
+            tableName: 'users',
+            recordId:  $user->id,
+            oldData:   ['password' => '***'],
+            newData:   ['password' => '***'],
+        );
 
         return response()->json([
             'message' => 'Password berhasil diubah.',
@@ -64,41 +105,36 @@ class ProfileController extends Controller
     }
 
     /**
-     * Upload foto profil.
-     * Menerima Base64 string (JPG/PNG, maks ~2.7MB setelah encoding).
-     * Validasi tipe MIME dari Base64 header sebelum simpan.
+     * Upload foto profil (endpoint terpisah).
      */
     public function uploadPhoto(Request $request): JsonResponse
     {
         $request->validate([
-            'photo' => 'required|string',
-            // Validasi format Base64 dan tipe file dilakukan manual di bawah
+            'photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $base64 = $request->photo;
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        // Pastikan format Base64 valid: data:image/jpeg;base64,... atau data:image/png;base64,...
-        if (! preg_match('/^data:image\/(jpeg|png);base64,/', $base64, $matches)) {
-            return response()->json([
-                'message' => 'Format foto tidak valid. Hanya JPG dan PNG yang diizinkan.',
-            ], 422);
+        if ($user->photo_path) {
+            Storage::disk('public')->delete($user->photo_path);
         }
 
-        // Hitung ukuran file dari Base64 (estimasi: panjang Base64 * 0.75)
-        $base64Data   = substr($base64, strpos($base64, ',') + 1);
-        $sizeInBytes  = (int) (strlen($base64Data) * 0.75);
-        $maxBytes     = 2 * 1024 * 1024; // 2MB
+        $path = $request->file('photo')->store('photos/users', 'public');
+        
+        $oldData = $user->getRawOriginal();
+        $user->update(['photo_path' => $path]);
 
-        if ($sizeInBytes > $maxBytes) {
-            return response()->json([
-                'message' => 'Ukuran foto maksimal 2MB.',
-            ], 422);
-        }
-
-        Auth::user()->update(['profile_photo' => $base64]);
+        $this->auditService->log(
+            action:    'profile.photo_upload',
+            tableName: 'users',
+            recordId:  $user->id,
+            oldData:   $oldData,
+            newData:   $user->fresh()->toArray(),
+        );
 
         return response()->json([
-            'data'    => ['profile_photo' => $base64],
+            'data'    => new UserResource($user->fresh()),
             'message' => 'Foto profil berhasil diperbarui.',
         ]);
     }
@@ -108,10 +144,28 @@ class ProfileController extends Controller
      */
     public function deletePhoto(): JsonResponse
     {
-        Auth::user()->update(['profile_photo' => null]);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ($user->photo_path) {
+            Storage::disk('public')->delete($user->photo_path);
+        }
+
+        $oldData = $user->getRawOriginal();
+        $user->update(['photo_path' => null]);
+
+        $this->auditService->log(
+            action:    'profile.photo_delete',
+            tableName: 'users',
+            recordId:  $user->id,
+            oldData:   $oldData,
+            newData:   $user->fresh()->toArray(),
+        );
 
         return response()->json([
+            'data'    => new UserResource($user->fresh()),
             'message' => 'Foto profil berhasil dihapus.',
         ]);
     }
 }
+

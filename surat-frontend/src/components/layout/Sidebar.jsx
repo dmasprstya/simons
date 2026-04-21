@@ -196,9 +196,9 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
         <div className={`px-4 py-6 border-t border-slate-100 ${collapsed ? 'lg:flex lg:flex-col lg:items-center' : ''}`}>
           {/* Avatar + info */}
           <div className={`flex items-center gap-3 mb-4 ${collapsed ? 'lg:justify-center' : ''}`}>
-            {user?.profile_photo ? (
+            {user?.photo_url || user?.profile_photo ? (
               <img
-                src={user.profile_photo}
+                src={user.photo_url || user?.profile_photo}
                 alt="Foto Profil"
                 className="h-10 w-10 rounded-xl object-cover shrink-0 border border-slate-100 shadow-sm"
               />

@@ -23,7 +23,8 @@ class UserResource extends JsonResource
             'division'   => $this->division,
             'role'       => $this->role,
             'is_active'     => $this->is_active,
-            'profile_photo' => $this->profile_photo,
+            'photo_url'     => $this->photo_url,
+            'profile_photo' => $this->photo_url, // Alias for compatibility
             'created_at'    => $this->created_at?->format('Y-m-d H:i'),
         ];
     }

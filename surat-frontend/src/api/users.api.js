@@ -14,7 +14,13 @@ export async function getUsers(params = {}) {
  * @param {Object} data - { name, email, password, role }
  */
 export async function createUser(data) {
-  const response = await api.post('/users', data);
+  const form = new FormData();
+  Object.entries(data).forEach(([key, val]) => {
+    if (val !== undefined && val !== null) form.append(key, val);
+  });
+  const response = await api.post('/users', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 }
 
@@ -31,7 +37,15 @@ export async function getUser(id) {
  * @param {Object} data - { name, email, role }
  */
 export async function updateUser(id, data) {
-  const response = await api.put(`/users/${id}`, data);
+  // Laravel tidak mendukung multipart PUT — gunakan POST + _method spoofing
+  const form = new FormData();
+  form.append('_method', 'PUT');
+  Object.entries(data).forEach(([key, val]) => {
+    if (val !== undefined && val !== null) form.append(key, val);
+  });
+  const response = await api.post(`/users/${id}`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 }
 

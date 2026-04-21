@@ -159,9 +159,9 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
           className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition-colors group"
         >
           {/* Avatar */}
-          {user?.profile_photo ? (
+          {user?.photo_url || user?.profile_photo ? (
             <img
-              src={user.profile_photo}
+              src={user.photo_url || user?.profile_photo}
               alt="Foto Profil"
               className="w-8 h-8 rounded-xl object-cover border border-slate-100 shadow-sm"
             />
