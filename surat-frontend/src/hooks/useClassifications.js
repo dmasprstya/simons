@@ -6,6 +6,7 @@ import {
   updateClassification,
   toggleActive,
   deleteClassification,
+  getAllFlat,
 } from '../api/classifications.api';
 
 /**
@@ -23,6 +24,7 @@ export function useClassifications() {
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Loading & error untuk aksi individual
   const [actionLoading, setActionLoading] = useState(false);
@@ -46,6 +48,7 @@ export function useClassifications() {
     try {
       const response = await getRoots(params);
       setRoots(response.data || []);
+      setIsSearching(false);
       // Reset tree state saat fetch ulang
       setChildrenMap({});
       setExpandedIds(new Set());
@@ -80,6 +83,29 @@ export function useClassifications() {
         next.delete(parentId);
         return next;
       });
+    }
+  }, []);
+
+  /**
+   * Search klasifikasi secara flat
+   * @param {Object} params - { search, type, is_active }
+   */
+  const searchClassifications = useCallback(async (params = {}) => {
+    setLoading(true);
+    setError(null);
+    setIsSearching(true);
+
+    try {
+      const response = await getAllFlat(params);
+      setRoots(response.data || []); // Reuse roots state for flat results
+      setChildrenMap({});
+      setExpandedIds(new Set());
+    } catch (err) {
+      const message = err.response?.data?.message || 'Gagal mencari klasifikasi.';
+      setError(message);
+      setRoots([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -256,5 +282,7 @@ export function useClassifications() {
     handleUpdate,
     handleToggleActive,
     handleDelete,
+    isSearching,
+    searchClassifications,
   };
 }

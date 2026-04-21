@@ -15,6 +15,15 @@ export async function searchClassifications(q) {
 }
 
 /**
+ * Get All Flat — daftar semua level klasifikasi (untuk admin)
+ * @param {Object} params - { search, type, level, is_active }
+ */
+export async function getAllFlat(params = {}) {
+  const response = await api.get('/classifications/all', { params });
+  return response.data;
+}
+
+/**
  * Get Children — daftar sub-klasifikasi dari parent tertentu
  */
 export async function getChildren(id) {

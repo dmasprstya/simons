@@ -33,17 +33,19 @@ function TreeRow({
   onAddChild,
   onToggleActive,
   onDelete,
+  isSearching = false,
 }) {
-  const isExpanded = expandedIds.has(item.id);
-  const isLoadingChildren = loadingChildrenIds.has(item.id);
-  const children = childrenMap[item.id] || [];
-  const hasChildren = item.children_count > 0 || children.length > 0;
+  const isExpanded = !isSearching && expandedIds.has(item.id);
+  const isLoadingChildren = !isSearching && loadingChildrenIds.has(item.id);
+  const children = isSearching ? [] : (childrenMap[item.id] || []);
+  const hasChildren = !isSearching && (item.children_count > 0 || children.length > 0);
 
   // Level 4 tidak bisa punya child lagi
   const canAddChild = (item.level || level) < 4;
 
-  // Indentasi berdasarkan level
-  const paddingLeft = `${(level - 1) * 32 + 16}px`;
+  // Indentasi berdasarkan level (tidak ada indentasi saat mencari)
+  const currentLevel = item.level || level;
+  const paddingLeft = isSearching ? '16px' : `${(currentLevel - 1) * 32 + 16}px`;
 
   return (
     <>
@@ -52,7 +54,7 @@ function TreeRow({
         <td className="py-2 text-xs text-[#0B1F3A] whitespace-nowrap" style={{ paddingLeft }}>
           <div className="flex items-center gap-2">
             {/* Expand/collapse button */}
-            {hasChildren || canAddChild ? (
+            {!isSearching && (hasChildren || canAddChild) ? (
               <button
                 type="button"
                 onClick={() => onToggleExpand(item.id)}
@@ -67,18 +69,18 @@ function TreeRow({
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
-            ) : (
+            ) : !isSearching ? (
               <span className="inline-block w-6" />
-            )}
+            ) : null}
 
             {/* Level indicator dot */}
             <span
               className={`inline-block h-2 w-2 rounded-full ${
-                level === 1
+                currentLevel === 1
                   ? 'bg-primary'
-                  : level === 2
+                  : currentLevel === 2
                   ? 'bg-secondary'
-                  : level === 3
+                  : currentLevel === 3
                   ? 'bg-slate-400'
                   : 'bg-slate-300'
               }`}
@@ -105,7 +107,7 @@ function TreeRow({
         {/* Level */}
         <td className="px-3 py-2 text-xs text-center">
           <span className="inline-flex items-center justify-center h-5 w-5 rounded bg-[#F7F9FC] text-[#64748B] text-[10px] font-semibold">
-            {item.level || level}
+            {currentLevel}
           </span>
         </td>
 
@@ -219,12 +221,15 @@ export default function ClassificationsPage() {
     handleUpdate,
     handleToggleActive,
     handleDelete,
+    isSearching,
+    searchClassifications,
   } = useClassifications();
   const toast = useToast();
 
   // === Filter state ===
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // === Modal state ===
   const [showAddModal, setShowAddModal] = useState(false);
@@ -256,8 +261,9 @@ export default function ClassificationsPage() {
     const params = {};
     if (typeFilter) params.type = typeFilter;
     if (statusFilter) params.is_active = statusFilter;
+    if (searchTerm.trim()) params.search = searchTerm.trim();
     return params;
-  }, [typeFilter, statusFilter]);
+  }, [typeFilter, statusFilter, searchTerm]);
 
   // Fetch roots saat mount
   useEffect(() => {
@@ -266,12 +272,18 @@ export default function ClassificationsPage() {
 
   // Handler filter
   const handleFilter = () => {
-    fetchRoots(buildParams());
+    const params = buildParams();
+    if (searchTerm.trim()) {
+      searchClassifications(params);
+    } else {
+      fetchRoots(params);
+    }
   };
 
   const handleResetFilter = () => {
     setTypeFilter('');
     setStatusFilter('');
+    setSearchTerm('');
     fetchRoots({});
   };
 
@@ -563,6 +575,34 @@ export default function ClassificationsPage() {
             </select>
           </div>
 
+          {/* Search */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
+              Cari Kode / Nama
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+                placeholder="Cari klasifikasi..."
+                className={inputBaseClass}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B]"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="flex gap-2 pt-1">
             <Button variant="primary" size="sm" onClick={handleFilter}>
               Filter
@@ -624,7 +664,10 @@ export default function ClassificationsPage() {
                     <span className="text-2xl">🗂️</span>
                   </div>
                   <p className="text-xs text-[#64748B]">
-                    Belum ada data klasifikasi. Klik '+ Tambah Root' untuk memulai.
+                    {isSearching 
+                      ? 'Tidak ada klasifikasi yang sesuai dengan pencarian Anda.'
+                      : "Belum ada data klasifikasi. Klik '+ Tambah Root' untuk memulai."
+                    }
                   </p>
                 </div>
               </td>
@@ -647,6 +690,7 @@ export default function ClassificationsPage() {
                   onAddChild={openAddChildModal}
                   onToggleActive={openToggleConfirm}
                   onDelete={openDeleteConfirm}
+                  isSearching={isSearching}
                 />
               ))}
           </tbody>

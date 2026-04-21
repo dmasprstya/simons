@@ -1,12 +1,13 @@
 import { useState, useCallback, useRef } from 'react';
-import { getUsers, createUser, updateUser, toggleActive } from '../api/users.api';
+import { getUsers, createUser, updateUser, toggleActive, changeUserPassword } from '../api/users.api';
 
 /**
  * useUsers — custom hook untuk mengelola data user (admin).
  *
  * State: users, loading, error, meta, actionLoading, actionError
  * Functions: fetchUsers(params), refetch(), handleCreateUser(data),
- *            handleUpdateUser(id, data), handleToggleActive(id)
+ *            handleUpdateUser(id, data), handleToggleActive(id),
+ *            handleChangePassword(id, data)
  *
  * Mendukung filter: search, role, is_active
  */
@@ -127,6 +128,29 @@ export function useUsers() {
     }
   }, [refetch]);
 
+  /**
+   * Ganti password user
+   * @param {number} id - ID user
+   * @param {Object} data - { password, password_confirmation }
+   * @returns {Object} response data jika sukses
+   */
+  const handleChangePassword = useCallback(async (id, data) => {
+    setActionLoading(true);
+    setActionError(null);
+
+    try {
+      const response = await changeUserPassword(id, data);
+      return response;
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Gagal mengubah password user.';
+      setActionError(message);
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  }, []);
+
   return {
     users,
     loading,
@@ -140,5 +164,6 @@ export function useUsers() {
     handleCreateUser,
     handleUpdateUser,
     handleToggleActive,
+    handleChangePassword,
   };
 }

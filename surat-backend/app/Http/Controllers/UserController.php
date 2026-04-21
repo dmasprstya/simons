@@ -192,4 +192,33 @@ class UserController extends Controller
             'message' => "Akun user berhasil {$statusLabel}.",
         ]);
     }
+
+    /**
+     * Ganti password user oleh admin.
+     */
+    public function changePassword(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::findOrFail($id);
+
+        $user->update([
+            'password' => bcrypt($request->password),
+        ]);
+
+        $this->auditService->log(
+            action:    'user.change_password',
+            tableName: 'users',
+            recordId:  $user->id,
+            oldData:   ['password' => '********'],
+            newData:   ['password' => '********'],
+        );
+
+        return response()->json([
+            'data'    => new UserResource($user->fresh()),
+            'message' => 'Password user berhasil diubah.',
+        ]);
+    }
 }

@@ -32,6 +32,7 @@ export default function UsersPage() {
     handleCreateUser,
     handleUpdateUser,
     handleToggleActive,
+    handleChangePassword,
   } = useUsers();
   const toast = useToast();
   const { user: currentUser, updateProfile } = useAuthStore();
@@ -45,6 +46,7 @@ export default function UsersPage() {
   // === Modal state ===
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
   // === Confirm dialog state ===
@@ -265,6 +267,51 @@ export default function UsersPage() {
     }
   };
 
+  // === Handler Ganti Password ===
+  const openPasswordModal = (user) => {
+    setEditingUser(user);
+    setFormData({
+      password: '',
+      password_confirmation: '',
+    });
+    setFormErrors({});
+    setActionError(null);
+    setShowPasswordModal(true);
+  };
+
+  const handleSubmitPassword = async (e) => {
+    e.preventDefault();
+
+    // Validasi password sederhana
+    const errors = {};
+    if (!formData.password) {
+      errors.password = 'Password wajib diisi.';
+    } else if (formData.password.length < 8) {
+      errors.password = 'Password minimal 8 karakter.';
+    }
+
+    if (formData.password !== formData.password_confirmation) {
+      errors.password_confirmation = 'Konfirmasi password tidak cocok.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    try {
+      await handleChangePassword(editingUser.id, {
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+      });
+      setShowPasswordModal(false);
+      setEditingUser(null);
+      toast.success('Password user berhasil diubah.');
+    } catch {
+      toast.error('Gagal mengubah password user.');
+    }
+  };
+
   // === Handler input form ===
   const handleInputChange = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -350,6 +397,13 @@ export default function UsersPage() {
             onClick={() => openEditModal(row)}
           >
             Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => openPasswordModal(row)}
+          >
+            Ganti Password
           </Button>
           <Button
             variant="outline"
@@ -726,6 +780,75 @@ export default function UsersPage() {
         confirmLabel={togglingUser?.is_active ? 'Nonaktifkan' : 'Aktifkan'}
         loading={actionLoading}
       />
+
+      {/* Modal Ganti Password */}
+      <Modal
+        isOpen={showPasswordModal}
+        onClose={() => {
+          setShowPasswordModal(false);
+          setEditingUser(null);
+        }}
+        title={`Ganti Password: ${editingUser?.name}`}
+        size="sm"
+      >
+        <form onSubmit={handleSubmitPassword} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+              Password Baru <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange('password')}
+              placeholder="Minimal 8 karakter"
+              className={formErrors.password ? inputErrorClass : inputBaseClass}
+            />
+            {formErrors.password && (
+              <p className="mt-1 text-xs text-red-600">{formErrors.password}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+              Konfirmasi Password Baru <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              value={formData.password_confirmation}
+              onChange={handleInputChange('password_confirmation')}
+              placeholder="Ulangi password"
+              className={formErrors.password_confirmation ? inputErrorClass : inputBaseClass}
+            />
+            {formErrors.password_confirmation && (
+              <p className="mt-1 text-xs text-red-600">{formErrors.password_confirmation}</p>
+            )}
+          </div>
+
+          {actionError && <ErrorMessage error={actionError} />}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setShowPasswordModal(false);
+                setEditingUser(null);
+              }}
+              disabled={actionLoading}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              loading={actionLoading}
+            >
+              Ganti Password
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

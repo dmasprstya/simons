@@ -56,3 +56,13 @@ export async function toggleActive(id) {
   const response = await api.patch(`/users/${id}/toggle-active`);
   return response.data;
 }
+
+/**
+ * Change User Password — ganti password user (admin only)
+ * @param {string} id - User ID
+ * @param {Object} data - { password, password_confirmation }
+ */
+export async function changeUserPassword(id, data) {
+  const response = await api.put(`/users/${id}/change-password`, data);
+  return response.data;
+}

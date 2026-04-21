@@ -38,6 +38,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::post('/', [UserController::class, 'store']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::put('/{id}', [UserController::class, 'update']);
+        Route::put('/{id}/change-password', [UserController::class, 'changePassword']);
         Route::patch('/{id}/toggle-active', [UserController::class, 'toggleActive']);
     });
 
@@ -47,17 +48,16 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::get('/', [LetterClassificationController::class, 'index']);
         // Route statis HARUS didaftarkan sebelum route dinamis /{id}
         Route::get('/search', [LetterClassificationController::class, 'search']);
-        Route::get('/{id}/children', [LetterClassificationController::class, 'children']);
-        Route::get('/{id}', [LetterClassificationController::class, 'show']);
-        // Write & admin-only reads
+        // Write & admin-only reads — statis /all WAJIB sebelum /{id}
         Route::middleware('role:admin')->group(function (): void {
-            // Flat list semua level — berguna untuk admin mengelola & debug child classifications
             Route::get('/all', [LetterClassificationController::class, 'allFlat']);
             Route::post('/', [LetterClassificationController::class, 'store']);
             Route::put('/{id}', [LetterClassificationController::class, 'update']);
             Route::patch('/{id}/toggle-active', [LetterClassificationController::class, 'toggleActive']);
             Route::delete('/{id}', [LetterClassificationController::class, 'destroy']);
         });
+        Route::get('/{id}/children', [LetterClassificationController::class, 'children']);
+        Route::get('/{id}', [LetterClassificationController::class, 'show']);
     });
 
     // === LETTERS ===
