@@ -142,7 +142,7 @@ export default function TakeNumberPage() {
   `;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-navy">Ambil Nomor Surat</h1>
@@ -190,8 +190,8 @@ export default function TakeNumberPage() {
                 maxLength={255}
                 placeholder="Contoh: Undangan Rapat Koordinasi"
                 className={`${inputBaseClass} ${validationErrors.subject
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-[#E2E8F0]'
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-[#E2E8F0]'
                   }`}
               />
               <div className="flex items-center justify-between mt-1">
@@ -223,8 +223,8 @@ export default function TakeNumberPage() {
                 maxLength={255}
                 placeholder="Contoh: Kepala Dinas Pendidikan"
                 className={`${inputBaseClass} ${validationErrors.destination
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-[#E2E8F0]'
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-[#E2E8F0]'
                   }`}
               />
               <div className="flex items-center justify-between mt-1">

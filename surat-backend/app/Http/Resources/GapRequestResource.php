@@ -28,6 +28,9 @@ class GapRequestResource extends JsonResource
             'status'      => $this->status,
             // number nullable — diisi saat gap disetujui dan nomor dikeluarkan
             'number'      => $this->number,
+            'formatted_number' => $this->number && $this->status === 'approved' && $this->relationLoaded('classification')
+                ? \App\Models\LetterNumber::buildFormattedNumber($this->classification->code, $this->number)
+                : null,
             // reviewed_at nullable — diisi saat admin mereview
             'reviewed_at' => $this->reviewed_at?->format('Y-m-d H:i'),
             'created_at'  => $this->created_at?->format('Y-m-d H:i'),

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
+import { displayClassification } from '../../utils/formatNumber';
 import { useGapRequests } from '../../hooks/useGapRequests';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
@@ -217,18 +217,28 @@ export default function GapRequestPage() {
       render: (value) => <StatusChip status={value} />,
     },
     {
-      key: 'issued_number',
-      label: 'Nomor Diterbitkan',
+      key: 'number',
+      label: 'Urutan',
       render: (value, row) => {
         // Tampilkan nomor hanya jika status approved
-        if (row.status === 'approved') {
-          // Gunakan formatted_number dari letter jika tersedia
-          const displayNumber = row.letter
-            ? displayLetterNumber(row.letter)
-            : (value || '-');
+        if (row.status === 'approved' && value) {
           return (
             <span className="font-semibold text-[#2A7FD4] font-mono">
-              {displayNumber}
+              {value}
+            </span>
+          );
+        }
+        return <span className="text-[#94A3B8]">-</span>;
+      },
+    },
+    {
+      key: 'formatted_number',
+      label: 'Nomor Surat',
+      render: (value, row) => {
+        if (row.status === 'approved' && value) {
+          return (
+            <span className="font-bold text-[#0B1F3A] font-mono whitespace-nowrap">
+              {value}
             </span>
           );
         }
@@ -256,7 +266,7 @@ export default function GapRequestPage() {
       </div>
 
       {/* ==================== BAGIAN ATAS — Form Request Baru ==================== */}
-      <Card className="max-w-2xl mx-auto">
+      <Card className="space-y-4">
         <div className="mb-5">
           <h2 className="text-base font-bold text-navy">Buat Request Baru</h2>
           <p className="text-xs text-muted mt-0.5">Isi form di bawah untuk mengajukan gap request.</p>
@@ -287,10 +297,10 @@ export default function GapRequestPage() {
             </label>
             <div
               className={`flex items-center h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm ${validationErrors.number
-                  ? 'border-red-300'
-                  : selectedNumber
-                    ? 'border-[#2A7FD4]'
-                    : 'border-[#E2E8F0]'
+                ? 'border-red-300'
+                : selectedNumber
+                  ? 'border-[#2A7FD4]'
+                  : 'border-[#E2E8F0]'
                 }`}
             >
               {selectedNumber ? (
@@ -351,10 +361,10 @@ export default function GapRequestPage() {
               )}
               <span
                 className={`text-[10px] ${reason.length >= REASON_MAX
-                    ? 'text-red-500 font-medium'
-                    : reason.length >= REASON_MAX * 0.9
-                      ? 'text-amber-500'
-                      : 'text-[#94A3B8]'
+                  ? 'text-red-500 font-medium'
+                  : reason.length >= REASON_MAX * 0.9
+                    ? 'text-amber-500'
+                    : 'text-[#94A3B8]'
                   }`}
               >
                 {reason.length}/{REASON_MAX}
@@ -498,8 +508,8 @@ export default function GapRequestPage() {
                                 onClick={() => handleSelectNumber(item)}
                                 title={`Zona gap: ${item.gap_start} – ${item.gap_end}`}
                                 className={`px-3 py-1 rounded-md text-xs font-mono font-semibold border transition-all duration-150 ${selectedNumber === item.number
-                                    ? 'bg-[#2A7FD4] text-white border-[#2A7FD4] shadow-sm'
-                                    : 'bg-white text-[#2A7FD4] border-[#BFDBFE] hover:bg-[#2A7FD4] hover:text-white hover:border-[#2A7FD4]'
+                                  ? 'bg-[#2A7FD4] text-white border-[#2A7FD4] shadow-sm'
+                                  : 'bg-white text-[#2A7FD4] border-[#BFDBFE] hover:bg-[#2A7FD4] hover:text-white hover:border-[#2A7FD4]'
                                   }`}
                               >
                                 {selectedNumber === item.number ? `✓ ${item.number}` : item.number}

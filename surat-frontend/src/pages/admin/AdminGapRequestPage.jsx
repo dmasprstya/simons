@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminGapRequests } from '../../hooks/useAdminGapRequests';
 import { useToast } from '../../hooks/useToast';
 import Table from '../../components/ui/Table';
@@ -90,11 +89,8 @@ export default function AdminGapRequestPage() {
     try {
       const response = await approveRequest(approveTarget.id);
 
-      // Ambil nomor terformat dari response — gunakan displayLetterNumber jika letter tersedia
-      const letterData = response.data?.letter;
-      const issuedNumber = letterData
-        ? displayLetterNumber(letterData)
-        : (response.data?.issued_number || 'N/A');
+      // Gunakan formatted_number dari resource yang baru saja ditambahkan
+      const issuedNumber = response.data?.formatted_number || response.data?.number || 'N/A';
 
       toast.success(
         `Gap request disetujui! Nomor diterbitkan: ${issuedNumber}`
@@ -162,7 +158,7 @@ export default function AdminGapRequestPage() {
       },
     },
     {
-      key: 'user',
+      key: 'requested_by',
       label: 'User',
       render: (value) => (
         <span className="font-medium text-[#0B1F3A] text-xs">
@@ -175,7 +171,7 @@ export default function AdminGapRequestPage() {
       label: 'Klasifikasi',
       render: (value) => (
         <span className="bg-[#EBF4FD] text-[#185FA5] px-2 py-0.5 rounded text-xs font-medium">
-          {value?.full_code || value?.code || '-'}
+          {value?.code || '-'}
         </span>
       ),
     },
@@ -211,17 +207,27 @@ export default function AdminGapRequestPage() {
       render: (value) => <StatusChip status={value} />,
     },
     {
-      key: 'issued_number',
-      label: 'Nomor Diterbitkan',
+      key: 'number',
+      label: 'Urutan',
       render: (value, row) => {
-        if (row.status === 'approved') {
-          // Gunakan formatted_number dari letter jika tersedia
-          const displayNumber = row.letter
-            ? displayLetterNumber(row.letter)
-            : (value || '-');
+        if (row.status === 'approved' && value) {
           return (
             <span className="font-semibold text-[#2A7FD4] font-mono text-xs">
-              {displayNumber}
+              {value}
+            </span>
+          );
+        }
+        return <span className="text-[#94A3B8] text-xs">-</span>;
+      },
+    },
+    {
+      key: 'formatted_number',
+      label: 'Nomor Surat',
+      render: (value, row) => {
+        if (row.status === 'approved' && value) {
+          return (
+            <span className="font-bold text-[#0B1F3A] font-mono text-xs whitespace-nowrap">
+              {value}
             </span>
           );
         }
@@ -329,8 +335,8 @@ export default function AdminGapRequestPage() {
         title="Setujui Gap Request"
         message={
           approveTarget
-            ? `Setujui gap request dari "${approveTarget.user?.name || 'User'}" untuk klasifikasi "${
-                approveTarget.classification?.full_code || approveTarget.classification?.code || '-'
+            ? `Setujui gap request dari "${approveTarget.requested_by?.name || 'User'}" untuk klasifikasi "${
+                approveTarget.classification?.code || '-'
               }"? Nomor surat akan diterbitkan dari zona gap.`
             : ''
         }
@@ -357,13 +363,11 @@ export default function AdminGapRequestPage() {
           <div className="bg-[#F7F9FC] rounded-lg p-3 text-xs text-[#64748B]">
             <p>
               <span className="font-medium text-[#0B1F3A]">User:</span>{' '}
-              {rejectTarget?.user?.name || '-'}
+              {rejectTarget?.requested_by?.name || '-'}
             </p>
             <p>
               <span className="font-medium text-[#0B1F3A]">Klasifikasi:</span>{' '}
-              {rejectTarget?.classification?.full_code ||
-                rejectTarget?.classification?.code ||
-                '-'}
+              {rejectTarget?.classification?.code || '-'}
             </p>
           </div>
 
