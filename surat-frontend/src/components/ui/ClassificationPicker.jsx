@@ -260,6 +260,9 @@ export default function ClassificationPicker({ value, onChange, disabled = false
             </div>
             <p className="text-[11px] font-extrabold text-[#94A3B8] uppercase tracking-widest mb-1">Terpilih</p>
             <h4 className="text-xl font-black text-[#1B2F6E] tracking-tight">{path[path.length - 1].name}</h4>
+            <p className="mt-1 text-sm font-bold text-[var(--color-secondary-dark)] font-mono">
+              {path[path.length - 1].code}
+            </p>
           </div>
         ) : (
           <div className="max-h-72 overflow-y-auto custom-scrollbar">
