@@ -22,8 +22,13 @@ const statusConfig = {
   rejected: { variant: 'danger',  label: 'Ditolak' },
 };
 
-export default function StatusChip({ status }) {
-  const config = statusConfig[status] || { variant: 'default', label: status };
+export default function StatusChip({ status, source }) {
+  const config = { ...statusConfig[status] } || { variant: 'default', label: status };
+
+  // Tambahkan detail sumber jika status aktif
+  if (status === 'active' && source) {
+    config.label = source === 'gap' ? 'Aktif (Kosong)' : 'Aktif (Reguler)';
+  }
 
   return <Badge variant={config.variant}>{config.label}</Badge>;
 }

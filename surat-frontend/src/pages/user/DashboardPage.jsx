@@ -202,7 +202,7 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
                         {new Date(letter.issued_date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short' })}
                       </span>
-                      <StatusChip status={letter.status} />
+                      <StatusChip status={letter.status} source={letter.source} />
                     </div>
                   </div>
                 ))}

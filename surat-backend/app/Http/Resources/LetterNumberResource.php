@@ -25,6 +25,7 @@ class LetterNumberResource extends JsonResource
             'issued_date'      => $this->issued_date?->format('Y-m-d'),
             'subject'          => $this->subject,
             'destination'      => $this->destination,
+            'source'           => $this->source,
             'sifat_surat'      => $this->sifat_surat,
             'status'           => $this->status,
             // voided_at nullable — hanya ada jika surat telah di-void

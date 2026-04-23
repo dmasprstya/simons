@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
     {
       key: 'status',
       label: 'Status',
-      render: (value) => <StatusChip status={value} />,
+      render: (value, row) => <StatusChip status={value} source={row.source} />,
     },
   ];
 

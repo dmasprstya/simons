@@ -185,7 +185,7 @@ export default function MyLettersPage() {
     {
       key: 'status',
       label: 'Status',
-      render: (value) => <StatusChip status={value} />,
+      render: (value, row) => <StatusChip status={value} source={row.source} />,
     },
     {
       key: 'actions',
