@@ -8,10 +8,12 @@ use App\Http\Requests\StoreGapRequestRequest;
 use App\Http\Resources\GapRequestResource;
 use App\Models\DailyGap;
 use App\Models\GapRequest;
+use App\Models\LetterNumber;
 use App\Services\GapRequestService;
 use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -89,7 +91,7 @@ class GapRequestController extends Controller
 
             // Guard 3: Harus mengambil nomor terkecil yang tersedia secara berurutan
             $count = count($numbers);
-            $usedInLetters = \App\Models\LetterNumber::pluck('number')->all();
+            $usedInLetters = LetterNumber::pluck('number')->all();
             $usedInRequests = GapRequest::whereIn('status', ['pending', 'approved'])
                 ->whereNotNull('number')
                 ->pluck('number')
@@ -97,7 +99,7 @@ class GapRequestController extends Controller
             $excluded = array_flip(array_merge($usedInLetters, $usedInRequests));
 
             $vacantNumbers = [];
-            $dailyGaps = \App\Models\DailyGap::orderBy('date')->get();
+            $dailyGaps = DailyGap::orderBy('date')->get();
             foreach ($dailyGaps as $gap) {
                 for ($n = $gap->gap_start; $n <= $gap->gap_end; $n++) {
                     if (!isset($excluded[$n])) {
@@ -136,7 +138,7 @@ class GapRequestController extends Controller
                     null,
                     [
                         'number'            => $gapRequest->number,
-                        'gap_date'          => $gapRequest->gap_date->format('Y-m-d'),
+                        'gap_date'          => Carbon::parse($gapRequest->gap_date)->format('Y-m-d'),
                         'classification_id' => $gapRequest->classification_id,
                     ]
                 );

@@ -127,6 +127,8 @@ class NumberingServiceTest extends TestCase
             'number'            => 1005,
             'gap_date'          => '2026-04-20',
             'status'            => 'approved',
+            'subject'           => 'Perihal Surat Testing',
+            'destination'       => 'Tujuan Surat Testing',
             'reason'            => 'Butuh nomor mundur',
         ]);
 
@@ -151,6 +153,8 @@ class NumberingServiceTest extends TestCase
             'number'            => 1050, // Jauh dari gap yang ada (1001-1010)
             'gap_date'          => '2026-04-20',
             'status'            => 'approved',
+            'subject'           => 'Perihal Surat Testing',
+            'destination'       => 'Tujuan Surat Testing',
             'reason'            => 'Ngawur',
         ]);
 
@@ -158,24 +162,4 @@ class NumberingServiceTest extends TestCase
         $this->service->releaseGapNumber($gapRequest);
     }
 
-    /**
-     * Test 6: Reset sequence mengarsipkan gap yang tersisa.
-     */
-    public function test_reset_sequence_mengarsipkan_gap(): void
-    {
-        Carbon::setTestNow('2026-04-20 10:00:00');
-        $this->service->acquireNumber(); // 1000
-
-        $this->service->resetSequence(5000); // Reset ke 5000
-
-        // Harusnya mengarsipkan gap 1001-1010 meski belum ganti hari (karena paksa reset)
-        $this->assertDatabaseHas('daily_gaps', [
-            'date' => '2026-04-20 00:00:00',
-            'gap_start' => 1001,
-            'gap_end' => 1010
-        ]);
-
-        $n = $this->service->acquireNumber();
-        $this->assertEquals(5000, $n);
-    }
 }

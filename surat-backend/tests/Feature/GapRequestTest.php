@@ -67,6 +67,8 @@ class GapRequestTest extends TestCase
             'requested_by'      => $user->id,
             'classification_id' => $classification->id,
             'gap_date'          => $gapDate,
+            'subject'           => 'Perihal Surat Testing',
+            'destination'       => 'Tujuan Surat Testing',
             'reason'            => 'Alasan pengajuan gap request untuk keperluan testing',
             'status'            => 'pending',
             'number'            => $gapNumber,
@@ -94,13 +96,16 @@ class GapRequestTest extends TestCase
         $response = $this->actingAs($user, 'sanctum')
                          ->postJson('/api/gap-requests', [
                              'classification_id' => $classification->id,
-                             'number'            => 1010, // nomor dalam zona gap yang tercatat
-                             'gap_date'          => today()->toDateString(),
+                             'items'             => [
+                                 ['number' => 1010, 'gap_date' => today()->toDateString()],
+                             ],
+                             'subject'           => 'Perihal Surat Testing',
+                             'destination'       => 'Tujuan Surat Testing',
                              'reason'            => 'Surat yang sebelumnya hilang perlu diganti dengan nomor cadangan',
                          ]);
 
         $response->assertStatus(201)
-                 ->assertJsonPath('data.status', 'pending');
+                 ->assertJsonPath('data.0.status', 'pending');
     }
 
     /**
@@ -112,6 +117,13 @@ class GapRequestTest extends TestCase
         $admin          = $this->makeAdmin();
         $classification = $this->makeClassification();
         $today          = today()->toDateString();
+
+        // Seed DailyGap
+        DailyGap::create([
+            'date'      => $today,
+            'gap_start' => 1010,
+            'gap_end'   => 1019,
+        ]);
 
         // GlobalSequence (next_start=1000, gap_size=10) sudah ada via migration.
         // Nomor 1010 = gap zone blok 0 (posInBlock=10, gap_size=10) — valid.
@@ -138,6 +150,13 @@ class GapRequestTest extends TestCase
         $admin          = $this->makeAdmin();
         $classification = $this->makeClassification();
         $today          = today()->toDateString();
+
+        // Seed DailyGap
+        DailyGap::create([
+            'date'      => $today,
+            'gap_start' => 1010,
+            'gap_end'   => 1019,
+        ]);
 
         // GlobalSequence sudah ada via migration. Nomor 1010 = awal zona gap blok 0.
         $gapRequest = $this->makePendingGapRequest($user, $classification, $today, 1010);
@@ -188,6 +207,13 @@ class GapRequestTest extends TestCase
         $admin          = $this->makeAdmin();
         $classification = $this->makeClassification();
         $today          = today()->toDateString();
+
+        // Seed DailyGap
+        DailyGap::create([
+            'date'      => $today,
+            'gap_start' => 1010,
+            'gap_end'   => 1019,
+        ]);
 
         // GlobalSequence sudah ada via migration.
         $gapRequest = $this->makePendingGapRequest($user, $classification, $today, 1010);

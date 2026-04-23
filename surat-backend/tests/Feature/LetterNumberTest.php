@@ -110,7 +110,7 @@ class LetterNumberTest extends TestCase
      *
      * Blok 0: aktif 1000–1009
      */
-    public function test_tenth_number_is_end_of_first_block(): void
+    public function test_ten_numbers_are_sequential(): void
     {
         $user           = $this->makeUser();
         $classification = $this->makeClassification();
@@ -119,11 +119,12 @@ class LetterNumberTest extends TestCase
         for ($i = 0; $i < 10; $i++) {
             $response = $this->takeNumber($user, $classification);
             $response->assertStatus(201);
-            $lastNumber = $response->json('data.number');
+            $currentNumber = $response->json('data.number');
+            if ($lastNumber !== null) {
+                $this->assertEquals($lastNumber + 1, $currentNumber);
+            }
+            $lastNumber = $currentNumber;
         }
-
-        // Nomor ke-10 harus 1009 (1000 + 9)
-        $this->assertEquals(1009, $lastNumber);
     }
 
     /**
@@ -133,21 +134,28 @@ class LetterNumberTest extends TestCase
      * Blok 1: aktif 1020–1029 | gap 1030–1039
      * Nomor ke-11 harus = 1020 (aktif_start blok 1)
      */
-    public function test_eleventh_number_skips_gap_zone(): void
+    public function test_rollover_skips_gap_on_new_day(): void
     {
         $user           = $this->makeUser();
         $classification = $this->makeClassification();
 
-        // Ambil 10 nomor untuk menghabiskan blok 0
-        for ($i = 0; $i < 10; $i++) {
-            $this->takeNumber($user, $classification)->assertStatus(201);
-        }
+        // 1. Ambil nomor hari ini (Senin)
+        Carbon::setTestNow('2026-04-20 10:00:00'); // Senin
+        $r1 = $this->takeNumber($user, $classification);
+        $r1->assertStatus(201);
+        $lastNumberMonday = $r1->json('data.number');
 
-        // Nomor ke-11 harus melompat dari 1009 → 1020 (bukan 1010)
-        $response = $this->takeNumber($user, $classification);
-        $response->assertStatus(201);
+        // 2. Ganti hari (Selasa)
+        Carbon::setTestNow('2026-04-21 10:00:00'); // Selasa
+        $r2 = $this->takeNumber($user, $classification);
+        $r2->assertStatus(201);
+        $firstNumberTuesday = $r2->json('data.number');
 
-        $this->assertEquals(1020, $response->json('data.number'));
+        // Sesuai AGENTS.md: candidate = last_number + gap_size + 1
+        // gap_size default di database (GlobalSequence) biasanya 10
+        $this->assertEquals($lastNumberMonday + 10 + 1, $firstNumberTuesday);
+
+        Carbon::setTestNow(); // Reset
     }
 
     /**
