@@ -249,8 +249,8 @@ export default function MyLettersPage() {
                 </svg>
                 Rentang Tanggal
               </label>
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <div className="w-full sm:flex-1">
                   <input
                     type="date"
                     value={dateFrom}
@@ -258,8 +258,8 @@ export default function MyLettersPage() {
                     className={inputBaseClass}
                   />
                 </div>
-                <span className="text-slate-300 font-medium text-xs">s/d</span>
-                <div className="flex-1">
+                <span className="text-slate-300 font-medium text-xs text-center sm:text-left">s/d</span>
+                <div className="w-full sm:flex-1">
                   <input
                     type="date"
                     value={dateTo}

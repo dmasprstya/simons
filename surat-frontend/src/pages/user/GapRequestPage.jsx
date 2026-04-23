@@ -323,30 +323,30 @@ export default function GapRequestPage() {
 
           {/* 2. Integrated Number Picker */}
           <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-navy">Pilih Nomor Kosong</h3>
                 <p className="text-[10px] text-muted mt-0.5">Gunakan filter untuk mencari nomor berdasarkan tanggal gap.</p>
               </div>
 
               {/* Mini Filter bar */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-medium text-[#64748B] uppercase">Dari:</span>
+                  <span className="text-[10px] font-medium text-[#64748B] uppercase shrink-0 w-12 sm:w-auto">Dari:</span>
                   <input
                     type="date"
                     value={vacantDateFrom}
                     onChange={(e) => setVacantDateFrom(e.target.value)}
-                    className="h-7 rounded border border-[#E2E8F0] bg-white px-2 text-[10px] text-[#0B1F3A] focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20"
+                    className="flex-1 h-7 rounded border border-[#E2E8F0] bg-white px-2 text-[10px] text-[#0B1F3A] focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20"
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-medium text-[#64748B] uppercase">Sampai:</span>
+                  <span className="text-[10px] font-medium text-[#64748B] uppercase shrink-0 w-12 sm:w-auto">Sampai:</span>
                   <input
                     type="date"
                     value={vacantDateTo}
                     onChange={(e) => setVacantDateTo(e.target.value)}
-                    className="h-7 rounded border border-[#E2E8F0] bg-white px-2 text-[10px] text-[#0B1F3A] focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20"
+                    className="flex-1 h-7 rounded border border-[#E2E8F0] bg-white px-2 text-[10px] text-[#0B1F3A] focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20"
                   />
                 </div>
               </div>
