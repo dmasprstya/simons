@@ -200,6 +200,7 @@ export default function SequenceSettingsPage() {
         return (
           <span className="text-xs text-[#64748B]">
             {date.toLocaleDateString('id-ID', {
+              weekday: 'long',
               day: '2-digit',
               month: 'short',
               year: 'numeric',

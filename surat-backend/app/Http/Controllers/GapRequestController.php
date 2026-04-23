@@ -9,9 +9,11 @@ use App\Http\Resources\GapRequestResource;
 use App\Models\DailyGap;
 use App\Models\GapRequest;
 use App\Services\GapRequestService;
+use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class GapRequestController extends Controller
 {
@@ -22,6 +24,7 @@ class GapRequestController extends Controller
      */
     public function __construct(
         private readonly GapRequestService $gapRequestService,
+        private readonly AuditService $auditService,
     ) {}
 
     /**
@@ -61,39 +64,89 @@ class GapRequestController extends Controller
     public function store(StoreGapRequestRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $number    = $validated['number'];
+        $items     = $validated['items'];
+        $numbers   = collect($items)->pluck('number')->all();
 
-        // Guard 1: nomor harus masuk dalam rentang DailyGap yang tercatat
-        $inGapZone = DailyGap::where('gap_start', '<=', $number)
-            ->where('gap_end', '>=', $number)
-            ->exists();
+        return DB::transaction(function () use ($validated, $items, $numbers) {
+            // Guard 1 & 2: Validasi zona gap dan status lock untuk setiap nomor
+            foreach ($numbers as $number) {
+                $inGapZone = DailyGap::where('gap_start', '<=', $number)
+                    ->where('gap_end', '>=', $number)
+                    ->exists();
 
-        if (!$inGapZone) {
+                if (!$inGapZone) {
+                    return response()->json(['message' => "Nomor {$number} bukan bagian dari zona gap manapun."], 422);
+                }
+
+                $isLocked = GapRequest::where('number', $number)
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->exists();
+
+                if ($isLocked) {
+                    return response()->json(['message' => "Nomor {$number} sudah direquest oleh user lain."], 422);
+                }
+            }
+
+            // Guard 3: Harus mengambil nomor terkecil yang tersedia secara berurutan
+            $count = count($numbers);
+            $usedInLetters = \App\Models\LetterNumber::pluck('number')->all();
+            $usedInRequests = GapRequest::whereIn('status', ['pending', 'approved'])
+                ->whereNotNull('number')
+                ->pluck('number')
+                ->all();
+            $excluded = array_flip(array_merge($usedInLetters, $usedInRequests));
+
+            $vacantNumbers = [];
+            $dailyGaps = \App\Models\DailyGap::orderBy('date')->get();
+            foreach ($dailyGaps as $gap) {
+                for ($n = $gap->gap_start; $n <= $gap->gap_end; $n++) {
+                    if (!isset($excluded[$n])) {
+                        $vacantNumbers[] = $n;
+                        if (count($vacantNumbers) >= $count) break 2;
+                    }
+                }
+            }
+
+            sort($numbers);
+            if ($numbers !== array_slice($vacantNumbers, 0, $count)) {
+                $expected = implode(', ', array_slice($vacantNumbers, 0, $count));
+                return response()->json([
+                    'message' => "Anda harus mengambil nomor terkecil yang tersedia secara berurutan ({$expected}). Tidak diperbolehkan melompati nomor.",
+                ], 422);
+            }
+
+            $createdRequests = [];
+            foreach ($items as $item) {
+                $gapRequest = GapRequest::create([
+                    'classification_id' => $validated['classification_id'],
+                    'requested_by'      => Auth::id(),
+                    'number'            => $item['number'],
+                    'gap_date'          => $item['gap_date'],
+                    'reason'            => $validated['reason'],
+                    'status'            => 'pending',
+                ]);
+
+                // Log audit untuk setiap request yang dibuat
+                $this->auditService->log(
+                    'gap_request.created',
+                    'gap_requests',
+                    $gapRequest->id,
+                    null,
+                    [
+                        'number'            => $gapRequest->number,
+                        'gap_date'          => $gapRequest->gap_date->format('Y-m-d'),
+                        'classification_id' => $gapRequest->classification_id,
+                    ]
+                );
+
+                $createdRequests[] = $gapRequest;
+            }
+
             return response()->json([
-                'message' => 'Nomor bukan bagian dari zona gap manapun.',
-            ], 422);
-        }
-
-        // Guard 2: nomor tidak boleh sedang dikunci oleh request lain
-        $isLocked = GapRequest::where('number', $number)
-            ->whereIn('status', ['pending', 'approved'])
-            ->exists();
-
-        if ($isLocked) {
-            return response()->json([
-                'message' => 'Nomor ini sudah direquest oleh user lain.',
-            ], 422);
-        }
-
-        $validated['requested_by'] = Auth::id();
-        $validated['status']       = 'pending';
-
-        $gapRequest = GapRequest::create($validated);
-
-        return response()->json([
-            'data'    => new GapRequestResource($gapRequest),
-            'message' => 'Gap request berhasil diajukan.',
-        ], 201);
+                'data'    => GapRequestResource::collection(collect($createdRequests)),
+                'message' => count($createdRequests) . ' gap request berhasil diajukan.',
+            ], 201);
+        });
     }
 
     /**

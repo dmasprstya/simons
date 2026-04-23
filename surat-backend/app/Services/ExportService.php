@@ -33,7 +33,7 @@ class ExportService
                 'letter_numbers.destination',
                 'letter_numbers.sifat_surat',
                 'users.name as requested_by',
-                'users.division',
+                'users.work_unit',
                 'letter_numbers.status',
             ]);
 
@@ -49,8 +49,8 @@ class ExportService
             $query->where('letter_numbers.classification_id', (int) $filters['classification_id']);
         }
 
-        if (!empty($filters['division'])) {
-            $query->where('users.division', 'like', '%' . $filters['division'] . '%');
+        if (!empty($filters['work_unit'])) {
+            $query->where('users.work_unit', 'like', '%' . $filters['work_unit'] . '%');
         }
 
         if (!empty($filters['status'])) {

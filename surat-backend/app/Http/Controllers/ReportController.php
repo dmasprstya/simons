@@ -29,7 +29,7 @@ class ReportController extends Controller
      *   - date_from:          batas awal tanggal surat  (alias issued_date_from)
      *   - date_to:            batas akhir tanggal surat (alias issued_date_to)
      *   - classification_id:  filter per klasifikasi
-     *   - division:           filter per divisi
+     *   - work_unit:          filter per unit kerja
      *   - status:             active | voided
      *
      * Response shape:
@@ -37,7 +37,7 @@ class ReportController extends Controller
      *   total_letters: int,
      *   per_day: [{ date, count }],
      *   per_classification: [{ classification, count }],
-     *   per_division: [{ division, count }],
+     *   per_work_unit: [{ work_unit, count }],
      * }
      */
     public function summary(Request $request): JsonResponse
@@ -58,7 +58,7 @@ class ReportController extends Controller
             'issued_date_from'  => 'nullable|date',
             'issued_date_to'    => 'nullable|date',
             'classification_id' => 'nullable|integer|exists:letter_classifications,id',
-            'division'          => 'nullable|string|max:255',
+            'work_unit'         => 'nullable|string|max:255',
             'status'            => 'nullable|in:active,voided',
         ]);
 
@@ -81,9 +81,9 @@ class ReportController extends Controller
                 $q->where('letter_numbers.classification_id', $request->classification_id);
             }
 
-            // Filter berdasarkan divisi
-            if ($request->filled('division')) {
-                $q->where('users.division', 'like', '%' . $request->division . '%');
+            // Filter berdasarkan Unit Kerja
+            if ($request->filled('work_unit')) {
+                $q->where('users.work_unit', 'like', '%' . $request->work_unit . '%');
             }
 
             // Filter berdasarkan status
@@ -117,13 +117,13 @@ class ReportController extends Controller
             ->orderByDesc(DB::raw('COUNT(*)'))
             ->get();
 
-        // 4) Breakdown per divisi — { division, count }
-        $perDivision = $baseQuery()
+        // 4) Breakdown per Unit Kerja — { work_unit, count }
+        $perWorkUnit = $baseQuery()
             ->select([
-                DB::raw("IFNULL(users.division, 'Tanpa Divisi') as division"),
+                DB::raw("IFNULL(users.work_unit, 'Tanpa Unit Kerja') as work_unit"),
                 DB::raw('COUNT(*) as count'),
             ])
-            ->groupBy('users.division')
+            ->groupBy('users.work_unit')
             ->orderByDesc(DB::raw('COUNT(*)'))
             ->get();
 
@@ -132,7 +132,7 @@ class ReportController extends Controller
                 'total_letters'      => $totalLetters,
                 'per_day'            => $perDay,
                 'per_classification' => $perClassification,
-                'per_division'       => $perDivision,
+                'per_work_unit'       => $perWorkUnit,
             ],
             'message' => 'Ringkasan laporan berhasil diambil.',
         ]);
@@ -150,7 +150,7 @@ class ReportController extends Controller
             'date_from'         => 'nullable|date',
             'date_to'           => 'nullable|date',
             'classification_id' => 'nullable|integer|exists:letter_classifications,id',
-            'division'          => 'nullable|string|max:255',
+            'work_unit'         => 'nullable|string|max:255',
             'status'            => 'nullable|in:active,voided',
             'format'            => 'nullable|in:csv,pdf,json',
         ]);
@@ -158,7 +158,7 @@ class ReportController extends Controller
             'date_from',
             'date_to',
             'classification_id',
-            'division',
+            'work_unit',
             'status',
         ]);
         $format = $request->input('format', 'csv');
@@ -208,7 +208,7 @@ class ReportController extends Controller
             'Tujuan',
             'Sifat Surat',
             'Pemohon',
-            'Divisi',
+            'Unit Kerja',
             'Status',
         ]);
 
@@ -222,7 +222,7 @@ class ReportController extends Controller
                 $row->destination,
                 $row->sifat_surat,
                 $row->requested_by,
-                $row->division,
+                $row->work_unit,
                 $row->status,
             ]);
         }

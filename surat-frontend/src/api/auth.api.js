@@ -1,10 +1,10 @@
 import api from './axios';
 
 /**
- * Login — kirim email & password, terima token + user data
+ * Login — kirim nip & password, terima token + user data
  */
-export async function login(email, password) {
-  const response = await api.post('/auth/login', { email, password });
+export async function login(nip, password) {
+  const response = await api.post('/auth/login', { nip, password });
   return response.data;
 }
 

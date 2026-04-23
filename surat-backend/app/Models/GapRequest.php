@@ -30,6 +30,8 @@ class GapRequest extends Model
         'number',
         'gap_date',
         'status',
+        'subject',
+        'destination',
         'reason',
         'reviewed_at',
     ];

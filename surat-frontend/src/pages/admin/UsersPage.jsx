@@ -15,7 +15,7 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
  *
  * Fitur:
  * - Tabel: Nama | Email | Divisi | Role | Status | Aksi
- * - Aksi per baris: Edit (modal), Toggle aktif/nonaktif (ConfirmDialog)
+ * - Aksi per baris: Edit (modal), Ganti Password (modal), Toggle aktif/nonaktif (ConfirmDialog), Hapus (ConfirmDialog)
  * - Tombol "Tambah User" → Modal form tambah
  * - Filter: search nama/email, filter role, filter status
  */
@@ -33,6 +33,7 @@ export default function UsersPage() {
     handleUpdateUser,
     handleToggleActive,
     handleChangePassword,
+    handleDeleteUser,
   } = useUsers();
   const toast = useToast();
   const { user: currentUser, updateProfile } = useAuthStore();
@@ -52,6 +53,8 @@ export default function UsersPage() {
   // === Confirm dialog state ===
   const [showConfirm, setShowConfirm] = useState(false);
   const [togglingUser, setTogglingUser] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(null);
 
   // === Form state (tambah & edit) ===
   const [formData, setFormData] = useState({
@@ -60,7 +63,7 @@ export default function UsersPage() {
     email: '',
     password: '',
     password_confirmation: '',
-    division: '',
+    work_unit: '',
     role: 'user',
   });
   const [formErrors, setFormErrors] = useState({});
@@ -139,8 +142,8 @@ export default function UsersPage() {
       }
     }
 
-    if (!formData.division.trim()) {
-      errors.division = 'Divisi wajib diisi.';
+    if (!formData.work_unit) {
+      errors.work_unit = 'Unit Kerja wajib dipilih.';
     }
 
     setFormErrors(errors);
@@ -155,7 +158,7 @@ export default function UsersPage() {
       email: '',
       password: '',
       password_confirmation: '',
-      division: '',
+      work_unit: '',
       role: 'user',
     });
     setFormErrors({});
@@ -176,7 +179,7 @@ export default function UsersPage() {
         email: formData.email.trim(),
         password: formData.password,
         password_confirmation: formData.password_confirmation,
-        division: formData.division.trim(),
+        work_unit: formData.work_unit,
         role: formData.role,
         photo: photoFile ?? undefined,
       });
@@ -198,7 +201,7 @@ export default function UsersPage() {
       email: user.email || '',
       password: '',
       password_confirmation: '',
-      division: user.division || '',
+      work_unit: user.work_unit || '',
       role: user.role || 'user',
     });
     setFormErrors({});
@@ -219,7 +222,7 @@ export default function UsersPage() {
         name: formData.name.trim(),
         nip: formData.nip.trim(),
         email: formData.email.trim(),
-        division: formData.division.trim(),
+        work_unit: formData.work_unit,
         role: formData.role,
         photo: photoFile ?? undefined,
       });
@@ -264,6 +267,26 @@ export default function UsersPage() {
     } catch {
       toast.error('Gagal mengubah status user.');
       setShowConfirm(false);
+    }
+  };
+
+  // === Handler Hapus User ===
+  const openDeleteConfirm = (user) => {
+    setDeletingUser(user);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
+
+    try {
+      await handleDeleteUser(deletingUser.id);
+      setShowDeleteConfirm(false);
+      setDeletingUser(null);
+      toast.success('User berhasil dihapus.');
+    } catch {
+      toast.error('Gagal menghapus user. Pastikan user tidak memiliki riwayat surat.');
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -362,8 +385,8 @@ export default function UsersPage() {
       ),
     },
     {
-      key: 'division',
-      label: 'Divisi',
+      key: 'work_unit',
+      label: 'Unit Kerja',
       render: (value) => (
         <span className="text-xs text-[#64748B]">{value || '-'}</span>
       ),
@@ -403,15 +426,23 @@ export default function UsersPage() {
             size="sm"
             onClick={() => openPasswordModal(row)}
           >
-            Ganti Password
+            Password
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className={row.is_active ? '!bg-red-50 !text-red-700 !border-red-100 hover:!bg-red-100' : '!bg-emerald-50 !text-emerald-700 !border-emerald-100 hover:!bg-emerald-100'}
+            className={row.is_active ? '!bg-amber-50 !text-amber-700 !border-amber-100 hover:!bg-amber-100' : '!bg-emerald-50 !text-emerald-700 !border-emerald-100 hover:!bg-emerald-100'}
             onClick={() => openToggleConfirm(row)}
           >
-            {row.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+            {row.is_active ? 'Nonaktif' : 'Aktif'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="!bg-red-50 !text-red-700 !border-red-100 hover:!bg-red-100"
+            onClick={() => openDeleteConfirm(row)}
+          >
+            Hapus
           </Button>
         </div>
       ),
@@ -568,20 +599,24 @@ export default function UsersPage() {
           </>
         )}
 
-        {/* Divisi */}
+        {/* Unit Kerja */}
         <div>
           <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-            Divisi <span className="text-red-500">*</span>
+            Unit Kerja <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={formData.division}
-            onChange={handleInputChange('division')}
-            placeholder="Nama divisi"
-            className={formErrors.division ? inputErrorClass : inputBaseClass}
-          />
-          {formErrors.division && (
-            <p className="mt-1 text-xs text-red-600">{formErrors.division}</p>
+          <select
+            value={formData.work_unit}
+            onChange={handleInputChange('work_unit')}
+            className={formErrors.work_unit ? inputErrorClass : inputBaseClass}
+          >
+            <option value="">-- Pilih Unit Kerja --</option>
+            <option value="Bidang P3H">Bidang P3H</option>
+            <option value="Layanan KI">Layanan KI</option>
+            <option value="Layanan AHU">Layanan AHU</option>
+            <option value="Bagian TUM">Bagian TUM</option>
+          </select>
+          {formErrors.work_unit && (
+            <p className="mt-1 text-xs text-red-600">{formErrors.work_unit}</p>
           )}
         </div>
 
@@ -778,6 +813,21 @@ export default function UsersPage() {
             : `Apakah Anda yakin ingin mengaktifkan kembali user "${togglingUser?.name}"?`
         }
         confirmLabel={togglingUser?.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+        loading={actionLoading}
+      />
+
+      {/* Confirm Dialog Hapus User */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeletingUser(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Hapus User"
+        message={`Apakah Anda yakin ingin menghapus user "${deletingUser?.name}"? Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel="Hapus"
+        variant="danger"
         loading={actionLoading}
       />
 

@@ -91,9 +91,9 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
 
   const breadcrumbs = buildBreadcrumbs();
   const divisionLabel =
-    typeof user?.division === 'string'
-      ? user.division
-      : user?.division?.title || user?.division?.name || null;
+    typeof user?.work_unit === 'string'
+      ? user.work_unit
+      : user?.work_unit?.title || user?.work_unit?.name || null;
 
   return (
     <header

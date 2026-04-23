@@ -110,8 +110,8 @@
             <tr>
                 <td class="label">Total Data:</td>
                 <td>{{ number_format($rows->count()) }} baris</td>
-                <td class="label">Divisi:</td>
-                <td style="text-align: right;">{{ $filters['division'] ?? 'Semua' }}</td>
+                <td class="label">Unit Kerja:</td>
+                <td style="text-align: right;">{{ $filters['work_unit'] ?? 'Semua' }}</td>
             </tr>
         </table>
     </div>
@@ -125,7 +125,7 @@
                 <th>Klasifikasi</th>
                 <th style="width: 180px;">Perihal</th>
                 <th style="width: 90px;">Pemohon</th>
-                <th style="width: 80px;">Divisi</th>
+                <th style="width: 80px;">Unit Kerja</th>
                 <th style="width: 50px;">Status</th>
             </tr>
         </thead>
@@ -140,7 +140,7 @@
                     <td>{{ $row->classification }}</td>
                     <td>{{ $row->subject }}</td>
                     <td>{{ $row->requested_by }}</td>
-                    <td>{{ $row->division }}</td>
+                    <td>{{ $row->work_unit }}</td>
                     <td>
                         <span class="status-badge {{ $row->status === 'active' ? 'status-active' : 'status-voided' }}">
                             {{ $row->status }}

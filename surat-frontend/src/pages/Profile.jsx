@@ -69,7 +69,7 @@ export default function ProfilePage() {
 
   // ── Section 2: Edit Info ──
   const [name, setName] = useState('');
-  const [division, setDivision] = useState('');
+  const [workUnit, setWorkUnit] = useState('');
   const [nip, setNip] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
@@ -94,7 +94,7 @@ export default function ProfilePage() {
         const data = res.data?.data ?? res.data;
         if (!cancelled) {
           setName(data.name ?? '');
-          setDivision(data.division ?? '');
+          setWorkUnit(data.work_unit ?? '');
           setNip(data.nip ?? '');
           setEmail(data.email ?? '');
           setRole(data.role ?? '');
@@ -104,7 +104,7 @@ export default function ProfilePage() {
         /* authStore sudah memiliki data dasar dari login */
         if (!cancelled) {
           setName(user?.name ?? '');
-          setDivision(user?.division ?? '');
+          setWorkUnit(user?.work_unit ?? '');
           setNip(user?.nip ?? '');
           setEmail(user?.email ?? '');
           setRole(user?.role ?? '');
@@ -185,9 +185,9 @@ export default function ProfilePage() {
     setInfoError(null);
     setInfoSaving(true);
     try {
-      const res = await updateProfile({ name: name.trim(), division: division.trim() });
+      const res = await updateProfile({ name: name.trim() });
       const data = res.data?.data ?? res.data;
-      syncStore({ name: data.name ?? name, division: data.division ?? division });
+      syncStore({ name: data.name ?? name });
       toast.success('Profil berhasil diperbarui.');
     } catch (err) {
       setInfoError(err.response?.data?.message ?? 'Gagal menyimpan perubahan.');
@@ -363,18 +363,13 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Divisi */}
             <div>
-              <label htmlFor="profile-division" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-                Divisi
-              </label>
-              <input
-                id="profile-division"
-                type="text"
-                value={division}
-                onChange={(e) => setDivision(e.target.value)}
-                className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#2A7FD4] bg-white transition"
-              />
+              <p className="text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+                Unit Kerja
+              </p>
+              <p className="text-sm text-[#64748B] px-3 py-2 bg-[#F7F9FC] rounded-lg border border-[#E2E8F0]">
+                {workUnit || '-'}
+              </p>
             </div>
 
             {/* Email — read-only */}

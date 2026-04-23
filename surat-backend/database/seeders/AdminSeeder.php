@@ -20,7 +20,7 @@ class AdminSeeder extends Seeder
                 'name'      => 'Administrator',
                 'nip'       => 'ADM-0001',
                 'password'  => bcrypt('password'),
-                'division'  => 'TU',
+                'work_unit' => 'Bagian TUM',
                 'role'      => 'admin',
                 'is_active' => true,
             ]

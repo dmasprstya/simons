@@ -52,3 +52,13 @@ export async function voidLetter(id) {
   const response = await api.patch(`/letters/${id}/void`);
   return response.data;
 }
+
+/**
+ * Update Letter — edit klasifikasi, perihal, dan tujuan surat
+ * @param {number} id
+ * @param {{ classification_id: number, subject: string, destination: string }} data
+ */
+export async function updateLetter(id, data) {
+  const response = await api.patch(`/letters/${id}`, data);
+  return response.data;
+}

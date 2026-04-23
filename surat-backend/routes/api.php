@@ -21,6 +21,7 @@ Route::prefix('auth')->group(function (): void {
 
     Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::post('logout', [AuthController::class, 'logout']);
+        // Route statis HARUS didaftarkan sebelum route dinamis /{id}
         Route::get('me', [AuthController::class, 'me']);
         Route::post('change-password', [AuthController::class, 'changePassword']);
     });
@@ -30,6 +31,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
 
     // === DASHBOARD ===
     Route::get('dashboard', [DashboardController::class, 'index'])->middleware('role:user');
+    // Admin dashboard specific endpoint
     Route::get('dashboard/admin', [DashboardController::class, 'adminIndex'])->middleware('role:admin');
 
     // === USERS (admin only) ===
@@ -40,6 +42,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::put('/{id}', [UserController::class, 'update']);
         Route::put('/{id}/change-password', [UserController::class, 'changePassword']);
         Route::patch('/{id}/toggle-active', [UserController::class, 'toggleActive']);
+        Route::delete('/{id}', [UserController::class, 'destroy']);
     });
 
     // === CLASSIFICATIONS ===
@@ -69,6 +72,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         // Pengambilan nomor surat — hanya bisa dilakukan user biasa, bukan admin
         Route::post('/', [LetterNumberController::class, 'store'])->middleware('role:user');
         Route::get('/{id}', [LetterNumberController::class, 'show']);
+        Route::patch('/{id}', [LetterNumberController::class, 'update']);
         Route::patch('/{id}/void', [LetterNumberController::class, 'void']);
     });
 

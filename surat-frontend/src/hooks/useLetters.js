@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { getMyLetters, voidLetter as voidLetterApi } from '../api/letters.api';
+import { getMyLetters, voidLetter as voidLetterApi, updateLetter as updateLetterApi } from '../api/letters.api';
 
 /**
  * useLetters — custom hook untuk mengelola data surat milik user.
@@ -67,6 +67,17 @@ export function useLetters() {
     return fetchMyLetters(lastParamsRef.current);
   }, [fetchMyLetters]);
 
+  const updateLetter = useCallback(async (id, data) => {
+    try {
+      const response = await updateLetterApi(id, data);
+      return response;
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Gagal memperbarui surat. Silakan coba lagi.';
+      throw new Error(message);
+    }
+  }, []);
+
   return {
     letters,
     loading,
@@ -74,6 +85,7 @@ export function useLetters() {
     meta,
     fetchMyLetters,
     voidLetter,
+    updateLetter,
     refetch,
   };
 }

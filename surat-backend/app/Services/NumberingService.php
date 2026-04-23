@@ -151,8 +151,8 @@ class NumberingService
                     $gapRequest->number
                 ),
                 'issued_date'  => $gapRequest->gap_date,
-                'subject'      => 'Gap request #' . $gapRequest->id,
-                'destination'  => '-',
+                'subject'      => $gapRequest->subject,
+                'destination'  => $gapRequest->destination,
                 'status'       => 'active',
             ]);
         });

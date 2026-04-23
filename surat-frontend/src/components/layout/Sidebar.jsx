@@ -90,9 +90,9 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
   const divisionLabel =
-    typeof user?.division === 'string'
-      ? user.division
-      : user?.division?.title || user?.division?.name || '-';
+    typeof user?.work_unit === 'string'
+      ? user.work_unit
+      : user?.work_unit?.title || user?.work_unit?.name || '-';
 
   return (
     <>

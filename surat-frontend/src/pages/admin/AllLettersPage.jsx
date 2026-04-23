@@ -29,7 +29,7 @@ export default function AllLettersPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [status, setStatus] = useState('');
-  const [division, setDivision] = useState('');
+  const [workUnit, setWorkUnit] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // === Export state ===
@@ -44,10 +44,10 @@ export default function AllLettersPage() {
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
       if (status) params.status = status;
-      if (division.trim()) params.division = division.trim();
+      if (workUnit.trim()) params.work_unit = workUnit.trim();
       return params;
     },
-    [search, classificationId, dateFrom, dateTo, status, division]
+    [search, classificationId, dateFrom, dateTo, status, workUnit]
   );
 
   // Fetch data saat mount dan saat filter/page berubah
@@ -73,7 +73,7 @@ export default function AllLettersPage() {
     setDateFrom('');
     setDateTo('');
     setStatus('');
-    setDivision('');
+    setWorkUnit('');
     setCurrentPage(1);
     fetchAllLetters({ page: 1 });
   };
@@ -127,11 +127,11 @@ export default function AllLettersPage() {
       ),
     },
     {
-      key: 'division',
-      label: 'Divisi',
+      key: 'work_unit',
+      label: 'Unit Kerja',
       render: (value, row) => (
         <span className="text-xs text-[#64748B]">
-          {value || row.user?.division || '-'}
+          {value || row.user?.work_unit || '-'}
         </span>
       ),
     },
@@ -162,6 +162,7 @@ export default function AllLettersPage() {
         return (
           <span className="text-xs text-[#64748B]">
             {date.toLocaleDateString('id-ID', {
+              weekday: 'long',
               day: '2-digit',
               month: 'short',
               year: 'numeric',
@@ -277,16 +278,16 @@ export default function AllLettersPage() {
             </select>
           </div>
 
-          {/* Divisi */}
+          {/* Unit Kerja */}
           <div className="w-full sm:w-36">
             <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-              Divisi
+              Unit Kerja
             </label>
             <input
               type="text"
-              value={division}
-              onChange={(e) => setDivision(e.target.value)}
-              placeholder="Nama divisi..."
+              value={workUnit}
+              onChange={(e) => setWorkUnit(e.target.value)}
+              placeholder="Nama unit kerja..."
               className={inputBaseClass}
             />
           </div>

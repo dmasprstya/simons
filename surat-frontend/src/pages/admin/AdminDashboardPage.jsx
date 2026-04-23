@@ -95,7 +95,7 @@ export default function AdminDashboardPage() {
             {value?.name || '-'}
           </p>
           <p className="text-[10px] text-slate-400 truncate">
-            {value?.division || '-'}
+            {value?.work_unit || '-'}
           </p>
         </div>
       ),
@@ -127,6 +127,7 @@ export default function AdminDashboardPage() {
         return (
           <span className="text-xs text-[#64748B]">
             {date.toLocaleDateString('id-ID', {
+              weekday: 'long',
               day: '2-digit',
               month: 'short',
               year: 'numeric',
@@ -153,6 +154,7 @@ export default function AdminDashboardPage() {
         return (
           <span className="text-xs text-[#64748B]">
             {date.toLocaleString('id-ID', {
+              weekday: 'long',
               day: '2-digit',
               month: 'short',
               year: 'numeric',
@@ -249,9 +251,9 @@ export default function AdminDashboardPage() {
             />
             <SummaryCard
               icon="🔢"
-              label="Sequence Aktif"
-              value={sequence?.next_number ?? '-'}
-              subtext="Nomor berikutnya dalam antrian"
+              label="Nomor Terakhir"
+              value={sequence?.last_number ?? '-'}
+              subtext="Nomor surat terakhir yang diambil"
             />
             <SummaryCard
               icon="👥"

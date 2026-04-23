@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
+import { displayLetterNumber } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { getDashboardData } from '../../api/dashboard.api';
@@ -7,8 +7,6 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import StatusChip from '../../components/ui/StatusChip';
-import Table from '../../components/ui/Table';
-import Badge from '../../components/ui/Badge';
 
 /**
  * DashboardPage — Halaman utama untuk role user.
@@ -25,7 +23,6 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const [recentLetters, setRecentLetters] = useState([]);
-  const [allRecentLetters, setAllRecentLetters] = useState([]);
   const [globalSeq, setGlobalSeq] = useState(null);
   const [userStats, setUserStats] = useState({ today: 0, month: 0, active: 0, total: 0 });
 
@@ -55,7 +52,6 @@ export default function DashboardPage() {
       const d = res.data;
       setUserStats(d.stats);
       setRecentLetters(d.recent_letters || []);
-      setAllRecentLetters(d.all_recent_letters || []);
       setGlobalSeq(d.sequence);
     } catch (err) {
       setError(err.response?.data?.message || 'Gagal memuat data dashboard.');
@@ -76,7 +72,6 @@ export default function DashboardPage() {
         const d = res.data;
         setUserStats(d.stats);
         setRecentLetters(d.recent_letters || []);
-        setAllRecentLetters(d.all_recent_letters || []);
         setGlobalSeq(d.sequence);
       } catch (err) {
         if (!cancelled) setError(err.response?.data?.message || 'Gagal memuat data dashboard.');
@@ -88,70 +83,7 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // Kolom tabel riwayat pengambilan nomor semua user
-  const recentAllColumns = [
-    {
-      key: 'number',
-      label: 'Nomor Surat',
-      render: (_value, row) => (
-        <span className="font-semibold text-[#0B1F3A] font-mono">{displayLetterNumber(row)}</span>
-      ),
-    },
-    {
-      key: 'user',
-      label: 'Pengambil',
-      render: (value) => (
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-primary truncate">
-            {value?.name || '-'}
-          </p>
-          <p className="text-[10px] text-slate-400 truncate">
-            {value?.division || '-'}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: 'classification',
-      label: 'Klasifikasi',
-      render: (value) => (
-        <span className="bg-primary-light text-primary px-2 py-0.5 rounded text-xs font-bold">
-          {displayClassification(value)}
-        </span>
-      ),
-    },
-    {
-      key: 'subject',
-      label: 'Perihal',
-      render: (value) => (
-        <span className="max-w-[180px] truncate block text-xs text-[#64748B]" title={value}>
-          {value || '-'}
-        </span>
-      ),
-    },
-    {
-      key: 'issued_date',
-      label: 'Tanggal',
-      render: (value) => {
-        if (!value) return '-';
-        const date = new Date(value + 'T00:00:00');
-        return (
-          <span className="text-xs text-[#64748B]">
-            {date.toLocaleDateString('id-ID', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (value) => <StatusChip status={value} />,
-    },
-  ];
+
 
   // Jika request gagal total, tampilkan error + tombol retry di level dashboard
   if (error) {
@@ -268,7 +200,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                        {new Date(letter.issued_date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
+                        {new Date(letter.issued_date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short' })}
                       </span>
                       <StatusChip status={letter.status} />
                     </div>
@@ -295,28 +227,6 @@ export default function DashboardPage() {
       </div>
 
 
-      {/* ── Row 4: Riwayat Table Full Width ── */}
-      <Card className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-navy">Riwayat Pengambilan Nomor Terbaru</h2>
-            <p className="text-xs text-muted mt-0.5">
-              10 pengambilan nomor surat terakhir dari seluruh pengguna.
-            </p>
-          </div>
-          <Badge variant="info" className="px-3 py-1 text-[10px]">Global Activity</Badge>
-        </div>
-
-        {/* error sudah ditangani di level dashboard */}
-
-        <Table
-          columns={recentAllColumns}
-          data={allRecentLetters}
-          loading={loading}
-          emptyText="Belum ada riwayat pengambilan nomor surat."
-          emptyIcon="🕘"
-        />
-      </Card>
     </div>
   );
 }

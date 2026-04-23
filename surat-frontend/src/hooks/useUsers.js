@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { getUsers, createUser, updateUser, toggleActive, changeUserPassword } from '../api/users.api';
+import { getUsers, createUser, updateUser, toggleActive, changeUserPassword, deleteUser } from '../api/users.api';
 
 /**
  * useUsers — custom hook untuk mengelola data user (admin).
@@ -7,7 +7,7 @@ import { getUsers, createUser, updateUser, toggleActive, changeUserPassword } fr
  * State: users, loading, error, meta, actionLoading, actionError
  * Functions: fetchUsers(params), refetch(), handleCreateUser(data),
  *            handleUpdateUser(id, data), handleToggleActive(id),
- *            handleChangePassword(id, data)
+ *            handleChangePassword(id, data), handleDeleteUser(id)
  *
  * Mendukung filter: search, role, is_active
  */
@@ -151,6 +151,30 @@ export function useUsers() {
     }
   }, []);
 
+  /**
+   * Hapus user
+   * @param {number} id - ID user
+   * @returns {Object} response data jika sukses
+   */
+  const handleDeleteUser = useCallback(async (id) => {
+    setActionLoading(true);
+    setActionError(null);
+
+    try {
+      const response = await deleteUser(id);
+      // Refetch list setelah delete
+      await refetch();
+      return response;
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Gagal menghapus user.';
+      setActionError(message);
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  }, [refetch]);
+
   return {
     users,
     loading,
@@ -165,5 +189,6 @@ export function useUsers() {
     handleUpdateUser,
     handleToggleActive,
     handleChangePassword,
+    handleDeleteUser,
   };
 }

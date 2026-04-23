@@ -59,11 +59,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 10 surat terbaru dari semua user — eager load user + classification
-        $allRecentLetters = LetterNumber::with(['user', 'classification'])
-            ->orderByDesc('created_at')
-            ->limit(10)
-            ->get();
+
 
         // Sequence info: read-only, tidak perlu lock
         // Null-safe: jika GlobalSequence belum ada, kembalikan null agar frontend
@@ -83,7 +79,6 @@ class DashboardController extends Controller
                     'active' => (int) ($stats->active ?? 0),
                 ],
                 'recent_letters'     => LetterNumberResource::collection($recentLetters),
-                'all_recent_letters' => LetterNumberResource::collection($allRecentLetters),
                 'sequence'           => $sequence,
             ],
             'message' => 'Data dashboard berhasil diambil.',

@@ -19,7 +19,7 @@ class UserController extends Controller
     ) {}
 
     /**
-     * Daftar semua user dengan filter role dan division.
+     * Daftar semua user dengan filter role dan work_unit.
      *
      * Hanya admin yang dapat mengakses endpoint ini (dijamin via middleware role:admin).
      * Hasil di-paginate 20 per halaman.
@@ -28,7 +28,7 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        // Filter pencarian teks \u2014 nama, email, atau NIP
+        // Filter pencarian teks — nama, email, atau NIP
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -48,9 +48,9 @@ class UserController extends Controller
             $query->where('is_active', (bool) $request->is_active);
         }
 
-        // Filter berdasarkan division jika disediakan
-        if ($request->filled('division')) {
-            $query->where('division', 'like', '%' . $request->division . '%');
+        // Filter berdasarkan work_unit jika disediakan
+        if ($request->filled('work_unit')) {
+            $query->where('work_unit', 'like', '%' . $request->work_unit . '%');
         }
 
         $users = $query->orderBy('name')->paginate(20);
@@ -220,5 +220,43 @@ class UserController extends Controller
             'data'    => new UserResource($user->fresh()),
             'message' => 'Password user berhasil diubah.',
         ]);
+    }
+
+    /**
+     * Hapus user dari sistem.
+     */
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        // Cegah admin menghapus diri sendiri
+        if ($user->id === $request->user()->id) {
+            return response()->json([
+                'message' => 'Tidak dapat menghapus diri sendiri.',
+            ], 422);
+        }
+
+        $oldData = $user->getRawOriginal();
+
+        return DB::transaction(function () use ($user, $oldData) {
+            // Hapus foto profil jika ada
+            if ($user->photo_path) {
+                Storage::disk('public')->delete($user->photo_path);
+            }
+
+            $user->delete();
+
+            $this->auditService->log(
+                action:    'user.delete',
+                tableName: 'users',
+                recordId:  $user->id,
+                oldData:   $oldData,
+            );
+
+            return response()->json([
+                'data'    => null,
+                'message' => 'User berhasil dihapus.',
+            ]);
+        });
     }
 }

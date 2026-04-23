@@ -34,7 +34,7 @@ class AuthTest extends TestCase
         $user = $this->makeUser();
 
         $response = $this->postJson('/api/auth/login', [
-            'email'    => $user->email,
+            'nip'      => $user->nip,
             'password' => 'password123',
         ]);
 
@@ -56,7 +56,7 @@ class AuthTest extends TestCase
         $user = $this->makeUser();
 
         $response = $this->postJson('/api/auth/login', [
-            'email'    => $user->email,
+            'nip'      => $user->nip,
             'password' => 'wrong-password',
         ]);
 
@@ -71,7 +71,7 @@ class AuthTest extends TestCase
         $user = $this->makeUser(isActive: false);
 
         $response = $this->postJson('/api/auth/login', [
-            'email'    => $user->email,
+            'nip'      => $user->nip,
             'password' => 'password123',
         ]);
 

@@ -27,7 +27,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update nama dan divisi user yang sedang login.
+     * Update nama dan Unit Kerja user yang sedang login.
      * Email, role, dan NIP tidak bisa diubah sendiri.
      */
     public function update(Request $request): JsonResponse
@@ -36,11 +36,10 @@ class ProfileController extends Controller
 
         $request->validate([
             'name'     => 'required|string|max:100',
-            'division' => 'required|string|max:100',
             'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $validated = $request->only('name', 'division');
+        $validated = $request->only('name');
 
         // Ganti foto profil jika ada file baru
         if ($request->hasFile('photo')) {

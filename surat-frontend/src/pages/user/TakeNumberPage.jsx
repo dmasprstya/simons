@@ -310,7 +310,9 @@ export default function TakeNumberPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-xl p-3">
                 <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Tanggal</p>
-                <p className="text-sm font-bold text-navy mt-0.5">{resultData.issued_date}</p>
+                <p className="text-sm font-bold text-navy mt-0.5">
+                  {new Date(resultData.issued_date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                </p>
               </div>
               <div className="bg-slate-50 rounded-xl p-3">
                 <p className="text-[10px] text-muted font-semibold uppercase tracking-widest">Klasifikasi</p>

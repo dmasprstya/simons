@@ -21,16 +21,20 @@ class AuthController extends Controller
      * 4. Buat token Sanctum.
      * 5. Return 200 dengan token + data user.
      */
+    public function __construct(
+        private readonly \App\Services\AuditService $auditService
+    ) {}
+
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'nip'      => ['required', 'string'],
             'password' => ['required'],
         ]);
 
         // Coba autentikasi; jika gagal kembalikan 401
         if (! Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Email atau password salah.'], 401);
+            return response()->json(['message' => 'NIP atau password salah.'], 401);
         }
 
         /** @var \App\Models\User $user */
@@ -46,6 +50,16 @@ class AuthController extends Controller
 
         // Buat personal access token
         $token = $user->createToken('api-token')->plainTextToken;
+
+        // Catat ke audit log
+        $this->auditService->log(
+            'auth.login',
+            'users',
+            $user->id,
+            null,
+            ['nip' => $user->nip],
+            $user->id
+        );
 
         return response()->json([
             'data' => [

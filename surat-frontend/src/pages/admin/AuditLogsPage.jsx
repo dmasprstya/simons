@@ -113,6 +113,7 @@ function formatDateTime(dateStr) {
   if (!dateStr) return '-';
   const date = new Date(dateStr);
   return date.toLocaleDateString('id-ID', {
+    weekday: 'long',
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -126,6 +127,8 @@ function formatDateTime(dateStr) {
  * Helper: mapping label aksi ke bahasa Indonesia yang lebih readable
  */
 function formatAction(action) {
+  // Karena backend sudah mengirim dalam bahasa Indonesia, kita tinggal mengembalikan nilainya.
+  // Map ini tetap ada untuk fallback atau jika ada key lama yang belum terupdate.
   const actionLabels = {
     'letter.created': 'Surat Dibuat',
     'letter.voided': 'Surat Dibatalkan',
@@ -139,6 +142,7 @@ function formatAction(action) {
     'classification.updated': 'Klasifikasi Diperbarui',
     'classification.toggled': 'Status Klasifikasi Diubah',
     'sequence.updated': 'Sequence Diperbarui',
+    'auth.login': 'Masuk',
   };
   return actionLabels[action] || action;
 }
@@ -147,10 +151,19 @@ function formatAction(action) {
  * Helper: warna badge untuk aksi
  */
 function getActionColor(action) {
-  if (action?.includes('created') || action?.includes('approved')) return 'text-[#065F46] bg-[#ECFDF5]';
-  if (action?.includes('voided') || action?.includes('rejected')) return 'text-[#991B1B] bg-[#FEF2F2]';
-  if (action?.includes('updated') || action?.includes('toggled')) return 'text-[#185FA5] bg-[#EBF4FD]';
-  if (action?.includes('requested')) return 'text-amber-700 bg-amber-50';
+  const act = action?.toLowerCase() || '';
+  if (act.includes('dibuat') || act.includes('disetujui') || act.includes('masuk') || act.includes('created') || act.includes('approved')) {
+    return 'text-[#065F46] bg-[#ECFDF5]';
+  }
+  if (act.includes('dibatalkan') || act.includes('ditolak') || act.includes('dihapus') || act.includes('voided') || act.includes('rejected') || act.includes('deleted')) {
+    return 'text-[#991B1B] bg-[#FEF2F2]';
+  }
+  if (act.includes('diperbarui') || act.includes('diubah') || act.includes('updated') || act.includes('toggled')) {
+    return 'text-[#185FA5] bg-[#EBF4FD]';
+  }
+  if (act.includes('diminta') || act.includes('requested')) {
+    return 'text-amber-700 bg-amber-50';
+  }
   return 'text-[#64748B] bg-[#F7F9FC]';
 }
 

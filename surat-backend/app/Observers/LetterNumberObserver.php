@@ -46,6 +46,21 @@ class LetterNumberObserver
                     'voided_at' => $letterNumber->voided_at,
                 ]
             );
+            return;
+        }
+
+        // Log perubahan detail surat (klasifikasi, perihal, tujuan)
+        $editableFields = ['classification_id', 'subject', 'destination', 'formatted_number'];
+        $dirtyFields    = array_intersect(array_keys($letterNumber->getDirty()), $editableFields);
+
+        if (!empty($dirtyFields)) {
+            $this->auditService->log(
+                'letter.updated',
+                'letter_numbers',
+                $letterNumber->id,
+                array_intersect_key($letterNumber->getOriginal(), array_flip($editableFields)),
+                $letterNumber->only($editableFields)
+            );
         }
     }
 }

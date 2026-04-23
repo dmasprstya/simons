@@ -200,7 +200,7 @@ export default function ReportsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [classificationId, setClassificationId] = useState(null);
-  const [division, setDivision] = useState('');
+  const [workUnit, setWorkUnit] = useState('');
 
   // Set default date range: 30 hari terakhir
   useEffect(() => {
@@ -229,7 +229,7 @@ export default function ReportsPage() {
     if (dateFrom) params.date_from = dateFrom;
     if (dateTo) params.date_to = dateTo;
     if (classificationId) params.classification_id = classificationId;
-    if (division.trim()) params.division = division.trim();
+    if (workUnit.trim()) params.work_unit = workUnit.trim();
     return params;
   };
 
@@ -250,7 +250,7 @@ export default function ReportsPage() {
     setDateFrom(from);
     setDateTo(to);
     setClassificationId(null);
-    setDivision('');
+    setWorkUnit('');
     fetchSummary({ date_from: from, date_to: to });
   };
 
@@ -266,9 +266,12 @@ export default function ReportsPage() {
 
   // Parsing summary data
   const totalLetters = summary?.total_letters ?? summary?.total ?? 0;
-  const dailyBreakdown = summary?.daily ?? summary?.per_day ?? [];
+  const dailyBreakdown = (summary?.daily ?? summary?.per_day ?? []).map(item => ({
+    ...item,
+    formatted_date: item.date ? new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short' }) : '-'
+  }));
   const classificationBreakdown = summary?.per_classification ?? summary?.by_classification ?? [];
-  const divisionBreakdown = summary?.per_division ?? summary?.by_division ?? [];
+  const workUnitBreakdown = summary?.per_work_unit ?? summary?.by_work_unit ?? [];
 
   const inputBaseClass = `
     block w-full h-11 rounded-[var(--radius-input)] border border-[#E2E8F0] bg-[#F8FAFC]
@@ -348,13 +351,13 @@ export default function ReportsPage() {
             <div className="space-y-6 flex-1">
               <div>
                 <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1 mb-2">
-                  B. Cari Divisi / Unit Kerja
+                  B. Cari Unit Kerja
                 </label>
                 <input
                   type="text"
-                  value={division}
-                  onChange={(e) => setDivision(e.target.value)}
-                  placeholder="Masukkan nama divisi..."
+                  value={workUnit}
+                  onChange={(e) => setWorkUnit(e.target.value)}
+                  placeholder="Masukkan nama unit kerja..."
                   className={inputBaseClass}
                 />
               </div>
@@ -430,7 +433,7 @@ export default function ReportsPage() {
               icon="📄"
               label="Total Surat"
               value={totalLetters}
-              subtext={`Periode ${dateFrom} - ${dateTo}`}
+              subtext={`Periode ${dateFrom ? new Date(dateFrom + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'} - ${dateTo ? new Date(dateTo + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'}`}
             />
             <StatCard
               icon="🏷️"
@@ -440,9 +443,9 @@ export default function ReportsPage() {
             />
             <StatCard
               icon="🏢"
-              label="Divisi"
-              value={divisionBreakdown.length}
-              subtext="Divisi berkontribusi"
+              label="Unit Kerja"
+              value={workUnitBreakdown.length}
+              subtext="Unit Kerja berkontribusi"
             />
           </div>
         ) : null}
@@ -463,7 +466,7 @@ export default function ReportsPage() {
               {dailyBreakdown.length > 0 ? (
                 <SimpleBarChart
                   data={dailyBreakdown}
-                  labelKey="date"
+                  labelKey="formatted_date"
                   valueKey="count"
                   title="📅 Tren Surat per Hari"
                 />
@@ -487,11 +490,11 @@ export default function ReportsPage() {
               />
 
               <BreakdownTable
-                data={divisionBreakdown}
-                labelKey="division"
+                data={workUnitBreakdown}
+                labelKey="work_unit"
                 valueKey="count"
-                title="🏢 Top Kontributor (Divisi)"
-                emptyText="Data divisi tidak tersedia."
+                title="🏢 Top Kontributor (Unit Kerja)"
+                emptyText="Data unit kerja tidak tersedia."
               />
             </div>
           </div>

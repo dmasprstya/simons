@@ -21,7 +21,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const [email, setEmail] = useState('');
+  const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
@@ -29,20 +29,15 @@ export default function LoginPage() {
   const passwordRef = useRef(null);
 
   // Validasi client-side sederhana
-  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isFormValid = isEmailValid && password.length > 0;
+  const isFormValid = nip.trim().length > 0 && password.length > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     // Cek validasi sebelum kirim
-    if (!email.trim()) {
-      setError('Email tidak boleh kosong.');
-      return;
-    }
-    if (!isEmailValid) {
-      setError('Format email tidak valid.');
+    if (!nip.trim()) {
+      setError('NIP tidak boleh kosong.');
       return;
     }
     if (!password) {
@@ -52,7 +47,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await login(nip, password);
       const { user, token } = result.data;
 
       // Simpan ke Zustand store
@@ -68,7 +63,7 @@ export default function LoginPage() {
       // Tangani error dari backend
       const status = err.response?.status;
       if (status === 401) {
-        setError('Email atau password salah.');
+        setError('NIP atau password salah.');
       } else if (status === 403) {
         setError('Akun Anda telah dinonaktifkan. Hubungi administrator.');
       } else if (err.response?.data?.message) {
@@ -96,32 +91,32 @@ export default function LoginPage() {
         {/* Card Login */}
         <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-6 sm:p-8">
           <h2 className="text-base font-semibold text-primary mb-1">Masuk ke akun Anda</h2>
-          <p className="text-sm text-slate-500 mb-6">Masukkan email dan password untuk melanjutkan.</p>
+          <p className="text-sm text-slate-500 mb-6">Masukkan NIP dan password untuk melanjutkan.</p>
 
           {/* Error Message */}
           <ErrorMessage error={error} />
           {error && <div className="mb-4" />}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
-            {/* Email */}
+            {/* NIP */}
             <div>
-              <label htmlFor="login-email" className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-1.5">
-                Email
+              <label htmlFor="login-nip" className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-1.5">
+                NIP
               </label>
               <input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="login-nip"
+                type="text"
+                value={nip}
+                onChange={(e) => setNip(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && email.trim()) {
+                  if (e.key === 'Enter' && nip.trim()) {
                     e.preventDefault();
                     passwordRef.current?.focus();
                   }
                 }}
-                placeholder="Masukkan email"
+                placeholder="Masukkan NIP"
                 disabled={loading}
-                autoComplete="email"
+                autoComplete="username"
                 className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-primary placeholder-[#94A3B8]
                   focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary focus:bg-white
                   disabled:bg-[#F7F9FC] disabled:cursor-not-allowed

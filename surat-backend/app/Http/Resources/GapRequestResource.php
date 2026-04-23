@@ -24,6 +24,8 @@ class GapRequestResource extends JsonResource
             'id'          => $this->id,
             // gap_date di-cast sebagai Carbon date → format Y-m-d
             'gap_date'    => $this->gap_date?->format('Y-m-d'),
+            'subject'     => $this->subject,
+            'destination' => $this->destination,
             'reason'      => $this->reason,
             'status'      => $this->status,
             // number nullable — diisi saat gap disetujui dan nomor dikeluarkan

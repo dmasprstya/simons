@@ -66,3 +66,11 @@ export async function changeUserPassword(id, data) {
   const response = await api.put(`/users/${id}/change-password`, data);
   return response.data;
 }
+
+/**
+ * Delete User — hapus user (admin only)
+ */
+export async function deleteUser(id) {
+  const response = await api.delete(`/users/${id}`);
+  return response.data;
+}

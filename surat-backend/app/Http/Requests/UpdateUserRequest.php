@@ -33,7 +33,7 @@ class UpdateUserRequest extends FormRequest
             'email'    => "required|email|unique:users,email,{$id}",
             // Password nullable saat update — hanya divalidasi jika ada isinya
             'password' => 'nullable|min:8',
-            'division' => 'required|string|max:100',
+            'work_unit' => 'required|string|max:100',
             'role'     => 'required|in:admin,user',
             'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ];
@@ -56,8 +56,8 @@ class UpdateUserRequest extends FormRequest
             'email.email'    => 'Format email tidak valid.',
             'email.unique'   => 'Email sudah digunakan oleh user lain.',
             'password.min'   => 'Password minimal 8 karakter.',
-            'division.required' => 'Divisi wajib diisi.',
-            'division.max'      => 'Divisi maksimal 100 karakter.',
+            'work_unit.required' => 'Unit Kerja wajib diisi.',
+            'work_unit.max'      => 'Unit Kerja maksimal 100 karakter.',
             'role.required'  => 'Role wajib dipilih.',
             'role.in'        => 'Role harus admin atau user.',
             'photo.image'    => 'File foto harus berupa gambar.',

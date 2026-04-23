@@ -2,7 +2,7 @@ import api from './axios';
 
 /**
  * Get Summary — ambil ringkasan laporan
- * @param {Object} params - { date_from, date_to, classification_id, division }
+ * @param {Object} params - { date_from, date_to, classification_id, work_unit }
  */
 export async function getSummary(params = {}) {
   const response = await api.get('/reports/summary', { params });
@@ -11,7 +11,7 @@ export async function getSummary(params = {}) {
 
 /**
  * Export Report — download laporan sebagai file blob (CSV/PDF)
- * @param {Object} params - { date_from, date_to, classification_id, format, division }
+ * @param {Object} params - { date_from, date_to, classification_id, format, work_unit }
  */
 export async function exportReport(params = {}) {
   let response;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\NumberingLockException;
 use App\Http\Requests\StoreLetterNumberRequest;
+use App\Http\Requests\UpdateLetterNumberRequest;
 use App\Http\Resources\LetterNumberResource;
 use App\Models\LetterNumber;
 use App\Services\NumberingService;
@@ -177,14 +178,59 @@ class LetterNumberController extends Controller
     }
 
     /**
-     * Daftar semua surat (admin only).
+     * Edit detail surat (klasifikasi, perihal, tujuan).
      *
-     * Filter yang tersedia:
-     *   - classification_id: ID klasifikasi surat
-     *   - user_id:           ID pembuat surat
-     *   - issued_date_from:  batas awal tanggal surat
-     *   - issued_date_to:    batas akhir tanggal surat
+     * Aturan bisnis edit:
+     *   1. Hanya pemilik surat yang dapat mengedit → 403.
+     *   2. Surat harus berstatus 'active' → 422.
+     *   3. Edit hanya diperbolehkan dalam 2 hari sejak issued_date → 422.
+     *   4. Jika classification_id berubah, formatted_number dibangun ulang.
      */
+    public function update(UpdateLetterNumberRequest $request, int $id): JsonResponse
+    {
+        $letter = LetterNumber::with('classification')->findOrFail($id);
+
+        if ($letter->user_id !== Auth::id()) {
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses untuk mengedit surat ini.',
+            ], 403);
+        }
+
+        if ($letter->status !== 'active') {
+            return response()->json([
+                'message' => 'Surat yang sudah dibatalkan tidak dapat diedit.',
+            ], 422);
+        }
+
+        // Edit hanya boleh dalam 2 hari sejak issued_date (hari ke-0 + hari ke-1 = 2 hari)
+        if (\Carbon\Carbon::parse($letter->issued_date)->diffInDays(today()) > 1) {
+            return response()->json([
+                'message' => 'Surat hanya dapat diedit dalam 2 hari sejak tanggal penerbitan.',
+            ], 422);
+        }
+
+        // Jika klasifikasi berubah, bangun ulang formatted_number
+        $classificationId = $request->classification_id;
+        if ((int) $classificationId !== (int) $letter->classification_id) {
+            $classification  = \App\Models\LetterClassification::find($classificationId);
+            $formattedNumber = LetterNumber::buildFormattedNumber($classification->code, $letter->number);
+        } else {
+            $formattedNumber = $letter->formatted_number;
+        }
+
+        $letter->update([
+            'classification_id' => $classificationId,
+            'subject'           => $request->subject,
+            'destination'       => $request->destination,
+            'formatted_number'  => $formattedNumber,
+        ]);
+
+        return response()->json([
+            'data'    => new LetterNumberResource($letter->fresh()->load('classification')),
+            'message' => 'Detail surat berhasil diperbarui.',
+        ]);
+    }
+
     /**
      * Riwayat pengambilan nomor surat terbaru dari semua user.
      *
@@ -245,9 +291,9 @@ class LetterNumberController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Filter berdasarkan divisi user
-        if ($request->filled('division')) {
-            $query->whereHas('user', fn ($u) => $u->where('division', 'like', '%' . $request->division . '%'));
+        // Filter berdasarkan Unit Kerja user
+        if ($request->filled('work_unit')) {
+            $query->whereHas('user', fn ($u) => $u->where('work_unit', 'like', '%' . $request->work_unit . '%'));
         }
 
         // Filter rentang tanggal issued_date — terima date_from/date_to atau issued_date_from/issued_date_to

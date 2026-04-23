@@ -31,8 +31,9 @@ export default function GapRequestPage() {
 
   // === Form state ===
   const [classificationId, setClassificationId] = useState(null);
-  const [selectedNumber, setSelectedNumber] = useState(null); // nomor gap yang dipilih dari tabel
-  const [gapDate, setGapDate] = useState('');
+  const [selectedItems, setSelectedItems] = useState([]); // Array of { number, date }
+  const [subject, setSubject] = useState('');
+  const [destination, setDestination] = useState('');
   const [reason, setReason] = useState('');
 
   // === UI state ===
@@ -46,7 +47,7 @@ export default function GapRequestPage() {
   // === Nomor Kosong filter state ===
   const [vacantDateFrom, setVacantDateFrom] = useState('');
   const [vacantDateTo, setVacantDateTo] = useState('');
-  const [vacantPage, setVacantPage] = useState(null); // null = belum pernah tampil
+  const [vacantPage, setVacantPage] = useState(1);
 
   // === Expand state untuk tree view nomor kosong ===
   const [expandedMonths, setExpandedMonths] = useState({});
@@ -61,13 +62,18 @@ export default function GapRequestPage() {
       const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const monthLabel = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
       const dateKey = item.date;
-      const dateLabel = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dateLabel = d.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
       if (!groups[monthKey]) groups[monthKey] = { label: monthLabel, dates: {} };
       if (!groups[monthKey].dates[dateKey]) groups[monthKey].dates[dateKey] = { label: dateLabel, numbers: [] };
       groups[monthKey].dates[dateKey].numbers.push(item);
     });
     return groups;
   })();
+
+  // Nomor terkecil yang tersedia secara global
+  const minAvailableNumber = vacantNumbers?.length > 0
+    ? Math.min(...vacantNumbers.map((n) => n.number))
+    : null;
 
   const toggleMonth = (key) => setExpandedMonths((prev) => ({ ...prev, [key]: !prev[key] }));
   const toggleDate = (key) => setExpandedDates((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -81,17 +87,33 @@ export default function GapRequestPage() {
     fetchMyRequests({ page: currentPage });
   }, [fetchMyRequests, currentPage]);
 
-  // Fetch nomor kosong saat vacantPage berubah (hanya jika sudah pernah klik Tampilkan)
+  // Fetch nomor kosong saat mount, saat filter tanggal berubah, atau saat page berubah
   useEffect(() => {
-    if (vacantPage === null) return;
     fetchVacantNumbers({ date_from: vacantDateFrom, date_to: vacantDateTo, page: vacantPage });
-  }, [vacantPage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [vacantDateFrom, vacantDateTo, vacantPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // === Pilih nomor dari tabel ===
   const handleSelectNumber = (row) => {
-    setSelectedNumber(row.number);
-    setGapDate(row.date);
-    setValidationErrors((prev) => ({ ...prev, number: undefined, gapDate: undefined }));
+    const isAlreadySelected = selectedItems.some(item => item.number === row.number);
+    
+    if (isAlreadySelected) {
+      // Hanya izinkan deselect nomor terakhir (paling besar) dalam pilihan
+      const maxSelected = Math.max(...selectedItems.map(i => i.number));
+      if (row.number === maxSelected) {
+        setSelectedItems(prev => prev.filter(item => item.number !== row.number));
+      } else {
+        toast.info('Hanya nomor terakhir yang dapat dibatalkan untuk menjaga urutan.');
+      }
+    } else {
+      // Pastikan memilih nomor berikutnya sesuai urutan di vacantNumbers
+      const nextIndex = selectedItems.length;
+      const nextExpected = vacantNumbers[nextIndex];
+      
+      if (nextExpected && row.number === nextExpected.number) {
+        setSelectedItems(prev => [...prev, { number: row.number, gap_date: row.date }]);
+        setValidationErrors(prev => ({ ...prev, numbers: undefined }));
+      }
+    }
   };
 
   // === Validasi form ===
@@ -101,11 +123,18 @@ export default function GapRequestPage() {
     if (!classificationId) {
       errors.classification = 'Klasifikasi wajib dipilih.';
     }
-    if (!selectedNumber) {
-      errors.number = 'Pilih nomor gap dari tabel Nomor Kosong Tersedia.';
+    if (selectedItems.length === 0) {
+      errors.numbers = 'Pilih minimal satu nomor gap dari daftar.';
     }
-    if (!gapDate) {
-      errors.gapDate = 'Tanggal gap wajib diisi.';
+    if (!subject.trim()) {
+      errors.subject = 'Perihal wajib diisi.';
+    } else if (subject.trim().length > 255) {
+      errors.subject = 'Perihal maksimal 255 karakter.';
+    }
+    if (!destination.trim()) {
+      errors.destination = 'Tujuan wajib diisi.';
+    } else if (destination.trim().length > 255) {
+      errors.destination = 'Tujuan maksimal 255 karakter.';
     }
     if (!reason.trim()) {
       errors.reason = 'Alasan wajib diisi.';
@@ -122,8 +151,9 @@ export default function GapRequestPage() {
   // === Reset form ===
   const resetForm = () => {
     setClassificationId(null);
-    setSelectedNumber(null);
-    setGapDate('');
+    setSelectedItems([]);
+    setSubject('');
+    setDestination('');
     setReason('');
     setSubmitError(null);
     setValidationErrors({});
@@ -141,13 +171,14 @@ export default function GapRequestPage() {
     try {
       await createRequest({
         classification_id: classificationId,
-        number: selectedNumber,
-        gap_date: gapDate,
+        items: selectedItems,
+        subject: subject.trim(),
+        destination: destination.trim(),
         reason: reason.trim(),
       });
 
       // Sukses — tampilkan toast, reset form, refresh tabel
-      toast.success('Request berhasil dikirim, menunggu persetujuan admin.');
+      toast.success(`${selectedItems.length} gap request berhasil diajukan.`);
       resetForm();
       setCurrentPage(1);
       refetch();
@@ -174,6 +205,7 @@ export default function GapRequestPage() {
         // Format tanggal ke format lokal Indonesia
         const date = new Date(value);
         return date.toLocaleDateString('id-ID', {
+          weekday: 'long',
           day: '2-digit',
           month: 'short',
           year: 'numeric',
@@ -196,6 +228,7 @@ export default function GapRequestPage() {
         if (!value) return '-';
         const date = new Date(value + 'T00:00:00');
         return date.toLocaleDateString('id-ID', {
+          weekday: 'long',
           day: '2-digit',
           month: 'short',
           year: 'numeric',
@@ -265,15 +298,15 @@ export default function GapRequestPage() {
         </p>
       </div>
 
-      {/* ==================== BAGIAN ATAS — Form Request Baru ==================== */}
-      <Card className="space-y-4">
-        <div className="mb-5">
+      {/* ==================== UNIFIED — Form + Nomor Kosong ==================== */}
+      <Card>
+        <div className="mb-6">
           <h2 className="text-base font-bold text-navy">Buat Request Baru</h2>
-          <p className="text-xs text-muted mt-0.5">Isi form di bawah untuk mengajukan gap request.</p>
+          <p className="text-xs text-muted mt-0.5">Lengkapi data di bawah untuk mengajukan gap request.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* ClassificationPicker — wajib, is_leaf=true */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 1. ClassificationPicker */}
           <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
               Klasifikasi Surat <span className="text-red-500">*</span>
@@ -284,73 +317,268 @@ export default function GapRequestPage() {
               disabled={submitting}
             />
             {validationErrors.classification && (
-              <p className="mt-1 text-xs text-red-600">
-                {validationErrors.classification}
-              </p>
+              <p className="mt-1 text-xs text-red-600">{validationErrors.classification}</p>
             )}
           </div>
 
-          {/* Nomor gap terpilih — diisi otomatis dari tabel nomor kosong */}
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-              Nomor Gap <span className="text-red-500">*</span>
-            </label>
-            <div
-              className={`flex items-center h-9 rounded-lg border bg-[#F7F9FC] px-3 text-sm ${validationErrors.number
-                ? 'border-red-300'
-                : selectedNumber
-                  ? 'border-[#2A7FD4]'
-                  : 'border-[#E2E8F0]'
-                }`}
-            >
-              {selectedNumber ? (
-                <>
-                  <span className="font-mono font-semibold text-[#2A7FD4] mr-2">{selectedNumber}</span>
-                  {gapDate && (
-                    <span className="text-xs text-[#64748B]">
-                      — {new Date(gapDate + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedNumber(null); setGapDate(''); }}
-                    className="ml-auto text-[#94A3B8] hover:text-red-500 text-xs"
-                    disabled={submitting}
-                  >
-                    ✕ Batal
-                  </button>
-                </>
-              ) : (
-                <span className="text-[#94A3B8] italic">Pilih nomor dari tabel Nomor Kosong di bawah</span>
+          {/* 2. Integrated Number Picker */}
+          <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-navy">Pilih Nomor Kosong</h3>
+                <p className="text-[10px] text-muted mt-0.5">Gunakan filter untuk mencari nomor berdasarkan tanggal gap.</p>
+              </div>
+
+              {/* Mini Filter bar */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-medium text-[#64748B] uppercase">Dari:</span>
+                  <input
+                    type="date"
+                    value={vacantDateFrom}
+                    onChange={(e) => setVacantDateFrom(e.target.value)}
+                    className="h-7 rounded border border-[#E2E8F0] bg-white px-2 text-[10px] text-[#0B1F3A] focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-medium text-[#64748B] uppercase">Sampai:</span>
+                  <input
+                    type="date"
+                    value={vacantDateTo}
+                    onChange={(e) => setVacantDateTo(e.target.value)}
+                    className="h-7 rounded border border-[#E2E8F0] bg-white px-2 text-[10px] text-[#0B1F3A] focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Error state picker */}
+            {vacantError && <ErrorMessage error={vacantError} />}
+
+            {/* Tree view — scrollable within form */}
+            <div className="overflow-y-auto max-h-[280px] pr-1 space-y-2 custom-scrollbar">
+              {vacantLoading && (
+                <div className="py-6 text-center text-sm text-[#94A3B8] animate-pulse">Memuat nomor kosong...</div>
+              )}
+
+              {!vacantLoading && Object.keys(groupedVacant).length === 0 && (
+                <div className="py-8 text-center bg-white border border-dashed border-[#E2E8F0] rounded-lg">
+                  <div className="text-xl mb-1">✅</div>
+                  <p className="text-xs text-[#94A3B8]">Tidak ada nomor kosong tersedia.</p>
+                </div>
+              )}
+
+              {!vacantLoading && Object.keys(groupedVacant).length > 0 && (
+                <div className="space-y-2">
+                  {Object.entries(groupedVacant).map(([monthKey, monthData]) => (
+                    <div key={monthKey} className="border border-[#E2E8F0] bg-white rounded-lg overflow-hidden">
+                      {/* Month header */}
+                      <button
+                        type="button"
+                        onClick={() => toggleMonth(monthKey)}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-[#F8FAFC] hover:bg-[#F1F5F9] transition-colors text-left"
+                      >
+                        <span className="text-xs font-semibold text-[#0B1F3A] flex items-center gap-2">
+                          <span>📅</span>
+                          {monthData.label}
+                          <span className="text-[10px] font-normal text-[#64748B]">
+                            ({Object.values(monthData.dates).reduce((acc, d) => acc + d.numbers.length, 0)} nomor)
+                          </span>
+                        </span>
+                        <span className={`text-[#2A7FD4] text-[10px] transition-transform duration-200 ${expandedMonths[monthKey] ? 'rotate-90' : ''}`}>
+                          ▶
+                        </span>
+                      </button>
+
+                      {/* Date list */}
+                      {expandedMonths[monthKey] && (
+                        <div className="divide-y divide-[#F1F5F9]">
+                          {Object.entries(monthData.dates).map(([dateKey, dateData]) => (
+                            <div key={dateKey}>
+                              <button
+                                type="button"
+                                onClick={() => toggleDate(dateKey)}
+                                className="w-full flex items-center justify-between px-4 py-1.5 bg-white hover:bg-[#F8FAFC] transition-colors text-left"
+                              >
+                                <span className="text-[10px] font-medium text-[#334155] flex items-center gap-2">
+                                  <span>🗓</span>
+                                  {dateData.label}
+                                  <span className="text-[#94A3B8] font-normal">({dateData.numbers.length})</span>
+                                </span>
+                                <span className={`text-[#94A3B8] text-[8px] transition-transform duration-200 ${expandedDates[dateKey] ? 'rotate-90' : ''}`}>
+                                  ▶
+                                </span>
+                              </button>
+
+                              {expandedDates[dateKey] && (
+                                <div className="px-4 pb-2 pt-1 flex flex-wrap gap-1.5">
+                                    {dateData.numbers.map((item) => {
+                                      const isSelected = selectedItems.some(i => i.number === item.number);
+                                      const nextIndex = selectedItems.length;
+                                      const isNext = vacantNumbers[nextIndex]?.number === item.number;
+                                      const isSelectable = isSelected || isNext;
+
+                                      return (
+                                        <button
+                                          key={item.number}
+                                          type="button"
+                                          onClick={() => handleSelectNumber(item)}
+                                          disabled={!isSelectable}
+                                          title={!isSelectable ? 'Anda harus mengambil nomor sesuai urutan' : ''}
+                                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-all duration-150 ${
+                                            isSelected
+                                              ? 'bg-[#2A7FD4] text-white border-[#2A7FD4] shadow-sm'
+                                              : isNext
+                                                ? 'bg-white text-[#2A7FD4] border-[#2A7FD4] hover:bg-[#2A7FD4]/5'
+                                                : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                          }`}
+                                        >
+                                          {isSelected ? `✓ ${item.number}` : item.number}
+                                        </button>
+                                      );
+                                    })}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            {validationErrors.number && (
-              <p className="mt-1 text-xs text-red-600">{validationErrors.number}</p>
+          </div>
+
+          {/* 3. Nomor gap terpilih — Display Multiple Chips */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+              Nomor Gap Terpilih ({selectedItems.length}) <span className="text-red-500">*</span>
+            </label>
+            <div
+              className={`min-h-[40px] p-2 rounded-lg border bg-[#F7F9FC] flex flex-wrap gap-2 ${
+                validationErrors.numbers
+                  ? 'border-red-300'
+                  : selectedItems.length > 0
+                    ? 'border-[#2A7FD4]'
+                    : 'border-[#E2E8F0]'
+              }`}
+            >
+              {selectedItems.length > 0 ? (
+                selectedItems.map((item) => (
+                  <div key={item.number} className="bg-white border border-[#2A7FD4] rounded px-2 py-1 flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-200">
+                    <span className="font-mono font-bold text-[#2A7FD4] text-sm">{item.number}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectNumber(item)}
+                      className="text-[#94A3B8] hover:text-red-500 transition-colors p-0.5"
+                      title="Batalkan nomor ini"
+                      disabled={submitting}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <span className="text-[#94A3B8] italic text-xs p-1">Silakan pilih nomor dari daftar di atas</span>
+              )}
+            </div>
+            {validationErrors.numbers && (
+              <p className="mt-1 text-xs text-red-600">{validationErrors.numbers}</p>
             )}
           </div>
 
-          {/* Textarea — Alasan (wajib, min 10 karakter, counter karakter) */}
+          {/* 4. Perihal & Tujuan */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Subject / Perihal */}
+            <div>
+              <label
+                htmlFor="subject"
+                className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
+              >
+                Perihal <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="subject"
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                disabled={submitting}
+                maxLength={255}
+                placeholder="Contoh: Undangan Rapat Koordinasi"
+                className={`${inputBaseClass} ${validationErrors.subject
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-[#E2E8F0]'
+                  }`}
+              />
+              <div className="flex items-center justify-between mt-1">
+                {validationErrors.subject ? (
+                  <p className="text-xs text-red-600">{validationErrors.subject}</p>
+                ) : (
+                  <span />
+                )}
+                <span className="text-[10px] text-[#94A3B8]">
+                  {subject.length}/255
+                </span>
+              </div>
+            </div>
+
+            {/* Destination / Tujuan */}
+            <div>
+              <label
+                htmlFor="destination"
+                className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
+              >
+                Tujuan <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="destination"
+                type="text"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                disabled={submitting}
+                maxLength={255}
+                placeholder="Contoh: Kepala Dinas Pendidikan"
+                className={`${inputBaseClass} ${validationErrors.destination
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-[#E2E8F0]'
+                  }`}
+              />
+              <div className="flex items-center justify-between mt-1">
+                {validationErrors.destination ? (
+                  <p className="text-xs text-red-600">{validationErrors.destination}</p>
+                ) : (
+                  <span />
+                )}
+                <span className="text-[10px] text-[#94A3B8]">
+                  {destination.length}/255
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Alasan */}
           <div>
             <label
               htmlFor="reason"
               className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1"
             >
-              Alasan <span className="text-red-500">*</span>
+              Alasan Permintaan <span className="text-red-500">*</span>
             </label>
             <textarea
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={submitting}
-              rows={3}
               maxLength={REASON_MAX}
               placeholder="Jelaskan alasan Anda membutuhkan nomor dari zona gap (minimal 10 karakter)"
-              className={`block w-full min-h-[80px] resize-none rounded-lg border bg-[#F7F9FC] px-3 py-2 text-sm text-[#0B1F3A]
+              className={`block w-full min-h-[100px] resize-none rounded-lg border bg-[#F7F9FC] px-3 py-2 text-sm text-[#0B1F3A]
                 transition-all duration-200
                 focus:border-[#2A7FD4] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20
-                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed ${validationErrors.reason
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-[#E2E8F0]'
+                disabled:bg-[#F7F9FC] disabled:text-[#94A3B8] disabled:cursor-not-allowed ${
+                  validationErrors.reason
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                    : 'border-[#E2E8F0]'
                 }`}
             />
             <div className="flex items-center justify-between mt-1">
@@ -360,174 +588,33 @@ export default function GapRequestPage() {
                 <span />
               )}
               <span
-                className={`text-[10px] ${reason.length >= REASON_MAX
-                  ? 'text-red-500 font-medium'
-                  : reason.length >= REASON_MAX * 0.9
-                    ? 'text-amber-500'
-                    : 'text-[#94A3B8]'
-                  }`}
+                className={`text-[10px] ${
+                  reason.length >= REASON_MAX
+                    ? 'text-red-500 font-medium'
+                    : reason.length >= REASON_MAX * 0.9
+                      ? 'text-amber-500'
+                      : 'text-[#94A3B8]'
+                }`}
               >
                 {reason.length}/{REASON_MAX}
               </span>
             </div>
           </div>
 
-          {/* Submit error */}
-          {submitError && <ErrorMessage error={submitError} />}
-
-          {/* Tombol submit */}
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full"
-            loading={submitting}
-          >
-            Kirim Request
-          </Button>
+          {/* 5. Submit */}
+          <div className="pt-2">
+            {submitError && <div className="mb-4"><ErrorMessage error={submitError} /></div>}
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              className="w-full shadow-lg shadow-[#2A7FD4]/10"
+              loading={submitting}
+            >
+              Kirim Gap Request
+            </Button>
+          </div>
         </form>
-      </Card>
-
-      {/* ==================== BAGIAN TENGAH — Nomor Kosong Tersedia ==================== */}
-      <Card className="space-y-4">
-        <div>
-          <h2 className="text-base font-bold text-navy">Nomor Kosong Tersedia</h2>
-          <p className="text-xs text-muted mt-0.5">Filter berdasarkan rentang tanggal gap.</p>
-        </div>
-
-        {/* Filter bar */}
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="vacant_date_from" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A]">
-              Dari Tanggal
-            </label>
-            <input
-              id="vacant_date_from"
-              type="date"
-              value={vacantDateFrom}
-              onChange={(e) => setVacantDateFrom(e.target.value)}
-              className={`${inputBaseClass} border-[#E2E8F0] w-auto`}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="vacant_date_to" className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A]">
-              Sampai Tanggal
-            </label>
-            <input
-              id="vacant_date_to"
-              type="date"
-              value={vacantDateTo}
-              onChange={(e) => setVacantDateTo(e.target.value)}
-              className={`${inputBaseClass} border-[#E2E8F0] w-auto`}
-            />
-          </div>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              // Reset ke page 1; jika vacantPage sudah 1, paksa re-fetch via fetchVacantNumbers langsung
-              if (vacantPage === 1) {
-                fetchVacantNumbers({ date_from: vacantDateFrom, date_to: vacantDateTo, page: 1 });
-              } else {
-                setVacantPage(1);
-              }
-            }}
-          >
-            Tampilkan
-          </Button>
-        </div>
-
-        {/* Error state */}
-        {vacantError && <ErrorMessage error={vacantError} />}
-
-        {/* Tree view nomor kosong — Month → Date → Numbers */}
-        {vacantLoading && (
-          <div className="py-6 text-center text-sm text-[#94A3B8] animate-pulse">Memuat nomor kosong...</div>
-        )}
-
-        {!vacantLoading && vacantPage !== null && Object.keys(groupedVacant).length === 0 && (
-          <div className="py-8 text-center">
-            <div className="text-2xl mb-1">✅</div>
-            <p className="text-sm text-[#94A3B8]">Tidak ada nomor kosong tersedia.</p>
-          </div>
-        )}
-
-        {!vacantLoading && Object.keys(groupedVacant).length > 0 && (
-          <div className="space-y-2">
-            {Object.entries(groupedVacant).map(([monthKey, monthData]) => (
-              <div key={monthKey} className="border border-[#E2E8F0] rounded-lg overflow-hidden">
-                {/* Month header */}
-                <button
-                  type="button"
-                  onClick={() => toggleMonth(monthKey)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 bg-[#F0F6FF] hover:bg-[#E4EFFE] transition-colors text-left"
-                >
-                  <span className="text-sm font-semibold text-[#0B1F3A] flex items-center gap-2">
-                    <span className="text-base">📅</span>
-                    {monthData.label}
-                    <span className="text-xs font-normal text-[#64748B]">
-                      ({Object.values(monthData.dates).reduce((acc, d) => acc + d.numbers.length, 0)} nomor)
-                    </span>
-                  </span>
-                  <span className={`text-[#2A7FD4] text-xs transition-transform duration-200 ${expandedMonths[monthKey] ? 'rotate-90' : ''}`}>
-                    ▶
-                  </span>
-                </button>
-
-                {/* Date list */}
-                {expandedMonths[monthKey] && (
-                  <div className="divide-y divide-[#F1F5F9]">
-                    {Object.entries(monthData.dates).map(([dateKey, dateData]) => (
-                      <div key={dateKey}>
-                        {/* Date header */}
-                        <button
-                          type="button"
-                          onClick={() => toggleDate(dateKey)}
-                          className="w-full flex items-center justify-between px-5 py-2 bg-white hover:bg-[#F7F9FC] transition-colors text-left"
-                        >
-                          <span className="text-xs font-medium text-[#334155] flex items-center gap-2">
-                            <span>🗓</span>
-                            {dateData.label}
-                            <span className="text-[#94A3B8] font-normal">
-                              ({dateData.numbers.length} nomor)
-                            </span>
-                          </span>
-                          <span className={`text-[#94A3B8] text-[10px] transition-transform duration-200 ${expandedDates[dateKey] ? 'rotate-90' : ''}`}>
-                            ▶
-                          </span>
-                        </button>
-
-                        {/* Numbers grid */}
-                        {expandedDates[dateKey] && (
-                          <div className="px-5 py-3 bg-[#FAFBFE] flex flex-wrap gap-2">
-                            {dateData.numbers.map((item) => (
-                              <button
-                                key={item.number}
-                                type="button"
-                                onClick={() => handleSelectNumber(item)}
-                                title={`Zona gap: ${item.gap_start} – ${item.gap_end}`}
-                                className={`px-3 py-1 rounded-md text-xs font-mono font-semibold border transition-all duration-150 ${selectedNumber === item.number
-                                  ? 'bg-[#2A7FD4] text-white border-[#2A7FD4] shadow-sm'
-                                  : 'bg-white text-[#2A7FD4] border-[#BFDBFE] hover:bg-[#2A7FD4] hover:text-white hover:border-[#2A7FD4]'
-                                  }`}
-                              >
-                                {selectedNumber === item.number ? `✓ ${item.number}` : item.number}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Pagination */}
-        <Pagination meta={vacantMeta} onPageChange={(page) => setVacantPage(page)} />
       </Card>
 
       {/* ==================== BAGIAN BAWAH — Tabel Riwayat Request ==================== */}

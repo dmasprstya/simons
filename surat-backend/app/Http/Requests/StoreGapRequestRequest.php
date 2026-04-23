@@ -30,11 +30,13 @@ class StoreGapRequestRequest extends FormRequest
                     ->where('is_leaf', true)
                     ->where('is_active', true),
             ],
-            // Nomor yang dimohon — harus dari zona gap yang valid (diverifikasi di controller)
-            'number'   => 'required|integer|min:1',
-            // gap_date boleh di masa lalu karena nomor gap bisa dari hari sebelumnya
-            'gap_date' => 'required|date',
-            'reason'   => 'required|string|min:10|max:1000',
+            // Batch request items
+            'items'            => 'required|array|min:1',
+            'items.*.number'   => 'required|integer|min:1',
+            'items.*.gap_date' => 'required|date',
+            'subject'          => 'required|string|max:255',
+            'destination'      => 'required|string|max:255',
+            'reason'           => 'required|string|min:10|max:1000',
         ];
     }
 
@@ -48,12 +50,15 @@ class StoreGapRequestRequest extends FormRequest
         return [
             'classification_id.required'     => 'Klasifikasi surat wajib dipilih.',
             'classification_id.exists'        => 'Klasifikasi surat tidak valid, tidak aktif, atau bukan node daun.',
-            'number.required'                => 'Nomor gap wajib diisi.',
-            'number.integer'                 => 'Nomor gap harus berupa bilangan bulat.',
-            'number.min'                     => 'Nomor gap harus lebih dari 0.',
-            'gap_date.required'              => 'Tanggal gap wajib diisi.',
-            'gap_date.date'                  => 'Format tanggal gap tidak valid.',
-            'gap_date.after_or_equal'        => 'Tanggal gap tidak boleh di masa lampau.',
+            'items.required'                => 'Pilih minimal satu nomor gap.',
+            'items.array'                   => 'Format data nomor gap tidak valid.',
+            'items.*.number.required'       => 'Nomor gap wajib diisi.',
+            'items.*.number.integer'        => 'Nomor gap harus berupa bilangan bulat.',
+            'items.*.gap_date.required'     => 'Tanggal gap wajib diisi.',
+            'subject.required'              => 'Perihal surat wajib diisi.',
+            'subject.max'                   => 'Perihal surat maksimal 255 karakter.',
+            'destination.required'          => 'Tujuan surat wajib diisi.',
+            'destination.max'               => 'Tujuan surat maksimal 255 karakter.',
             'reason.required'               => 'Alasan pengajuan gap wajib diisi.',
             'reason.min'                    => 'Alasan pengajuan gap minimal 10 karakter.',
             'reason.max'                    => 'Alasan pengajuan gap maksimal 1000 karakter.',
