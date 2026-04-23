@@ -122,6 +122,8 @@ class GapRequestController extends Controller
                     'requested_by'      => Auth::id(),
                     'number'            => $item['number'],
                     'gap_date'          => $item['gap_date'],
+                    'subject'           => $validated['subject'],
+                    'destination'       => $validated['destination'],
                     'reason'            => $validated['reason'],
                     'status'            => 'pending',
                 ]);
