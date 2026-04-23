@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSequences, updateGap, resetSequence } from '../../api/sequences.api';
+import { getSequences, updateGap } from '../../api/sequences.api';
 import Table from '../../components/ui/Table';
 import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
@@ -72,13 +72,6 @@ export default function SequenceSettingsPage() {
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(null);
 
-  // === Reset sequence state ===
-  const [resetNextStart, setResetNextStart] = useState(1000);
-  const [resetConfirmText, setResetConfirmText] = useState('');
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [resetting, setResetting] = useState(false);
-  const [resetError, setResetError] = useState(null);
-  const [resetSuccess, setResetSuccess] = useState(null);
 
   // === Tabel sequence state ===
   const [sequences, setSequences] = useState([]);
@@ -126,41 +119,6 @@ export default function SequenceSettingsPage() {
     fetchSequences(currentPage);
   }, [fetchSequences, currentPage]);
 
-  // Handle buka dialog konfirmasi reset
-  const handleOpenReset = () => {
-    if (!resetNextStart || resetNextStart < 1) {
-      setResetError('Nomor awal harus minimal 1.');
-      return;
-    }
-    setResetError(null);
-    setResetConfirmText('');
-    setShowResetConfirm(true);
-  };
-
-  // Handle eksekusi reset setelah konfirmasi
-  const handleConfirmReset = async () => {
-    if (resetConfirmText !== 'RESET') return;
-
-    setResetting(true);
-    setResetError(null);
-    setResetSuccess(null);
-
-    try {
-      const payload = { next_start: resetNextStart };
-
-      await resetSequence(payload);
-      setShowResetConfirm(false);
-      setResetConfirmText('');
-      setResetSuccess(`Sequence berhasil direset. Penomoran dimulai dari nomor ${resetNextStart}.`);
-
-      fetchSequences(1);
-      setTimeout(() => setResetSuccess(null), 6000);
-    } catch (err) {
-      setResetError(err.response?.data?.message || 'Gagal mereset sequence. Silakan coba lagi.');
-    } finally {
-      setResetting(false);
-    }
-  };
 
   // Handle simpan gap size
   const handleSaveGap = async () => {
@@ -238,12 +196,12 @@ export default function SequenceSettingsPage() {
         <div>
           <h1 className="text-base font-semibold text-[#0B1F3A]">Pengaturan Sequence Global</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">
-            Kelola loncatan nomor (gap) harian dan reset titik awal penomoran.
+            Kelola loncatan nomor (gap) harian untuk penomoran surat.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5">
         {/* ==================== LEFT — Gap Size Setting ==================== */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-5 shadow-sm">
           <div className="flex items-center gap-2">
@@ -294,84 +252,6 @@ export default function SequenceSettingsPage() {
           </Button>
         </div>
 
-        {/* ==================== RIGHT — Reset Penomoran ==================== */}
-        <div className="bg-white rounded-xl border border-red-100 p-6 space-y-5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-red-400"></span>
-            <h2 className="text-xs uppercase tracking-widest text-[#64748B] font-semibold">Reset Penomoran</h2>
-          </div>
-
-          <div className="rounded-lg bg-red-50 border border-red-100 p-4 space-y-2">
-            <p className="text-xs text-red-700 leading-relaxed font-medium">
-              Aksi berbahaya: Penomoran akan dimulai ulang dari nomor yang Anda tentukan. 
-              Gunakan hanya saat awal tahun atau pergantian buku register.
-            </p>
-          </div>
-
-          <div className="max-w-xs">
-            <label htmlFor="reset_next_start" className="block text-xs font-medium text-[#0B1F3A] mb-1">
-              Mulai Dari Nomor
-            </label>
-            <input
-              id="reset_next_start"
-              type="number"
-              min={1}
-              value={resetNextStart}
-              onChange={(e) => setResetNextStart(parseInt(e.target.value, 10) || '')}
-              disabled={resetting}
-              className={inputBaseClass}
-            />
-          </div>
-
-          {resetError && !showResetConfirm && <ErrorMessage error={resetError} />}
-          {resetSuccess && (
-            <div className="rounded-lg border border-[#065F46]/10 bg-[#ECFDF5] px-4 py-3 text-xs text-[#065F46]">
-              {resetSuccess}
-            </div>
-          )}
-
-          {!showResetConfirm ? (
-            <Button
-              variant="outline"
-              className="text-red-600 border-red-200 hover:bg-red-50"
-              onClick={handleOpenReset}
-              disabled={resetting || !resetNextStart}
-            >
-              Reset Sequence
-            </Button>
-          ) : (
-            <div className="rounded-xl border border-red-300 bg-red-50 p-4 space-y-3">
-              <p className="text-xs text-red-800 font-semibold">
-                Ketik <span className="bg-red-100 px-1 py-0.5 rounded font-mono">RESET</span> untuk konfirmasi:
-              </p>
-              <input
-                id="reset_confirm_text"
-                type="text"
-                value={resetConfirmText}
-                onChange={(e) => setResetConfirmText(e.target.value)}
-                disabled={resetting}
-                className={`${inputBaseClass} border-red-300 focus:border-red-500`}
-              />
-              <div className="flex gap-2">
-                <Button
-                  variant="primary"
-                  className="!bg-red-600 hover:!bg-red-700 !text-white !shadow-red-200"
-                  onClick={handleConfirmReset}
-                  disabled={resetConfirmText !== 'RESET' || resetting}
-                >
-                  {resetting ? 'Mereset...' : 'Ya, Reset'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowResetConfirm(false)}
-                  disabled={resetting}
-                >
-                  Batal
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* ==================== BOTTOM — Status Saat Ini ==================== */}

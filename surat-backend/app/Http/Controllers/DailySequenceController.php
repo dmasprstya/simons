@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ResetSequenceRequest;
 use App\Http\Requests\UpdateGapSizeRequest;
 use App\Services\AuditService;
 use App\Services\NumberingService;
@@ -75,36 +74,4 @@ class DailySequenceController extends Controller
         ]);
     }
 
-    /**
-     * Reset sequence penomoran ke titik awal baru.
-     *
-     * Endpoint: POST /sequences/reset
-     * Middleware: admin only
-     *
-     * Zona gap blok yang sedang berjalan diarsipkan ke daily_gaps sebelum reset.
-     * Aksi ini dicatat di audit_logs.
-     */
-    public function reset(ResetSequenceRequest $request): JsonResponse
-    {
-        // Simpan state lama untuk audit
-        $oldInfo = $this->numberingService->getSequenceInfo();
-
-        $newState = $this->numberingService->resetSequence(
-            nextStart: $request->integer('next_start'),
-        );
-
-        // Catat ke audit_logs — global_sequence id selalu 1
-        $this->auditService->log(
-            action:    'sequence.reset',
-            tableName: 'global_sequence',
-            recordId:  1,
-            oldData:   $oldInfo,
-            newData:   $newState,
-        );
-
-        return response()->json([
-            'data'    => $newState,
-            'message' => 'Sequence berhasil direset. Penomoran akan dimulai dari ' . $newState['next_start'] . '.',
-        ]);
-    }
 }

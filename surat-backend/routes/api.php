@@ -81,7 +81,6 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         // Route statis HARUS didaftarkan sebelum route lainnya
         Route::get('/today', [DailySequenceController::class, 'today']);
         Route::patch('/gap', [DailySequenceController::class, 'updateGap'])->middleware('role:admin');
-        Route::post('/reset', [DailySequenceController::class, 'reset'])->middleware('role:admin');
         Route::get('/', [DailySequenceController::class, 'index'])->middleware('role:admin');
     });
 

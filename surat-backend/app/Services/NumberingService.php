@@ -66,37 +66,50 @@ class NumberingService
                         $seq = GlobalSequence::getInstance();
                     }
 
-                    $isNewDay = $seq->last_issued_date !== null && 
-                                $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d');
+                    // 1. Deteksi Ganti Tahun
+                    $isNewYear = $seq->last_issued_date !== null && 
+                                 $seq->last_issued_date->format('Y') !== today()->format('Y');
 
-                    if ($isNewDay) {
-                        // 1. Rollover: Terjadi ganti hari
+                    if ($isNewYear) {
+                        // Arsipkan gap terakhir dari tahun lalu
+                        $this->archiveGapZone($seq->last_issued_date, $seq->last_number + 1, $seq->last_number + $seq->gap_size);
+                        
+                        // Mulai dari 1 untuk tahun baru
+                        $candidate = 1;
+
+                        Log::info('NumberingService: yearly reset applied', [
+                            'old_year' => $seq->last_issued_date->format('Y'),
+                            'new_year' => today()->format('Y'),
+                        ]);
+                    } 
+                    // 2. Deteksi Ganti Hari (dalam tahun yang sama)
+                    elseif ($seq->last_issued_date !== null && $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d')) {
                         $gapStart = $seq->last_number + 1;
                         $gapEnd   = $seq->last_number + $seq->gap_size;
 
-                        // Arsipkan gap hari kemarin
                         $this->archiveGapZone($seq->last_issued_date, $gapStart, $gapEnd);
 
-                        // Nomor kandidat hari ini melompati gap
                         $candidate = $gapEnd + 1;
 
                         Log::info('NumberingService: daily rollover gap applied', [
                             'old_date' => $seq->last_issued_date->toDateString(),
                             'gap' => "{$gapStart}–{$gapEnd}",
                         ]);
-                    } else {
-                        // 2. Hari yang sama atau nomor pertama kali
+                    } 
+                    // 3. Hari yang sama atau penggunaan pertama kali
+                    else {
                         if ($seq->last_number === 0) {
-                            // First time use: start from default or provided initial
                             $candidate = config('numbering.default_start', 1000);
                         } else {
                             $candidate = $seq->last_number + 1;
                         }
                     }
 
-                    // Verifikasi nomor belum dipakai
-                    if (LetterNumber::where('number', $candidate)->exists()) {
-                        throw new NumberingLockException("Nomor {$candidate} sudah digunakan.");
+                    // Verifikasi nomor belum dipakai di tahun yang sama
+                    if (LetterNumber::where('number', $candidate)
+                        ->whereYear('issued_date', today()->year)
+                        ->exists()) {
+                        throw new NumberingLockException("Nomor {$candidate} sudah digunakan di tahun ini.");
                     }
 
                     // Update sequence
@@ -197,59 +210,29 @@ class NumberingService
                 return;
             }
 
-            $isNewDay = $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d');
+            $isNewYear = $seq->last_issued_date->format('Y') !== today()->format('Y');
+            $isNewDay  = $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d');
 
             if (!$isNewDay) {
                 return;
             }
 
-            // Ganti hari: arsipkan gap (jika ada nomor yang sudah digunakan)
+            // Arsipkan gap hari terakhir yang tercatat
             if ($seq->last_number > 0) {
-                $gapStart = $seq->last_number + 1;
-                $gapEnd   = $seq->last_number + $seq->gap_size;
-
-                $this->archiveGapZone($seq->last_issued_date, $gapStart, $gapEnd);
-
-                Log::info('NumberingService@ensureDayIsCurrent: rollover applied', [
-                    'old_date' => $seq->last_issued_date->toDateString(),
-                    'gap' => "{$gapStart}–{$gapEnd}",
-                ]);
-            }
-
-            $seq->last_issued_date = today();
-            $seq->save();
-        });
-    }
-
-    /**
-     * Reset sequence.
-     */
-    public function resetSequence(int $startNumber): array
-    {
-        return DB::transaction(function () use ($startNumber) {
-            $seq = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
-
-            if (!$seq) {
-                $seq = GlobalSequence::getInstance();
-            }
-
-            // Sebelum reset, arsipkan gap berjalan jika ada
-            if ($seq->last_issued_date !== null && $seq->last_number > 0) {
                 $this->archiveGapZone($seq->last_issued_date, $seq->last_number + 1, $seq->last_number + $seq->gap_size);
             }
 
-            $seq->last_number = 0; // Will start from $startNumber on next acquire
-            // We can't actually set 'start' in GlobalSequence if next_start is deleted,
-            // so we might need to handle this manually or store start somewhere.
-            // But per AGENTS.md, we just use last_number.
-            // If we want to start from $startNumber, we can set last_number = $startNumber - 1.
-            $seq->last_number = $startNumber - 1;
+            if ($isNewYear) {
+                // Reset ke 0 agar saat acquireNumber() dipanggil berikutnya, candidate = 1
+                $seq->last_number = 0;
+                Log::info('NumberingService@ensureDayIsCurrent: yearly reset triggered');
+            }
+
             $seq->last_issued_date = today();
             $seq->save();
-
-            return $this->getSequenceInfo();
         });
     }
+
 
     /**
      * Update gap size.

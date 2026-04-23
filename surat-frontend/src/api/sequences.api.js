@@ -26,11 +26,3 @@ export async function updateGap(gapSize) {
   return response.data;
 }
 
-/**
- * Reset Sequence — reset penomoran ke titik awal baru (admin only)
- * @param {{ next_start: number, gap_size?: number }} payload
- */
-export async function resetSequence(payload) {
-  const response = await api.post('/sequences/reset', payload);
-  return response.data;
-}
