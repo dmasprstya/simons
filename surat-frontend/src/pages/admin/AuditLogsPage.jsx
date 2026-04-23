@@ -197,7 +197,7 @@ export default function AuditLogsPage() {
       const params = { page, per_page: 50 };
       if (search.trim()) params.search = search.trim();
       if (actionFilter) params.action = actionFilter;
-      if (tableFilter.trim()) params.auditable_type = tableFilter.trim();
+      if (tableFilter.trim()) params.table_name = tableFilter.trim();
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
       return params;
@@ -274,20 +274,20 @@ export default function AuditLogsPage() {
       ),
     },
     {
-      key: 'auditable_type',
+      key: 'table_name',
       label: 'Tabel',
       render: (value) => (
         <span className="font-mono text-xs text-[#64748B]">
-          {value ? value.replace('App\\Models\\', '') : '-'}
+          {value ? value.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) : ''}
         </span>
       ),
     },
     {
-      key: 'auditable_id',
+      key: 'record_id',
       label: 'Record ID',
       render: (value) => (
         <span className="font-mono text-xs text-[#64748B]">
-          {value || '-'}
+          {value || ''}
         </span>
       ),
     },
@@ -516,12 +516,12 @@ export default function AuditLogsPage() {
               <div className="bg-[#F7F9FC] rounded-lg p-3">
                 <p className="text-[10px] font-medium text-[#64748B] uppercase">Tabel</p>
                 <p className="text-xs font-mono text-[#0B1F3A] mt-0.5">
-                  {selectedLog.auditable_type ? selectedLog.auditable_type.replace('App\\Models\\', '') : '-'}
+                  {selectedLog.table_name ? selectedLog.table_name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) : ''}
                 </p>
               </div>
               <div className="bg-[#F7F9FC] rounded-lg p-3">
                 <p className="text-[10px] font-medium text-[#64748B] uppercase">Record ID</p>
-                <p className="text-xs font-mono text-[#0B1F3A] mt-0.5">{selectedLog.auditable_id || '-'}</p>
+                <p className="text-xs font-mono text-[#0B1F3A] mt-0.5">{selectedLog.record_id || ''}</p>
               </div>
               <div className="bg-[#F7F9FC] rounded-lg p-3">
                 <p className="text-[10px] font-medium text-[#64748B] uppercase">IP Address</p>

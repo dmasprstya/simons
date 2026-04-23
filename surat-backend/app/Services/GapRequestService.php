@@ -94,9 +94,10 @@ class GapRequestService
 
         // Perbarui status GapRequest beserta metadata review
         $gapRequest->update([
-            'status'      => 'rejected',
-            'reviewed_by' => $reviewer->id,
-            'reviewed_at' => now(),
+            'status'           => 'rejected',
+            'reviewed_by'      => $reviewer->id,
+            'reviewed_at'      => now(),
+            'rejection_reason' => $reason,
         ]);
 
         // Catat aksi rejection ke audit_logs; reason disimpan di new_data untuk referensi

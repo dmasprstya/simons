@@ -27,6 +27,7 @@ class GapRequestResource extends JsonResource
             'subject'     => $this->subject,
             'destination' => $this->destination,
             'reason'      => $this->reason,
+            'rejection_reason' => $this->rejection_reason,
             'status'      => $this->status,
             // number nullable — diisi saat gap disetujui dan nomor dikeluarkan
             'number'      => $this->number,

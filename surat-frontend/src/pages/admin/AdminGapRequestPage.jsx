@@ -58,6 +58,9 @@ export default function AdminGapRequestPage() {
   const [rejectLoading, setRejectLoading] = useState(false);
   const [rejectError, setRejectError] = useState(null);
 
+  // === Detail modal state ===
+  const [viewTarget, setViewTarget] = useState(null);
+
   // Ambil status dari tab aktif
   const currentStatus = TABS.find((t) => t.key === activeTab)?.status || '';
 
@@ -177,6 +180,24 @@ export default function AdminGapRequestPage() {
       ),
     },
     {
+      key: 'subject',
+      label: 'Perihal',
+      render: (value) => (
+        <span className="max-w-[150px] truncate block text-xs text-[#0B1F3A]" title={value}>
+          {value || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'destination',
+      label: 'Tujuan',
+      render: (value) => (
+        <span className="max-w-[150px] truncate block text-xs text-[#0B1F3A]" title={value}>
+          {value || '-'}
+        </span>
+      ),
+    },
+    {
       key: 'gap_date',
       label: 'Tanggal Gap',
       render: (value) => {
@@ -240,34 +261,44 @@ export default function AdminGapRequestPage() {
       key: 'actions',
       label: 'Aksi',
       render: (_value, row) => {
-        // Aksi hanya tersedia di tab Pending
-        if (row.status !== 'pending') return null;
-
         return (
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="!bg-emerald-50 !text-emerald-700 !border-emerald-100 hover:!bg-emerald-100"
-              onClick={() => {
-                setApproveError(null);
-                setApproveTarget(row);
-              }}
+              className="!bg-blue-50 !text-blue-700 !border-blue-100 hover:!bg-blue-100"
+              onClick={() => setViewTarget(row)}
             >
-              Setujui
+              Detail
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="!bg-red-50 !text-red-700 !border-red-100 hover:!bg-red-100"
-              onClick={() => {
-                setRejectError(null);
-                setRejectReason('');
-                setRejectTarget(row);
-              }}
-            >
-              Tolak
-            </Button>
+
+            {row.status === 'pending' && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="!bg-emerald-50 !text-emerald-700 !border-emerald-100 hover:!bg-emerald-100"
+                  onClick={() => {
+                    setApproveError(null);
+                    setApproveTarget(row);
+                  }}
+                >
+                  Setujui
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="!bg-red-50 !text-red-700 !border-red-100 hover:!bg-red-100"
+                  onClick={() => {
+                    setRejectError(null);
+                    setRejectReason('');
+                    setRejectTarget(row);
+                  }}
+                >
+                  Tolak
+                </Button>
+              </>
+            )}
           </div>
         );
       },
@@ -423,6 +454,137 @@ export default function AdminGapRequestPage() {
               loading={rejectLoading}
             >
               Tolak Request
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ============ DETAIL MODAL ============ */}
+      <Modal
+        isOpen={!!viewTarget}
+        onClose={() => setViewTarget(null)}
+        title="Detail Gap Request"
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            {/* SISI KIRI: METADATA (2/5 lebar) */}
+            <div className="md:col-span-2 space-y-6">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1.5">
+                  Status Request
+                </label>
+                <StatusChip status={viewTarget?.status} />
+              </div>
+
+              <div className="space-y-4 bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0]">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1">
+                    Pemohon
+                  </label>
+                  <p className="text-sm font-bold text-[#0B1F3A]">{viewTarget?.requested_by?.name || '-'}</p>
+                  <p className="text-xs text-[#64748B] mt-0.5">{viewTarget?.requested_by?.work_unit || '-'}</p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1">
+                    Klasifikasi
+                  </label>
+                  <p className="text-sm font-medium text-[#0B1F3A]">{viewTarget?.classification?.name || '-'}</p>
+                  <p className="text-xs font-mono text-[#185FA5] bg-[#EBF4FD] inline-block px-1.5 py-0.5 rounded mt-1">
+                    {viewTarget?.classification?.code || '-'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1">
+                    Waktu Pengajuan
+                  </label>
+                  <p className="text-xs text-[#0B1F3A]">
+                    {viewTarget?.created_at ? new Date(viewTarget.created_at).toLocaleDateString('id-ID', {
+                      weekday: 'long',
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) : '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1">
+                    Tanggal Gap
+                  </label>
+                  <p className="text-xs text-[#0B1F3A]">
+                    {viewTarget?.gap_date ? new Date(viewTarget.gap_date + 'T00:00:00').toLocaleDateString('id-ID', {
+                      weekday: 'long',
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric'
+                    }) : '-'}
+                  </p>
+                </div>
+                {viewTarget?.status === 'approved' && (
+                  <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">
+                      Nomor Diterbitkan
+                    </label>
+                    <p className="text-sm font-bold text-emerald-700 font-mono">{viewTarget?.formatted_number || '-'}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* SISI KANAN: KONTEN SURAT (3/5 lebar) */}
+            <div className="md:col-span-3 space-y-5 border-l border-[#E2E8F0] md:pl-6">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1.5">
+                  Perihal
+                </label>
+                <div className="text-sm font-semibold text-[#0B1F3A] leading-relaxed">
+                  {viewTarget?.subject || '-'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1.5">
+                  Tujuan
+                </label>
+                <div className="text-sm text-[#0B1F3A]">
+                  {viewTarget?.destination || '-'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1.5">
+                  Alasan Pengajuan
+                </label>
+                <div className="text-sm text-[#64748B] bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0] whitespace-pre-wrap italic">
+                  "{viewTarget?.reason || '-'}"
+                </div>
+              </div>
+
+              {viewTarget?.status === 'rejected' && (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-4 mt-4">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-red-600 mb-1">
+                    Catatan Penolakan
+                  </label>
+                  <p className="text-sm text-red-800 font-medium italic">
+                    "{viewTarget?.rejection_reason || 'Tidak ada alasan spesifik.'}"
+                  </p>
+                  <div className="mt-3 pt-3 border-t border-red-100 flex justify-between items-center text-[10px] text-red-400">
+                    <span>Reviewer: {viewTarget?.reviewed_by?.name || 'Admin'}</span>
+                    <span>{viewTarget?.reviewed_at}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-[#E2E8F0]">
+            <Button variant="outline" size="md" onClick={() => setViewTarget(null)}>
+              Tutup
             </Button>
           </div>
         </div>

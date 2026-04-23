@@ -33,6 +33,7 @@ class GapRequest extends Model
         'subject',
         'destination',
         'reason',
+        'rejection_reason',
         'reviewed_at',
     ];
 
