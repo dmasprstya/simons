@@ -327,6 +327,39 @@ export default function ReportsPage() {
       {/* Export error */}
       {exportError && <ErrorMessage error={exportError} />}
 
+      {/* Error report load */}
+      {error && <ErrorMessage error={error} />}
+
+      {/* Stat Cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : summary ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <StatCard
+            icon="📄"
+            label="Total Surat"
+            value={totalLetters}
+            subtext={`Periode ${dateFrom ? new Date(dateFrom + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'} - ${dateTo ? new Date(dateTo + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'}`}
+          />
+          <StatCard
+            icon="🏷️"
+            label="Klasifikasi"
+            value={classificationBreakdown.length}
+            subtext="Klasifikasi digunakan"
+          />
+          <StatCard
+            icon="🏢"
+            label="Unit Kerja"
+            value={workUnitBreakdown.length}
+            subtext="Unit Kerja berkontribusi"
+          />
+        </div>
+      ) : null}
+
       {/* Refined Filter Bar */}
       <div className="bg-white rounded-[var(--radius-card)] shadow-[var(--shadow-soft)] border border-[#E2E8F0] p-5 md:p-8">
         <div className="flex items-center gap-2 mb-6 md:mb-8">
@@ -415,40 +448,8 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Error report load */}
-      {error && <ErrorMessage error={error} />}
-
       {/* Summary Content */}
       <div className="space-y-8">
-        {/* Stat Cards */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-        ) : summary ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <StatCard
-              icon="📄"
-              label="Total Surat"
-              value={totalLetters}
-              subtext={`Periode ${dateFrom ? new Date(dateFrom + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'} - ${dateTo ? new Date(dateTo + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'}`}
-            />
-            <StatCard
-              icon="🏷️"
-              label="Klasifikasi"
-              value={classificationBreakdown.length}
-              subtext="Klasifikasi digunakan"
-            />
-            <StatCard
-              icon="🏢"
-              label="Unit Kerja"
-              value={workUnitBreakdown.length}
-              subtext="Unit Kerja berkontribusi"
-            />
-          </div>
-        ) : null}
 
         {/* Detailed Breakdown */}
         {loading ? (
