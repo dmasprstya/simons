@@ -18,7 +18,7 @@ export async function exportReport(params = {}) {
   try {
     response = await api.get('/reports/export', {
       params: { ...params, format: params.format || 'csv' },
-      responseType: 'blob',
+      ...(params.format !== 'json' && { responseType: 'blob' }),
     });
   } catch (err) {
     // Beberapa browser mengembalikan blob JSON pada error biner.
@@ -33,6 +33,11 @@ export async function exportReport(params = {}) {
     }
 
     throw new Error(err.message || 'Network error saat mengunduh file.');
+  }
+
+  // Jika format adalah JSON, kembalikan data mentah untuk diproses di frontend (misal oleh ExcelJS)
+  if (params.format === 'json') {
+    return response.data;
   }
 
   // Jika backend merespons JSON error, tampilkan message aslinya.

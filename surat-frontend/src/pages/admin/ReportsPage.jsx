@@ -193,7 +193,7 @@ function BreakdownTable({ data = [], labelKey = 'label', valueKey = 'count', tit
 }
 
 export default function ReportsPage() {
-  const { summary, loading, error, exporting, exportError, workUnits, fetchSummary, handleExport, fetchWorkUnits } =
+  const { summary, loading, error, exporting, exportError, workUnits, fetchSummary, handleExport, handleExcelExport, fetchWorkUnits } =
     useReports();
   const toast = useToast();
 
@@ -359,7 +359,14 @@ export default function ReportsPage() {
   // Handler export dengan toast notification
   const onExport = async (format, params = null) => {
     const exportParams = params || buildParams();
-    const result = await handleExport(format, exportParams);
+    let result;
+    
+    if (format === 'excel') {
+      result = await handleExcelExport(exportParams);
+    } else {
+      result = await handleExport(format, exportParams);
+    }
+
     if (result.success) {
       toast.success(`File ${format.toUpperCase()} berhasil diunduh.`);
     } else {
@@ -408,6 +415,14 @@ export default function ReportsPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Button
               variant="secondary"
+              onClick={() => onExport('excel', {})} // Header export all
+              loading={exporting === 'excel'}
+              disabled={!!exporting}
+              className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20 backdrop-blur-sm shadow-sm justify-center"
+            >
+              {exporting === 'excel' ? 'Menyiapkan...' : '📊 Export Semua (Excel)'}
+            </Button>
+            <Button
               onClick={() => onExport('csv', {})} // Header export all
               loading={exporting === 'csv'}
               disabled={!!exporting}
@@ -707,7 +722,7 @@ export default function ReportsPage() {
 
             {/* Actions */}
             <div className="mt-8 pt-6 border-t border-[#F1F5F9] space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <Button
                   variant="outline"
                   loading={loading}
@@ -715,6 +730,17 @@ export default function ReportsPage() {
                   className="h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]"
                 >
                   Reset
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => onExport('excel')}
+                  loading={exporting === 'excel'}
+                  disabled={!!exporting}
+                  className="h-12 rounded-xl !border-blue-200 !text-blue-600 hover:!bg-blue-50 text-[10px] font-bold"
+                  title="Export hasil filter ke Excel Profesional"
+                >
+                  Export EXCEL
                 </Button>
                 
                 <Button

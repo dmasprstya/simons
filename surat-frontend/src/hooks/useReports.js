@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getSummary, exportReport, getWorkUnits } from '../api/reports.api';
+import { generateExcel } from '../utils/excelExport';
 
 /**
  * useReports — custom hook untuk halaman Reports.
@@ -47,7 +48,7 @@ export function useReports() {
   }, []);
 
   /**
-   * Export laporan sebagai file (CSV)
+   * Export laporan sebagai file (CSV/PDF)
    * Menggunakan blob response dari API, trigger download otomatis
    */
   const handleExport = useCallback(async (format, params = {}) => {
@@ -60,6 +61,33 @@ export function useReports() {
     } catch (err) {
       const message =
         err.response?.data?.message || err.message || `Gagal mengekspor ${format.toUpperCase()}.`;
+      setExportError(message);
+      return { success: false, error: message };
+    } finally {
+      setExporting(null);
+    }
+  }, []);
+
+  /**
+   * Export laporan sebagai file Excel (XLSX) menggunakan ExcelJS
+   */
+  const handleExcelExport = useCallback(async (params = {}) => {
+    setExporting('excel');
+    setExportError(null);
+
+    try {
+      const response = await exportReport({ ...params, format: 'json' });
+      const data = response.data || [];
+      
+      await generateExcel(data, {
+        title: 'SIMONS — Sistem Informasi Manajemen Penomoran Surat',
+        subtitle: 'Laporan Data Nomor Surat',
+        filename: `laporan-surat-${new Date().getTime()}.xlsx`
+      });
+
+      return { success: true };
+    } catch (err) {
+      const message = err.message || 'Gagal mengekspor EXCEL.';
       setExportError(message);
       return { success: false, error: message };
     } finally {
@@ -93,6 +121,7 @@ export function useReports() {
     unitsLoading,
     fetchSummary,
     handleExport,
+    handleExcelExport,
     fetchWorkUnits,
   };
 }
