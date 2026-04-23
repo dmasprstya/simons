@@ -45,8 +45,14 @@ class ExportService
             $query->whereDate('letter_numbers.issued_date', '<=', $filters['date_to']);
         }
 
+        // Backward compatibility: handle both classification_id and classification_ids
+        $classIds = $filters['classification_ids'] ?? [];
         if (!empty($filters['classification_id'])) {
-            $query->where('letter_numbers.classification_id', (int) $filters['classification_id']);
+            $classIds[] = (int) $filters['classification_id'];
+        }
+        
+        if (!empty($classIds)) {
+            $query->whereIn('letter_numbers.classification_id', array_unique($classIds));
         }
 
         if (!empty($filters['work_unit'])) {
@@ -55,6 +61,14 @@ class ExportService
 
         if (!empty($filters['status'])) {
             $query->where('letter_numbers.status', $filters['status']);
+        }
+
+        if (!empty($filters['sifat_surat'])) {
+            $query->where('letter_numbers.sifat_surat', $filters['sifat_surat']);
+        }
+
+        if (!empty($filters['user_name'])) {
+            $query->where('users.name', 'like', '%' . $filters['user_name'] . '%');
         }
 
         return $query

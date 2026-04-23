@@ -116,6 +116,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
     Route::prefix('reports')->middleware('role:admin')->group(function (): void {
         Route::get('/summary', [ReportController::class, 'summary']);
         Route::get('/export', [ReportController::class, 'export']);
+        Route::get('/work-units', [ReportController::class, 'workUnits']);
     });
 
     // === GAP NUMBERS (nomor kosong dari zona gap harian) ===

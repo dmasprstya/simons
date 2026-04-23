@@ -70,3 +70,11 @@ export async function exportReport(params = {}) {
   return { success: true, filename };
 }
 
+/**
+ * Get Work Units — ambil daftar unik unit kerja untuk dropdown filter
+ */
+export async function getWorkUnits() {
+  const response = await api.get('/reports/work-units');
+  return response.data;
+}
+

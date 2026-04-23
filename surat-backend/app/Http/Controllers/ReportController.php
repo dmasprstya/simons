@@ -53,17 +53,28 @@ class ReportController extends Controller
         $dateTo   = $request->input('date_to', $request->input('issued_date_to'));
 
         $request->validate([
-            'date_from'         => 'nullable|date',
-            'date_to'           => 'nullable|date',
-            'issued_date_from'  => 'nullable|date',
-            'issued_date_to'    => 'nullable|date',
-            'classification_id' => 'nullable|integer|exists:letter_classifications,id',
-            'work_unit'         => 'nullable|string|max:255',
-            'status'            => 'nullable|in:active,voided',
+            'date_from'          => 'nullable|date',
+            'date_to'            => 'nullable|date',
+            'issued_date_from'   => 'nullable|date',
+            'issued_date_to'     => 'nullable|date',
+            'classification_id'  => 'nullable|integer',
+            'classification_ids' => 'nullable|array',
+            'classification_ids.*' => 'integer|exists:letter_classifications,id',
+            'work_unit'          => 'nullable|string|max:255',
+            'status'             => 'nullable|in:active,voided',
+            'sifat_surat'        => 'nullable|string|max:100',
+            'user_name'          => 'nullable|string|max:255',
         ]);
 
+        // Merge classification_id into classification_ids for consistency
+        $classIds = $request->input('classification_ids', []);
+        if ($request->filled('classification_id')) {
+            $classIds[] = (int) $request->classification_id;
+        }
+        $classIds = array_unique($classIds);
+
         // === Base query builder dengan filter ===
-        $baseQuery = function () use ($request, $dateFrom, $dateTo) {
+        $baseQuery = function () use ($request, $dateFrom, $dateTo, $classIds) {
             $q = DB::table('letter_numbers')
                 ->join('users', 'letter_numbers.user_id', '=', 'users.id')
                 ->join('letter_classifications', 'letter_numbers.classification_id', '=', 'letter_classifications.id');
@@ -76,9 +87,9 @@ class ReportController extends Controller
                 $q->whereDate('letter_numbers.issued_date', '<=', $dateTo);
             }
 
-            // Filter berdasarkan klasifikasi
-            if ($request->filled('classification_id')) {
-                $q->where('letter_numbers.classification_id', $request->classification_id);
+            // Filter berdasarkan klasifikasi (multiple)
+            if (!empty($classIds)) {
+                $q->whereIn('letter_numbers.classification_id', $classIds);
             }
 
             // Filter berdasarkan Unit Kerja
@@ -89,6 +100,16 @@ class ReportController extends Controller
             // Filter berdasarkan status
             if ($request->filled('status')) {
                 $q->where('letter_numbers.status', $request->status);
+            }
+
+            // Filter berdasarkan sifat surat
+            if ($request->filled('sifat_surat')) {
+                $q->where('letter_numbers.sifat_surat', $request->sifat_surat);
+            }
+
+            // Filter berdasarkan Nama User
+            if ($request->filled('user_name')) {
+                $q->where('users.name', 'like', '%' . $request->user_name . '%');
             }
 
             return $q;
@@ -147,19 +168,27 @@ class ReportController extends Controller
     public function export(Request $request): Response|JsonResponse
     {
         $request->validate([
-            'date_from'         => 'nullable|date',
-            'date_to'           => 'nullable|date',
-            'classification_id' => 'nullable|integer|exists:letter_classifications,id',
-            'work_unit'         => 'nullable|string|max:255',
-            'status'            => 'nullable|in:active,voided',
-            'format'            => 'nullable|in:csv,pdf,json',
+            'date_from'          => 'nullable|date',
+            'date_to'            => 'nullable|date',
+            'classification_id'  => 'nullable|integer',
+            'classification_ids' => 'nullable|array',
+            'classification_ids.*' => 'integer|exists:letter_classifications,id',
+            'work_unit'          => 'nullable|string|max:255',
+            'status'             => 'nullable|in:active,voided',
+            'sifat_surat'        => 'nullable|string|max:100',
+            'user_name'          => 'nullable|string|max:255',
+            'format'             => 'nullable|in:csv,pdf,json',
         ]);
+
         $filters = $request->only([
             'date_from',
             'date_to',
             'classification_id',
+            'classification_ids',
             'work_unit',
             'status',
+            'sifat_surat',
+            'user_name',
         ]);
         $format = $request->input('format', 'csv');
         $rows = $this->exportService->getReportRows($filters);
@@ -235,6 +264,24 @@ class ReportController extends Controller
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             'Cache-Control' => 'no-store, no-cache',
+        ]);
+    }
+
+    /**
+     * Ambil daftar unik Unit Kerja untuk filter dropdown.
+     */
+    public function workUnits(): JsonResponse
+    {
+        $units = DB::table('users')
+            ->whereNotNull('work_unit')
+            ->where('work_unit', '!=', '')
+            ->distinct()
+            ->orderBy('work_unit')
+            ->pluck('work_unit');
+
+        return response()->json([
+            'data' => $units,
+            'message' => 'Daftar unit kerja berhasil diambil.',
         ]);
     }
 }

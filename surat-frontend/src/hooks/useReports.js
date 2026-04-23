@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getSummary, exportReport } from '../api/reports.api';
+import { getSummary, exportReport, getWorkUnits } from '../api/reports.api';
 
 /**
  * useReports — custom hook untuk halaman Reports.
@@ -22,6 +22,9 @@ export function useReports() {
 
   const [exporting, setExporting] = useState(null);
   const [exportError, setExportError] = useState(null);
+
+  const [workUnits, setWorkUnits] = useState([]);
+  const [unitsLoading, setUnitsLoading] = useState(false);
 
   /**
    * Fetch data ringkasan laporan
@@ -64,13 +67,32 @@ export function useReports() {
     }
   }, []);
 
+  /**
+   * Fetch daftar unit kerja untuk dropdown
+   */
+  const fetchWorkUnits = useCallback(async () => {
+    setUnitsLoading(true);
+    try {
+      const res = await getWorkUnits();
+      setWorkUnits(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch work units', err);
+      setWorkUnits([]);
+    } finally {
+      setUnitsLoading(false);
+    }
+  }, []);
+
   return {
     summary,
     loading,
     error,
     exporting,
     exportError,
+    workUnits,
+    unitsLoading,
     fetchSummary,
     handleExport,
+    fetchWorkUnits,
   };
 }

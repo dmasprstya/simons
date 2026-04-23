@@ -5,6 +5,7 @@ import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Button from '../../components/ui/Button';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import EmptyState from '../../components/ui/EmptyState';
+import { getUsers } from '../../api/users.api';
 
 /**
  * ReportsPage — Halaman laporan dan export untuk admin.
@@ -161,8 +162,8 @@ function BreakdownTable({ data = [], labelKey = 'label', valueKey = 'count', tit
             <p className="text-xs font-semibold text-[#94A3B8]">{emptyText || 'Tidak ada data.'}</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#F1F5F9]">
-            {data.slice(0, 10).map((item, index) => (
+          <div className="divide-y divide-[#F1F5F9] max-h-[400px] overflow-y-auto custom-scrollbar">
+            {data.map((item, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between px-8 py-4 hover:bg-[#F8FAFC] transition-all group"
@@ -184,7 +185,7 @@ function BreakdownTable({ data = [], labelKey = 'label', valueKey = 'count', tit
       
       {data.length > 10 && (
         <div className="px-8 py-3 bg-[#F8FAFC]/50 border-t border-[#F1F5F9] text-center">
-          <p className="text-[10px] font-bold text-[#94A3B8] uppercase">Menampilkan Top 10</p>
+          <p className="text-[10px] font-bold text-[#94A3B8] uppercase">Menampilkan {data.length} Kategori</p>
         </div>
       )}
     </div>
@@ -192,15 +193,35 @@ function BreakdownTable({ data = [], labelKey = 'label', valueKey = 'count', tit
 }
 
 export default function ReportsPage() {
-  const { summary, loading, error, exporting, exportError, fetchSummary, handleExport } =
+  const { summary, loading, error, exporting, exportError, workUnits, fetchSummary, handleExport, fetchWorkUnits } =
     useReports();
   const toast = useToast();
 
   // === Filter state ===
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [classificationId, setClassificationId] = useState(null);
+  const [selectedClassifications, setSelectedClassifications] = useState([]);
   const [workUnit, setWorkUnit] = useState('');
+  const [status, setStatus] = useState('');
+  const [sifatSurat, setSifatSurat] = useState('');
+  const [userName, setUserName] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
+  const [showUserResults, setShowUserResults] = useState(false);
+
+  // Helper untuk menambah klasifikasi ke filter
+  const addClassification = (id) => {
+    if (!id) return;
+    if (selectedClassifications.find(c => c.id === id)) return;
+    
+    // Karena ClassificationPicker hanya mengirim ID, kita butuh cara mendapatkan labelnya.
+    // Untuk saat ini kita gunakan ID sebagai placeholder, atau kita biarkan Picker mereset.
+    setSelectedClassifications([...selectedClassifications, { id }]);
+  };
+
+  const removeClassification = (id) => {
+    setSelectedClassifications(selectedClassifications.filter(c => c.id !== id));
+  };
 
   // Set default date range: 30 hari terakhir
   useEffect(() => {
@@ -215,7 +236,32 @@ export default function ReportsPage() {
     setDateTo(to);
 
     fetchSummary({ date_from: from, date_to: to });
-  }, [fetchSummary]);
+    fetchWorkUnits();
+  }, [fetchSummary, fetchWorkUnits]);
+
+  // Debounced user search
+  useEffect(() => {
+    if (userName.trim().length < 2) {
+      setUserSearchResults([]);
+      setShowUserResults(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setUserSearchLoading(true);
+      try {
+        const res = await getUsers({ search: userName.trim() });
+        setUserSearchResults(res.data || []);
+        setShowUserResults(true);
+      } catch (err) {
+        console.error('Failed to search users', err);
+      } finally {
+        setUserSearchLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [userName]);
 
   // Update document title
   useEffect(() => {
@@ -223,13 +269,66 @@ export default function ReportsPage() {
     return () => { document.title = 'SIMONS — Sistem Penomoran Surat'; };
   }, []);
 
+  // Helper untuk Periode Cepat
+  const setQuickPeriod = (type) => {
+    const now = new Date();
+    let from = new Date();
+    let to = new Date();
+
+    switch (type) {
+      case 'today':
+        // Today already set in from/to
+        break;
+      case 'last_7_days':
+        from.setDate(now.getDate() - 7);
+        break;
+      case 'this_month':
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+        to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'this_year':
+        from = new Date(now.getFullYear(), 0, 1);
+        to = new Date(now.getFullYear(), 11, 31);
+        break;
+      default:
+        break;
+    }
+
+    setDateFrom(from.toISOString().split('T')[0]);
+    setDateTo(to.toISOString().split('T')[0]);
+  };
+
+  // Helper untuk Rekap Bulanan/Tahunan
+  const setMonthlyYearly = (month, year) => {
+    if (!year) return;
+    
+    let from, to;
+    if (month === 'all') {
+      // Yearly
+      from = new Date(year, 0, 1);
+      to = new Date(year, 11, 31);
+    } else {
+      // Monthly
+      from = new Date(year, parseInt(month), 1);
+      to = new Date(year, parseInt(month) + 1, 0);
+    }
+
+    setDateFrom(from.toISOString().split('T')[0]);
+    setDateTo(to.toISOString().split('T')[0]);
+  };
+
   // Build params dari filter
   const buildParams = () => {
     const params = {};
     if (dateFrom) params.date_from = dateFrom;
     if (dateTo) params.date_to = dateTo;
-    if (classificationId) params.classification_id = classificationId;
+    if (selectedClassifications.length > 0) {
+      params.classification_ids = selectedClassifications.map(c => c.id);
+    }
     if (workUnit.trim()) params.work_unit = workUnit.trim();
+    if (status) params.status = status;
+    if (sifatSurat) params.sifat_surat = sifatSurat;
+    if (userName.trim()) params.user_name = userName.trim();
     return params;
   };
 
@@ -249,14 +348,18 @@ export default function ReportsPage() {
 
     setDateFrom(from);
     setDateTo(to);
-    setClassificationId(null);
+    setSelectedClassifications([]);
     setWorkUnit('');
+    setStatus('');
+    setSifatSurat('');
+    setUserName('');
     fetchSummary({ date_from: from, date_to: to });
   };
 
   // Handler export dengan toast notification
-  const onExport = async (format) => {
-    const result = await handleExport(format, buildParams());
+  const onExport = async (format, params = null) => {
+    const exportParams = params || buildParams();
+    const result = await handleExport(format, exportParams);
     if (result.success) {
       toast.success(`File ${format.toUpperCase()} berhasil diunduh.`);
     } else {
@@ -305,20 +408,20 @@ export default function ReportsPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Button
               variant="secondary"
-              onClick={() => onExport('csv')}
+              onClick={() => onExport('csv', {})} // Header export all
               loading={exporting === 'csv'}
               disabled={!!exporting}
               className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20 backdrop-blur-sm shadow-sm justify-center"
             >
-              {exporting === 'csv' ? 'Menyiapkan...' : '📥 Export CSV'}
+              {exporting === 'csv' ? 'Menyiapkan...' : '📥 Export Semua (CSV)'}
             </Button>
             <Button
-              onClick={() => onExport('pdf')}
+              onClick={() => onExport('pdf', {})} // Header export all
               loading={exporting === 'pdf'}
               disabled={!!exporting}
               className="!bg-[var(--color-secondary)] !text-[#1B2F6E] hover:opacity-90 shadow-md font-bold px-6 justify-center"
             >
-              {exporting === 'pdf' ? 'Menyiapkan...' : '📄 Download PDF'}
+              {exporting === 'pdf' ? 'Menyiapkan...' : '📄 Download Semua (PDF)'}
             </Button>
           </div>
         </div>
@@ -368,79 +471,281 @@ export default function ReportsPage() {
         </div>
         
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-10">
-          {/* Left Side: Classification (7 cols) */}
-          <div className="lg:col-span-12 xl:col-span-7 space-y-3">
-            <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1">
-              A. Filter Klasifikasi Surat
-            </label>
+          {/* Left Side: Classification (6 cols) */}
+          <div className="lg:col-span-12 xl:col-span-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1">
+                A. Filter Klasifikasi Surat
+              </label>
+              {selectedClassifications.length > 0 && (
+                <button 
+                  onClick={() => setSelectedClassifications([])}
+                  className="text-[10px] font-bold text-red-500 hover:underline"
+                >
+                  Hapus Semua
+                </button>
+              )}
+            </div>
+
             <ClassificationPicker
-              value={classificationId}
-              onChange={setClassificationId}
+              value={null} // Selalu null agar picker tidak "terkunci" di satu leaf
+              onChange={addClassification}
             />
+
+            {/* Selection Chips */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedClassifications.length === 0 ? (
+                <p className="text-[11px] text-[#94A3B8] italic ml-1">Semua klasifikasi akan ditampilkan jika tidak ada yang dipilih.</p>
+              ) : (
+                selectedClassifications.map(c => (
+                  <div key={c.id} className="flex items-center gap-2 bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-1.5 rounded-full shadow-sm group">
+                    <span className="text-xs font-bold text-[#1B2F6E]">ID: {c.id}</span>
+                    <button 
+                      onClick={() => removeClassification(c.id)}
+                      className="w-4 h-4 rounded-full bg-[#CBD5E1] text-white flex items-center justify-center hover:bg-red-500 transition-colors"
+                    >
+                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          {/* Right Side: Division, Dates, Actions (5 cols) */}
-          <div className="lg:col-span-12 xl:col-span-5 flex flex-col">
+          {/* Right Side: Other Filters (6 cols) */}
+          <div className="lg:col-span-12 xl:col-span-6 flex flex-col">
             <div className="space-y-6 flex-1">
-              <div>
-                <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1 mb-2">
-                  B. Cari Unit Kerja
-                </label>
-                <input
-                  type="text"
-                  value={workUnit}
-                  onChange={(e) => setWorkUnit(e.target.value)}
-                  placeholder="Masukkan nama unit kerja..."
-                  className={inputBaseClass}
-                />
+              {/* Row 1: Unit & User */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest ml-1 mb-2">
+                    B. Unit Kerja
+                  </label>
+                  <select
+                    value={workUnit}
+                    onChange={(e) => setWorkUnit(e.target.value)}
+                    className={inputBaseClass}
+                  >
+                    <option value="">Semua Unit Kerja</option>
+                    {workUnits.map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest ml-1 mb-2">
+                    C. Cari User (Pemohon)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-3 flex items-center text-[#94A3B8]">
+                      {userSearchLoading ? (
+                        <svg className="w-3.5 h-3.5 animate-spin text-[var(--color-primary)]" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      )}
+                    </span>
+                    <input
+                      type="text"
+                      value={userName}
+                      onChange={(e) => {
+                        setUserName(e.target.value);
+                        if (!e.target.value) setShowUserResults(false);
+                      }}
+                      onFocus={() => userName.length >= 2 && setShowUserResults(true)}
+                      placeholder="Nama pemohon..."
+                      className={`${inputBaseClass} !pl-9`}
+                    />
+
+                    {/* User Search Results Dropdown */}
+                    {showUserResults && (
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-[#E2E8F0] rounded-xl shadow-xl max-h-48 overflow-y-auto overflow-x-hidden py-1">
+                        {userSearchResults.length === 0 ? (
+                          <div className="px-4 py-2 text-xs text-[#94A3B8] italic">Tidak ada user ditemukan.</div>
+                        ) : (
+                          userSearchResults.map((u) => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => {
+                                setUserName(u.name);
+                                setShowUserResults(false);
+                              }}
+                              className="w-full text-left px-4 py-2 text-xs hover:bg-[#F8FAFC] transition-colors flex flex-col"
+                            >
+                              <span className="font-bold text-[#1B2F6E]">{u.name}</span>
+                              <span className="text-[10px] text-[#94A3B8]">{u.work_unit || 'Tanpa Unit Kerja'} • {u.nip || 'NIP -'}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="block text-[11px] font-extrabold text-[#64748B] uppercase tracking-wider ml-1">
-                  C. Rentang Waktu
-                </label>
+              {/* Row 2: Status & Sifat */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest ml-1 mb-2">
+                    D. Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className={inputBaseClass}
+                  >
+                    <option value="">Semua Status</option>
+                    <option value="active">Aktif</option>
+                    <option value="voided">Dibatalkan (Voided)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest ml-1 mb-2">
+                    E. Sifat Surat
+                  </label>
+                  <select
+                    value={sifatSurat}
+                    onChange={(e) => setSifatSurat(e.target.value)}
+                    className={inputBaseClass}
+                  >
+                    <option value="">Semua Sifat</option>
+                    <option value="biasa">Biasa</option>
+                    <option value="segera">Segera</option>
+                    <option value="sangat_segera">Sangat Segera</option>
+                    <option value="rahasia">Rahasia</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3: Date Range (Full Width of Column) */}
+              <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-[#F1F5F9] space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] font-black text-[#1B2F6E] uppercase tracking-widest ml-1">
+                    F. Rentang Waktu
+                  </label>
+                  <div className="flex gap-1.5">
+                    {[
+                      { id: 'today', label: 'Hari Ini' },
+                      { id: 'last_7_days', label: '7 Hari' },
+                      { id: 'this_month', label: 'Bulan Ini' }
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setQuickPeriod(p.id)}
+                        className="px-2.5 py-1 bg-white border border-[#E2E8F0] rounded-lg text-[8px] font-black text-[#64748B] uppercase tracking-widest shadow-sm hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)] hover:shadow-md active:scale-95 transition-all"
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] text-[#94A3B8] font-bold ml-1">Tgl Mulai</span>
+                  <div className="space-y-1">
+                    <span className="text-[9px] text-[#94A3B8] font-black uppercase ml-1">Mulai</span>
                     <input
                       type="date"
                       value={dateFrom}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className={inputBaseClass}
+                      className={`${inputBaseClass} !bg-white`}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] text-[#94A3B8] font-bold ml-1">Tgl Akhir</span>
+                  <div className="space-y-1">
+                    <span className="text-[9px] text-[#94A3B8] font-black uppercase ml-1">Selesai</span>
                     <input
                       type="date"
                       value={dateTo}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className={inputBaseClass}
+                      className={`${inputBaseClass} !bg-white`}
                     />
+                  </div>
+                </div>
+
+                {/* Month & Year Quick Selector */}
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#E2E8F0]/50">
+                  <div className="space-y-1">
+                    <span className="text-[9px] text-[#94A3B8] font-black uppercase ml-1">Rekap Bulanan</span>
+                    <select 
+                      className="w-full h-9 rounded-lg border border-[#E2E8F0] bg-white text-xs font-bold px-3 focus:outline-none focus:border-primary transition-all"
+                      onChange={(e) => setMonthlyYearly(e.target.value, document.getElementById('year-select').value)}
+                    >
+                      <option value="all">Sepanjang Tahun</option>
+                      {['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'].map((m, i) => (
+                        <option key={i} value={i}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] text-[#94A3B8] font-black uppercase ml-1">Tahun</span>
+                    <select 
+                      id="year-select"
+                      className="w-full h-9 rounded-lg border border-[#E2E8F0] bg-white text-xs font-bold px-3 focus:outline-none focus:border-primary transition-all"
+                      defaultValue={new Date().getFullYear()}
+                      onChange={(e) => {
+                        const monthSelect = e.target.parentElement.previousSibling.querySelector('select');
+                        setMonthlyYearly(monthSelect.value, e.target.value);
+                      }}
+                    >
+                      {[2024, 2025, 2026, 2027].map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Actions (At the bottom of right side) */}
-            <div className="flex gap-3 mt-10 pt-6 border-t border-[#F1F5F9]">
-              <Button
-                variant="outline"
-                loading={loading}
-                onClick={handleResetFilter}
-                className="flex-1 h-12"
-              >
-                Reset Filter
-              </Button>
+            {/* Actions */}
+            <div className="mt-8 pt-6 border-t border-[#F1F5F9] space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Button
+                  variant="outline"
+                  loading={loading}
+                  onClick={handleResetFilter}
+                  className="h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                >
+                  Reset
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => onExport('csv')}
+                  loading={exporting === 'csv'}
+                  disabled={!!exporting}
+                  className="h-12 rounded-xl !border-emerald-200 !text-emerald-600 hover:!bg-emerald-50 text-[10px] font-bold"
+                  title="Export hasil filter ke CSV"
+                >
+                  Export CSV
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => onExport('pdf')}
+                  loading={exporting === 'pdf'}
+                  disabled={!!exporting}
+                  className="h-12 rounded-xl !border-rose-200 !text-rose-600 hover:!bg-rose-50 text-[10px] font-bold"
+                  title="Download hasil filter ke PDF"
+                >
+                  Export PDF
+                </Button>
+              </div>
+
               <Button
                 variant="primary"
                 loading={loading}
                 onClick={handleFilter}
-                className="flex-[2] h-12"
+                className="w-full h-14 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
                 Tampilkan Laporan
               </Button>
             </div>
