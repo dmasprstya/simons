@@ -3,6 +3,13 @@ import { displayLetterNumber } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { getDashboardData } from '../../api/dashboard.api';
+import {
+  CalendarDaysIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  FolderIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import ErrorMessage from '../../components/ui/ErrorMessage';
@@ -107,7 +114,7 @@ export default function DashboardPage() {
 
         <div className="relative">
           <h1 className="text-2xl font-bold text-white tracking-tight">
-            Selamat datang, <span className="text-secondary">{user?.name || 'User'}</span> 👋
+            Selamat datang, <span className="text-secondary">{user?.name || 'User'}</span>
           </h1>
           <p className="text-slate-400 text-sm mt-1 font-medium">{today}</p>
         </div>
@@ -131,15 +138,15 @@ export default function DashboardPage() {
         {/* Stat Cards (Left Column) */}
         <div className="lg:col-span-4 space-y-4">
           {[
-            { label: 'Hari Ini', value: userStats.today, icon: '📅', color: 'bg-primary-light text-primary' },
-            { label: 'Bulan Ini', value: userStats.month, icon: '📊', color: 'bg-primary-light text-primary' },
-            { label: 'Total Aktif', value: userStats.active, icon: '✅', color: 'bg-emerald-50 text-emerald-600' },
-            { label: 'Total Surat', value: userStats.total, icon: '📂', color: 'bg-slate-50 text-slate-600' }
+            { label: 'Hari Ini', value: userStats.today, icon: CalendarDaysIcon, color: 'bg-primary-light text-primary' },
+            { label: 'Bulan Ini', value: userStats.month, icon: ChartBarIcon, color: 'bg-primary-light text-primary' },
+            { label: 'Total Aktif', value: userStats.active, icon: CheckCircleIcon, color: 'bg-emerald-50 text-emerald-600' },
+            { label: 'Total Surat', value: userStats.total, icon: FolderIcon, color: 'bg-slate-50 text-slate-600' }
           ].map((stat, idx) => (
             <Card key={idx} padding="md" hover>
               <div className="flex items-center gap-4">
-                <div className={`h-12 w-12 rounded-2xl ${stat.color} flex items-center justify-center text-2xl shrink-0`}>
-                  {stat.icon}
+                <div className={`h-12 w-12 rounded-2xl ${stat.color} flex items-center justify-center shrink-0`}>
+                  <stat.icon className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-muted uppercase tracking-[0.15em]">{stat.label}</p>
@@ -164,8 +171,10 @@ export default function DashboardPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/letters')}
+                className="flex items-center gap-1.5"
               >
-                Lihat Semua →
+                <span>Lihat Semua</span>
+                <ChevronRightIcon className="h-4 w-4" />
               </Button>
             </div>
 

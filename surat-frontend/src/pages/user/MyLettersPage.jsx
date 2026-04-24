@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useLetters } from '../../hooks/useLetters';
 import { useToast } from '../../hooks/useToast';
+import {
+  TagIcon,
+  CalendarDaysIcon,
+  PencilSquareIcon,
+  XMarkIcon,
+  DocumentTextIcon,
+} from '@heroicons/react/24/outline';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
@@ -197,9 +204,7 @@ export default function MyLettersPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-all duration-200 border border-blue-100"
             onClick={() => openEditModal(row)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <PencilSquareIcon className="h-3.5 w-3.5" />
             Edit
           </button>
         );
@@ -229,9 +234,7 @@ export default function MyLettersPage() {
           {/* KIRI: Klasifikasi */}
           <div className="space-y-2.5">
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
+              <TagIcon className="h-3.5 w-3.5" />
               Filter Klasifikasi
             </label>
             <ClassificationPicker
@@ -244,9 +247,7 @@ export default function MyLettersPage() {
           <div className="flex flex-col h-full">
             <div className="space-y-2.5">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+                <CalendarDaysIcon className="h-3.5 w-3.5" />
                 Rentang Tanggal
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
@@ -304,7 +305,7 @@ export default function MyLettersPage() {
         data={letters}
         loading={loading}
         emptyText="Belum ada surat. Klik 'Ambil Nomor' untuk memulai."
-        emptyIcon="📝"
+        emptyIcon={DocumentTextIcon}
       />
 
       {/* Pagination */}
@@ -334,9 +335,7 @@ export default function MyLettersPage() {
                   onClick={closeEditModal}
                   className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -347,9 +346,7 @@ export default function MyLettersPage() {
                 {/* KIRI: Klasifikasi */}
                 <div className="space-y-3">
                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
+                    <TagIcon className="h-3.5 w-3.5" />
                     Klasifikasi Surat
                   </label>
                   <div className="bg-slate-50 rounded-xl p-1 border border-slate-100">

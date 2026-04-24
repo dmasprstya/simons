@@ -9,6 +9,7 @@ import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import { UserIcon, PhotoIcon, UsersIcon } from '@heroicons/react/24/outline';
 
 /**
  * UsersPage — Halaman admin: kelola user.
@@ -487,8 +488,8 @@ export default function UsersPage() {
                 className="w-16 h-16 rounded-full object-cover border-2 border-[#1B2F6E]/20"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-[#1B2F6E]/10 flex items-center justify-center text-2xl text-[#1B2F6E]/40">
-                👤
+              <div className="w-16 h-16 rounded-full bg-[#1B2F6E]/10 flex items-center justify-center text-[#1B2F6E]/40">
+                <UserIcon className="h-8 w-8" />
               </div>
             )}
             <div className="flex-1">
@@ -496,7 +497,7 @@ export default function UsersPage() {
                 htmlFor="photo-upload"
                 className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] px-3 py-1.5 text-xs font-medium text-[#0B1F3A] hover:bg-white hover:border-primary transition-colors"
               >
-                <span>📷</span>
+                <PhotoIcon className="h-4 w-4" />
                 {photoPreview ? 'Ganti Foto' : 'Pilih Foto'}
               </label>
               <input
@@ -726,7 +727,7 @@ export default function UsersPage() {
         data={users}
         loading={loading}
         emptyText="Belum ada user terdaftar."
-        emptyIcon="👥"
+        emptyIcon={UsersIcon}
       />
 
       {/* Pagination */}

@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useReports } from '../../hooks/useReports';
 import { useToast } from '../../hooks/useToast';
+import {
+  ChartBarIcon,
+  DocumentTextIcon,
+  TagIcon,
+  BuildingOfficeIcon,
+  XMarkIcon,
+  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  CalendarDaysIcon,
+} from '@heroicons/react/24/outline';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Button from '../../components/ui/Button';
 import ErrorMessage from '../../components/ui/ErrorMessage';
@@ -54,12 +64,12 @@ function SkeletonTable() {
 /**
  * StatCard — card ringkasan dengan value besar
  */
-function StatCard({ icon, label, value, subtext }) {
+function StatCard({ icon: Icon, label, value, subtext }) {
   return (
     <div className="bg-white rounded-[var(--radius-card)] p-6 border border-[#F1F5F9] shadow-[var(--shadow-soft)] transition-all hover:scale-[1.02] active:scale-[0.98]">
       <div className="flex items-start justify-between">
-        <div className="w-12 h-12 bg-[#F8FAFC] rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-[#F1F5F9]">
-          {icon}
+        <div className="w-12 h-12 bg-[#F8FAFC] rounded-2xl flex items-center justify-center text-primary shadow-inner border border-[#F1F5F9]">
+          <Icon className="h-6 w-6" />
         </div>
       </div>
       <div className="mt-4">
@@ -158,7 +168,7 @@ function BreakdownTable({ data = [], labelKey = 'label', valueKey = 'count', tit
       <div className="flex-1">
         {data.length === 0 ? (
           <div className="px-8 py-12 text-center">
-            <span className="text-3xl block mb-3 opacity-50">📊</span>
+            <ChartBarIcon className="h-10 w-10 mx-auto mb-3 text-slate-300" />
             <p className="text-xs font-semibold text-[#94A3B8]">{emptyText || 'Tidak ada data.'}</p>
           </div>
         ) : (
@@ -400,8 +410,8 @@ export default function ReportsPage() {
         
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="hidden sm:flex w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl items-center justify-center text-3xl shadow-inner border border-white/20">
-              📊
+            <div className="hidden sm:flex w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl items-center justify-center text-white shadow-inner border border-white/20">
+              <ChartBarIcon className="h-8 w-8" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight">Laporan & Analitik</h1>
@@ -420,7 +430,7 @@ export default function ReportsPage() {
               disabled={!!exporting}
               className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20 backdrop-blur-sm shadow-sm justify-center"
             >
-              {exporting === 'excel' ? 'Menyiapkan...' : '📊 Export Semua (Excel)'}
+              {exporting === 'excel' ? 'Menyiapkan...' : 'Export Semua (Excel)'}
             </Button>
             <Button
               onClick={() => onExport('csv', {})} // Header export all
@@ -428,7 +438,7 @@ export default function ReportsPage() {
               disabled={!!exporting}
               className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20 backdrop-blur-sm shadow-sm justify-center"
             >
-              {exporting === 'csv' ? 'Menyiapkan...' : '📥 Export Semua (CSV)'}
+              {exporting === 'csv' ? 'Menyiapkan...' : 'Export Semua (CSV)'}
             </Button>
             <Button
               onClick={() => onExport('pdf', {})} // Header export all
@@ -436,7 +446,7 @@ export default function ReportsPage() {
               disabled={!!exporting}
               className="!bg-[var(--color-secondary)] !text-[#1B2F6E] hover:opacity-90 shadow-md font-bold px-6 justify-center"
             >
-              {exporting === 'pdf' ? 'Menyiapkan...' : '📄 Download Semua (PDF)'}
+              {exporting === 'pdf' ? 'Menyiapkan...' : 'Download Semua (PDF)'}
             </Button>
           </div>
         </div>
@@ -458,19 +468,19 @@ export default function ReportsPage() {
       ) : summary ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <StatCard
-            icon="📄"
+            icon={DocumentTextIcon}
             label="Total Surat"
             value={totalLetters}
             subtext={`Periode ${dateFrom ? new Date(dateFrom + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'} - ${dateTo ? new Date(dateTo + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '-'}`}
           />
           <StatCard
-            icon="🏷️"
+            icon={TagIcon}
             label="Klasifikasi"
             value={classificationBreakdown.length}
             subtext="Klasifikasi digunakan"
           />
           <StatCard
-            icon="🏢"
+            icon={BuildingOfficeIcon}
             label="Unit Kerja"
             value={workUnitBreakdown.length}
             subtext="Unit Kerja berkontribusi"
@@ -519,9 +529,7 @@ export default function ReportsPage() {
                       onClick={() => removeClassification(c.id)}
                       className="w-4 h-4 rounded-full bg-[#CBD5E1] text-white flex items-center justify-center hover:bg-red-500 transition-colors"
                     >
-                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <XMarkIcon className="w-3 h-3 stroke-[3]" />
                     </button>
                   </div>
                 ))
@@ -558,14 +566,9 @@ export default function ReportsPage() {
                   <div className="relative">
                     <span className="absolute inset-y-0 left-3 flex items-center text-[#94A3B8]">
                       {userSearchLoading ? (
-                        <svg className="w-3.5 h-3.5 animate-spin text-[var(--color-primary)]" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
+                        <ArrowPathIcon className="w-4 h-4 animate-spin text-primary" />
                       ) : (
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                        <MagnifyingGlassIcon className="w-4 h-4" />
                       )}
                     </span>
                     <input
@@ -800,11 +803,16 @@ export default function ReportsPage() {
                   data={dailyBreakdown}
                   labelKey="formatted_date"
                   valueKey="count"
-                  title="📅 Tren Surat per Hari"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <CalendarDaysIcon className="h-4 w-4" />
+                      <span>Tren Surat per Hari</span>
+                    </div>
+                  }
                 />
               ) : (
                 <div className="bg-white rounded-[var(--radius-card)] border border-[#E2E8F0] p-10 text-center flex flex-col items-center justify-center min-h-[300px]">
-                  <span className="text-4xl mb-4">📈</span>
+                  <ChartBarIcon className="h-12 w-12 mb-4 text-slate-200" />
                   <h3 className="text-[#1B2F6E] font-bold">Tren Harian Kosong</h3>
                   <p className="text-sm text-[#64748B] max-w-xs mt-1">Belum ada data surat yang terekam pada periode yang dipilih.</p>
                 </div>
@@ -817,7 +825,12 @@ export default function ReportsPage() {
                 data={classificationBreakdown}
                 labelKey="classification"
                 valueKey="count"
-                title="🏷️ Top Klasifikasi"
+                title={
+                  <div className="flex items-center gap-2">
+                    <TagIcon className="h-4 w-4" />
+                    <span>Top Klasifikasi</span>
+                  </div>
+                }
                 emptyText="Data klasifikasi tidak tersedia."
               />
 
@@ -825,15 +838,20 @@ export default function ReportsPage() {
                 data={workUnitBreakdown}
                 labelKey="work_unit"
                 valueKey="count"
-                title="🏢 Top Kontributor (Unit Kerja)"
+                title={
+                  <div className="flex items-center gap-2">
+                    <BuildingOfficeIcon className="h-4 w-4" />
+                    <span>Top Kontributor (Unit Kerja)</span>
+                  </div>
+                }
                 emptyText="Data unit kerja tidak tersedia."
               />
             </div>
           </div>
         ) : !error ? (
           <div className="bg-white rounded-[var(--radius-card)] border border-dashed border-[#CBD5E1] p-20 flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-[#F1F5F9] rounded-full flex items-center justify-center text-3xl mb-4">
-              📊
+            <div className="w-20 h-20 bg-[#F1F5F9] rounded-full flex items-center justify-center text-primary mb-4 shadow-inner">
+              <ChartBarIcon className="h-10 w-10" />
             </div>
             <h3 className="text-lg font-bold text-[#1B2F6E]">Siap Menganalisis Data</h3>
             <p className="text-[#64748B] text-sm mt-2 max-w-sm">

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
+import { ShieldCheckIcon, DocumentTextIcon, ClockIcon, HashtagIcon, UsersIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
@@ -26,12 +27,12 @@ function SkeletonCard() {
   );
 }
 
-function SummaryCard({ icon, label, value, subtext }) {
+function SummaryCard({ icon: Icon, label, value, subtext }) {
   return (
     <Card hover>
       <div className="flex items-start gap-4">
-        <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary-light text-primary text-2xl shrink-0">
-          {icon}
+        <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary-light text-primary shrink-0">
+          <Icon className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-muted uppercase tracking-widest">{label}</p>
@@ -212,8 +213,11 @@ export default function AdminDashboardPage() {
         <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-white/10 blur-xl" />
         <div className="relative">
-          <h1 className="text-2xl font-bold text-white">🛡️ Admin Dashboard</h1>
-          <p className="text-white/60 text-sm mt-1">{today}</p>
+          <div className="flex items-center gap-3">
+            <ShieldCheckIcon className="h-8 w-8 text-white/80" />
+            <h1 className="text-2xl font-bold text-white tracking-tight">Admin Dashboard</h1>
+          </div>
+          <p className="text-white/60 text-sm mt-2 font-medium">{today}</p>
         </div>
       </div>
 
@@ -229,25 +233,25 @@ export default function AdminDashboardPage() {
         ) : (
           <>
             <SummaryCard
-              icon="📄"
+              icon={DocumentTextIcon}
               label="Surat Hari Ini"
               value={stats.today_letters}
               subtext="Total nomor surat yang diambil hari ini"
             />
             <SummaryCard
-              icon="⏳"
+              icon={ClockIcon}
               label="Gap Request Pending"
               value={stats.pending_gaps}
               subtext="Request yang menunggu persetujuan"
             />
             <SummaryCard
-              icon="🔢"
+              icon={HashtagIcon}
               label="Nomor Terakhir"
               value={sequence?.last_number ?? '-'}
               subtext="Nomor surat terakhir yang diambil"
             />
             <SummaryCard
-              icon="👥"
+              icon={UsersIcon}
               label="User Aktif"
               value={stats.active_users}
               subtext="Total pengguna sistem yang aktif"
@@ -268,7 +272,7 @@ export default function AdminDashboardPage() {
           data={allRecentLetters}
           loading={loading}
           emptyText="Belum ada riwayat pengambilan nomor surat."
-          emptyIcon="🕘"
+          emptyIcon={ClockIcon}
         />
       </Card>
 

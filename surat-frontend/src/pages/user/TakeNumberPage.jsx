@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { displayLetterNumber, displayClassification } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
+import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { takeNumber } from '../../api/letters.api';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
@@ -292,7 +293,12 @@ export default function TakeNumberPage() {
       <Modal
         isOpen={showResult}
         onClose={() => setShowResult(false)}
-        title="✅ Nomor Surat Berhasil Diambil"
+        title={
+          <div className="flex items-center gap-2">
+            <CheckCircleIcon className="h-6 w-6 text-emerald-500" />
+            <span>Nomor Surat Berhasil Diambil</span>
+          </div>
+        }
         size="md"
       >
         {resultData && (

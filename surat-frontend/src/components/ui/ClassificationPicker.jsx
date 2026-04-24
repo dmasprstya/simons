@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useClassificationStore } from '../../store/classificationStore';
+import {
+  MagnifyingGlassIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  FolderIcon,
+  TagIcon,
+  ArrowPathIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { getRoots, getChildren, searchClassifications } from '../../api/classifications.api';
 
 /**
@@ -149,9 +158,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
       <div ref={searchRef} className="relative">
         <div className="relative">
           <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-[#94A3B8]">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
+            <MagnifyingGlassIcon className="h-4 w-4" />
           </span>
           <input
             type="text"
@@ -164,10 +171,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
           />
           {searchLoading && (
             <span className="absolute inset-y-0 right-4 flex items-center">
-              <svg className="h-4 w-4 animate-spin text-[var(--color-primary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
+              <ArrowPathIcon className="h-4 w-4 animate-spin text-primary" />
             </span>
           )}
         </div>
@@ -212,9 +216,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
           {path.map((node, i) => (
             <div key={node.id} className="flex items-center">
               <span className="mx-2.5 text-[#CBD5E1]">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRightIcon className="w-3 h-3" />
               </span>
               <button
                 type="button"
@@ -237,9 +239,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
             className="p-1.5 rounded-lg text-[#CBD5E1] hover:text-[#EF4444] hover:bg-[#FEF2F2] transition-all duration-200"
             title="Reset Pilihan"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -254,9 +254,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
         ) : isLeafSelected ? (
           <div className="p-10 text-center bg-[#F8FAFC]">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mb-4 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+              <CheckIcon className="h-8 w-8" />
             </div>
             <p className="text-[11px] font-extrabold text-[#94A3B8] uppercase tracking-widest mb-1">Terpilih</p>
             <h4 className="text-xl font-black text-[#1B2F6E] tracking-tight">{path[path.length - 1].name}</h4>
@@ -292,9 +290,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
                     </span>
                   ) : (
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#CBD5E1] group-hover:text-[var(--color-primary)] group-hover:bg-white transition-all shadow-sm group-hover:shadow-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
+                      <ChevronRightIcon className="h-4 w-4" />
                     </div>
                   )}
                 </button>

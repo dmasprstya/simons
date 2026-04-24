@@ -1,5 +1,6 @@
 import Modal from './Modal';
 import Button from './Button';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 /**
  * ConfirmDialog — Dialog konfirmasi sebelum aksi destruktif (void surat, reject gap request).
@@ -27,19 +28,7 @@ export default function ConfirmDialog({
       {/* Ikon peringatan & pesan */}
       <div className="flex flex-col items-center text-center gap-3 py-2">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FEF2F2]">
-          <svg
-            className="h-6 w-6 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-            />
-          </svg>
+          <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
         </div>
         <p className="text-sm text-[#64748B] leading-relaxed">{message}</p>
       </div>

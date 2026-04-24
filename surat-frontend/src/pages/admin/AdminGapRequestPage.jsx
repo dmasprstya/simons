@@ -8,6 +8,7 @@ import StatusChip from '../../components/ui/StatusChip';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Modal from '../../components/ui/Modal';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 
 /**
  * AdminGapRequestPage — Halaman kelola gap request (admin).
@@ -351,7 +352,7 @@ export default function AdminGapRequestPage() {
         data={requests}
         loading={loading}
         emptyText="Tidak ada gap request dalam kategori ini."
-        emptyIcon="📋"
+        emptyIcon={ClipboardDocumentListIcon}
       />
 
       {/* Pagination */}

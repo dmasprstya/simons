@@ -9,6 +9,7 @@ import Pagination from '../../components/ui/Pagination';
 import Button from '../../components/ui/Button';
 import StatusChip from '../../components/ui/StatusChip';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import { DocumentChartBarIcon, DocumentIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 /**
  * AllLettersPage — Halaman admin: daftar semua surat seluruh user.
@@ -198,23 +199,27 @@ export default function AllLettersPage() {
 
         {/* Export buttons */}
         <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => handleExport('excel')}
-            loading={exporting === 'excel'}
-            disabled={!!exporting}
-          >
-            📊 Export Excel
-          </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleExport('excel')}
+              loading={exporting === 'excel'}
+              disabled={!!exporting}
+              className="flex items-center gap-2"
+            >
+              <DocumentChartBarIcon className="h-4 w-4" />
+              <span>Export Excel</span>
+            </Button>
           <Button
             variant="secondary"
             size="sm"
             onClick={() => handleExport('pdf')}
             loading={exporting === 'pdf'}
             disabled={!!exporting}
+            className="flex items-center gap-2"
           >
-            📄 Export PDF
+            <DocumentIcon className="h-4 w-4" />
+            <span>Export PDF</span>
           </Button>
         </div>
       </div>
@@ -313,7 +318,7 @@ export default function AllLettersPage() {
         data={letters}
         loading={loading}
         emptyText="Belum ada data surat ditemukan."
-        emptyIcon="📄"
+        emptyIcon={DocumentTextIcon}
       />
 
       {/* Pagination */}

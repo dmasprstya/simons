@@ -7,6 +7,7 @@ import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { ChevronRightIcon, XMarkIcon, FolderIcon } from '@heroicons/react/24/outline';
 
 /**
  * ClassificationsPage — Halaman admin: kelola klasifikasi dalam format tree.
@@ -65,9 +66,7 @@ function TreeRow({
                 `}
                 aria-label={isExpanded ? 'Collapse' : 'Expand'}
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                </svg>
+                <ChevronRightIcon className="h-4 w-4" />
               </button>
             ) : !isSearching ? (
               <span className="inline-block w-6" />
@@ -595,9 +594,7 @@ export default function ClassificationsPage() {
                   onClick={() => setSearchTerm('')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B]"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <XMarkIcon className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -661,7 +658,7 @@ export default function ClassificationsPage() {
                 <td colSpan={6} className="px-6 py-16 text-center">
                 <div className="flex flex-col items-center">
                   <div className="flex items-center justify-center h-12 w-12 rounded-full bg-[#F7F9FC] mb-3">
-                    <span className="text-2xl">🗂️</span>
+                    <FolderIcon className="h-6 w-6 text-slate-300" />
                   </div>
                   <p className="text-xs text-[#64748B]">
                     {isSearching 

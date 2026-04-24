@@ -69,7 +69,14 @@ export default function Table({
               >
                 <div className="flex flex-col items-center">
                   <div className="flex items-center justify-center h-12 w-12 rounded-full bg-[#F7F9FC] mb-3">
-                    <span className="text-2xl">{emptyIcon}</span>
+                    {typeof emptyIcon === 'string' ? (
+                      <span className="text-2xl">{emptyIcon}</span>
+                    ) : (
+                      (() => {
+                        const Icon = emptyIcon;
+                        return <Icon className="h-6 w-6 text-[#94A3B8]" />;
+                      })()
+                    )}
                   </div>
                   <p className="text-xs text-[#64748B]">
                     {emptyText}

@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { displayClassification } from '../../utils/formatNumber';
 import { useGapRequests } from '../../hooks/useGapRequests';
 import { useToast } from '../../hooks/useToast';
+import {
+  CheckCircleIcon,
+  CalendarDaysIcon,
+  ClipboardDocumentListIcon,
+  XMarkIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
@@ -363,7 +370,7 @@ export default function GapRequestPage() {
 
               {!vacantLoading && Object.keys(groupedVacant).length === 0 && (
                 <div className="py-8 text-center bg-white border border-dashed border-[#E2E8F0] rounded-lg">
-                  <div className="text-xl mb-1">✅</div>
+                  <CheckCircleIcon className="h-8 w-8 mx-auto mb-1 text-emerald-500" />
                   <p className="text-xs text-[#94A3B8]">Tidak ada nomor kosong tersedia.</p>
                 </div>
               )}
@@ -379,15 +386,13 @@ export default function GapRequestPage() {
                         className="w-full flex items-center justify-between px-3 py-2 bg-[#F8FAFC] hover:bg-[#F1F5F9] transition-colors text-left"
                       >
                         <span className="text-xs font-semibold text-[#0B1F3A] flex items-center gap-2">
-                          <span>📅</span>
+                          <CalendarDaysIcon className="h-4 w-4 text-[#2A7FD4]" />
                           {monthData.label}
                           <span className="text-[10px] font-normal text-[#64748B]">
                             ({Object.values(monthData.dates).reduce((acc, d) => acc + d.numbers.length, 0)} nomor)
                           </span>
                         </span>
-                        <span className={`text-[#2A7FD4] text-[10px] transition-transform duration-200 ${expandedMonths[monthKey] ? 'rotate-90' : ''}`}>
-                          ▶
-                        </span>
+                        <ChevronRightIcon className={`h-3 w-3 text-[#2A7FD4] transition-transform duration-200 ${expandedMonths[monthKey] ? 'rotate-90' : ''}`} />
                       </button>
 
                       {/* Date list */}
@@ -401,13 +406,11 @@ export default function GapRequestPage() {
                                 className="w-full flex items-center justify-between px-4 py-1.5 bg-white hover:bg-[#F8FAFC] transition-colors text-left"
                               >
                                 <span className="text-[10px] font-medium text-[#334155] flex items-center gap-2">
-                                  <span>🗓</span>
+                                  <CalendarDaysIcon className="h-3.5 w-3.5 text-slate-400" />
                                   {dateData.label}
                                   <span className="text-[#94A3B8] font-normal">({dateData.numbers.length})</span>
                                 </span>
-                                <span className={`text-[#94A3B8] text-[8px] transition-transform duration-200 ${expandedDates[dateKey] ? 'rotate-90' : ''}`}>
-                                  ▶
-                                </span>
+                                <ChevronRightIcon className={`h-2.5 w-2.5 text-[#94A3B8] transition-transform duration-200 ${expandedDates[dateKey] ? 'rotate-90' : ''}`} />
                               </button>
 
                               {expandedDates[dateKey] && (
@@ -475,7 +478,7 @@ export default function GapRequestPage() {
                       title="Batalkan nomor ini"
                       disabled={submitting}
                     >
-                      ✕
+                      <XMarkIcon className="h-3 w-3" />
                     </button>
                   </div>
                 ))
@@ -633,7 +636,7 @@ export default function GapRequestPage() {
           data={requests}
           loading={loading}
           emptyText="Belum ada gap request. Buat request baru di form atas."
-          emptyIcon="📋"
+          emptyIcon={ClipboardDocumentListIcon}
         />
 
         {/* Pagination */}

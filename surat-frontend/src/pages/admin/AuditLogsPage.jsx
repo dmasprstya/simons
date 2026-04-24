@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { ClipboardDocumentListIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
 
 /**
  * AuditLogsPage — Halaman admin: log audit.
@@ -446,7 +447,7 @@ export default function AuditLogsPage() {
                 >
                   <div className="flex flex-col items-center">
                     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-[#F7F9FC] mb-3">
-                      <span className="text-2xl">📝</span>
+                      <ClipboardDocumentListIcon className="h-6 w-6 text-slate-300" />
                     </div>
                     <p className="text-xs text-[#64748B]">
                       Belum ada aktivitas yang tercatat.
@@ -541,9 +542,7 @@ export default function AuditLogsPage() {
             {/* Old Data vs New Data diff */}
             <div>
               <h4 className="text-xs font-semibold text-[#0B1F3A] mb-3 flex items-center gap-2">
-                <svg className="h-4 w-4 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                </svg>
+                <ArrowsRightLeftIcon className="h-4 w-4 text-[#94A3B8]" />
                 Perubahan Data
               </h4>
               <div className="rounded-lg border border-[#E2E8F0] overflow-hidden">
