@@ -23,16 +23,45 @@ class AuditLogResource extends JsonResource
         return [
             'id'         => $this->id,
             'action'     => $this->action,
-            'table_name' => $this->table_name,
+            'table_name' => trans("audit.table.{$this->table_name}") === "audit.table.{$this->table_name}" 
+                ? $this->table_name 
+                : trans("audit.table.{$this->table_name}"),
             'record_id'  => $this->record_id,
-            // old_data & new_data sudah di-cast array di model → tampil sebagai JSON object
-            'old_data'   => $this->old_data,
-            'new_data'   => $this->new_data,
+            'old_data'   => $this->translateData($this->old_data),
+            'new_data'   => $this->translateData($this->newData ?? $this->new_data),
             'ip_address' => $this->ip_address,
             'created_at' => $this->created_at?->format('Y-m-d H:i'),
+
 
             // Relasi user — nullable jika aksi berasal dari sistem/scheduler
             'user' => new UserResource($this->whenLoaded('user')),
         ];
     }
+
+    /**
+     * Menerjemahkan key field di dalam data (old/new) jika tersedia di file bahasa.
+     */
+    private function translateData(?array $data): ?array
+    {
+        if (!$data) return null;
+
+        $translated = [];
+        foreach ($data as $key => $value) {
+            $translatedKey = trans("audit.field.{$key}");
+            $finalKey = ($translatedKey === "audit.field.{$key}") ? $key : $translatedKey;
+            
+            // Terjemahkan nilai jika ini adalah field status
+            $finalValue = $value;
+            if ($key === 'status' && is_string($value)) {
+                $translatedValue = trans("audit.status.{$value}");
+                $finalValue = ($translatedValue === "audit.status.{$value}") ? $value : $translatedValue;
+            }
+
+            $translated[$finalKey] = $finalValue;
+        }
+
+
+        return $translated;
+    }
 }
+

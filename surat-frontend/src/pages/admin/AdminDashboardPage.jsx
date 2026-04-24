@@ -182,13 +182,13 @@ export default function AdminDashboardPage() {
         const val = value?.toLowerCase() || '';
         let colorClass = 'bg-[#F7F9FC] text-[#64748B]';
 
-        if (val.includes('dibuat') || val.includes('disetujui') || val.includes('masuk') || val.includes('created') || val.includes('approved')) {
+        if (val.includes('dibuat') || val.includes('disetujui') || val.includes('masuk')) {
           colorClass = 'bg-emerald-50 text-emerald-700';
-        } else if (val.includes('dibatalkan') || val.includes('ditolak') || val.includes('dihapus') || val.includes('voided') || val.includes('rejected') || val.includes('deleted')) {
+        } else if (val.includes('dibatalkan') || val.includes('ditolak') || val.includes('dihapus')) {
           colorClass = 'bg-red-50 text-red-700';
-        } else if (val.includes('diperbarui') || val.includes('diubah') || val.includes('updated') || val.includes('toggled')) {
+        } else if (val.includes('diperbarui') || val.includes('diubah') || val.includes('password')) {
           colorClass = 'bg-primary-light text-primary';
-        } else if (val.includes('diminta') || val.includes('requested')) {
+        } else if (val.includes('diminta')) {
           colorClass = 'bg-amber-50 text-amber-700';
         }
 
@@ -200,6 +200,7 @@ export default function AdminDashboardPage() {
           </span>
         );
       },
+
     },
   ];
 

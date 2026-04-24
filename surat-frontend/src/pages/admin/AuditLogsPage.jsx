@@ -125,48 +125,25 @@ function formatDateTime(dateStr) {
 }
 
 /**
- * Helper: mapping label aksi ke bahasa Indonesia yang lebih readable
- */
-function formatAction(action) {
-  // Karena backend sudah mengirim dalam bahasa Indonesia, kita tinggal mengembalikan nilainya.
-  // Map ini tetap ada untuk fallback atau jika ada key lama yang belum terupdate.
-  const actionLabels = {
-    'letter.created': 'Surat Dibuat',
-    'letter.voided': 'Surat Dibatalkan',
-    'gap.approved': 'Gap Disetujui',
-    'gap.rejected': 'Gap Ditolak',
-    'gap.requested': 'Gap Diminta',
-    'user.created': 'User Dibuat',
-    'user.updated': 'User Diperbarui',
-    'user.toggled': 'Status User Diubah',
-    'classification.created': 'Klasifikasi Dibuat',
-    'classification.updated': 'Klasifikasi Diperbarui',
-    'classification.toggled': 'Status Klasifikasi Diubah',
-    'sequence.updated': 'Sequence Diperbarui',
-    'auth.login': 'Masuk',
-  };
-  return actionLabels[action] || action;
-}
-
-/**
  * Helper: warna badge untuk aksi
  */
 function getActionColor(action) {
   const act = action?.toLowerCase() || '';
-  if (act.includes('dibuat') || act.includes('disetujui') || act.includes('masuk') || act.includes('created') || act.includes('approved')) {
+  if (act.includes('dibuat') || act.includes('disetujui') || act.includes('masuk')) {
     return 'text-[#065F46] bg-[#ECFDF5]';
   }
-  if (act.includes('dibatalkan') || act.includes('ditolak') || act.includes('dihapus') || act.includes('voided') || act.includes('rejected') || act.includes('deleted')) {
+  if (act.includes('dibatalkan') || act.includes('ditolak') || act.includes('dihapus')) {
     return 'text-[#991B1B] bg-[#FEF2F2]';
   }
-  if (act.includes('diperbarui') || act.includes('diubah') || act.includes('updated') || act.includes('toggled')) {
+  if (act.includes('diperbarui') || act.includes('diubah') || act.includes('password')) {
     return 'text-[#185FA5] bg-[#EBF4FD]';
   }
-  if (act.includes('diminta') || act.includes('requested')) {
+  if (act.includes('diminta')) {
     return 'text-amber-700 bg-amber-50';
   }
   return 'text-[#64748B] bg-[#F7F9FC]';
 }
+
 
 export default function AuditLogsPage() {
   const {
@@ -270,7 +247,7 @@ export default function AuditLogsPage() {
       label: 'Aksi',
       render: (value) => (
         <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${getActionColor(value)}`}>
-          {formatAction(value)}
+          {value}
         </span>
       ),
     },
@@ -278,8 +255,8 @@ export default function AuditLogsPage() {
       key: 'table_name',
       label: 'Tabel',
       render: (value) => (
-        <span className="font-mono text-xs text-[#64748B]">
-          {value ? value.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) : ''}
+        <span className="font-medium text-xs text-[#64748B]">
+          {value}
         </span>
       ),
     },
@@ -348,10 +325,29 @@ export default function AuditLogsPage() {
               className={inputBaseClass}
             >
               <option value="">Semua</option>
-              <option value="letter.created">Surat Dibuat</option>
-              <option value="letter.voided">Surat Dibatalkan</option>
-              <option value="gap.approved">Gap Disetujui</option>
-              <option value="gap.rejected">Gap Ditolak</option>
+              <option value="Surat Dibuat">Surat Dibuat</option>
+              <option value="Surat Dibatalkan">Surat Dibatalkan</option>
+              <option value="Detail Surat Diperbarui">Detail Surat Diperbarui</option>
+              <option value="Gap Disetujui">Gap Disetujui</option>
+              <option value="Gap Ditolak">Gap Ditolak</option>
+              <option value="Gap Diminta">Gap Diminta</option>
+              <option value="Permintaan Gap Diajukan">Permintaan Gap Diajukan</option>
+              <option value="Status Gap Diubah">Status Gap Diubah</option>
+              <option value="User Dibuat">User Dibuat</option>
+              <option value="User Diperbarui">User Diperbarui</option>
+              <option value="User Dihapus">User Dihapus</option>
+              <option value="Profil Diperbarui">Profil Diperbarui</option>
+              <option value="Password Profil Diubah">Password Profil Diubah</option>
+              <option value="Foto Profil Diunggah">Foto Profil Diunggah</option>
+              <option value="Foto Profil Dihapus">Foto Profil Dihapus</option>
+              <option value="Klasifikasi Dibuat">Klasifikasi Dibuat</option>
+              <option value="Klasifikasi Diperbarui">Klasifikasi Diperbarui</option>
+              <option value="Klasifikasi Dihapus">Klasifikasi Dihapus</option>
+              <option value="Laporan Diekspor">Laporan Diekspor</option>
+              <option value="Masuk">Masuk</option>
+
+
+
             </select>
           </div>
 
@@ -511,13 +507,13 @@ export default function AuditLogsPage() {
               <div className="bg-[#F7F9FC] rounded-lg p-3">
                 <p className="text-[10px] font-medium text-[#64748B] uppercase">Aksi</p>
                 <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium mt-0.5 ${getActionColor(selectedLog.action)}`}>
-                  {formatAction(selectedLog.action)}
+                  {selectedLog.action}
                 </span>
               </div>
               <div className="bg-[#F7F9FC] rounded-lg p-3">
                 <p className="text-[10px] font-medium text-[#64748B] uppercase">Tabel</p>
-                <p className="text-xs font-mono text-[#0B1F3A] mt-0.5">
-                  {selectedLog.table_name ? selectedLog.table_name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) : ''}
+                <p className="text-xs font-medium text-[#0B1F3A] mt-0.5">
+                  {selectedLog.table_name}
                 </p>
               </div>
               <div className="bg-[#F7F9FC] rounded-lg p-3">
