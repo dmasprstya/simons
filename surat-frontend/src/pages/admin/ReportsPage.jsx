@@ -638,6 +638,7 @@ export default function ReportsPage() {
                   >
                     <option value="">Semua Sifat</option>
                     <option value="biasa">Biasa</option>
+                    <option value="penting">Penting</option>
                     <option value="segera">Segera</option>
                     <option value="sangat_segera">Sangat Segera</option>
                     <option value="rahasia">Rahasia</option>

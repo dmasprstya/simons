@@ -77,7 +77,16 @@ export function useReports() {
 
     try {
       const response = await exportReport({ ...params, format: 'json' });
-      const data = response.data || [];
+      const data = (response.data || []).map(item => ({
+        ...item,
+        sifat_surat: {
+          sangat_segera: 'Sangat Segera',
+          segera: 'Segera',
+          penting: 'Penting',
+          biasa: 'Biasa',
+          rahasia: 'Rahasia',
+        }[item.sifat_surat] || item.sifat_surat
+      }));
       
       await generateExcel(data, {
         title: 'SIMONS — Sistem Informasi Manajemen Penomoran Surat',

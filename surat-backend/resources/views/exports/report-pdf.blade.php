@@ -175,7 +175,18 @@
                     <td>{{ $row->classification }}</td>
                     <td>{{ $row->subject }}</td>
                     <td>{{ $row->destination ?? '-' }}</td>
-                    <td style="text-align: center;">{{ $row->sifat_surat ?? '-' }}</td>
+                    <td style="text-align: center;">
+                        @php
+                            $sifatLabels = [
+                                'sangat_segera' => 'Sangat Segera',
+                                'segera' => 'Segera',
+                                'penting' => 'Penting',
+                                'biasa' => 'Biasa',
+                                'rahasia' => 'Rahasia',
+                            ];
+                        @endphp
+                        {{ $sifatLabels[$row->sifat_surat] ?? $row->sifat_surat ?? '-' }}
+                    </td>
                     <td>{{ $row->requested_by }}</td>
                     <td>{{ $row->work_unit }}</td>
                     <td style="text-align: center;">

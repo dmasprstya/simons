@@ -148,6 +148,7 @@ export default function MyLettersPage() {
                   {{
                     sangat_segera: 'Sgt Segera',
                     segera: 'Segera',
+                    penting: 'Penting',
                     biasa: 'Biasa',
                     rahasia: 'Rahasia',
                   }[row.sifat_surat] || row.sifat_surat}

@@ -33,7 +33,7 @@ class StoreLetterNumberRequest extends FormRequest
             'subject'      => 'required|string|max:255',
             'destination'  => 'required|string|max:255',
             // Sifat surat wajib dipilih — enum harus sesuai dengan nilai yang valid
-            'sifat_surat'  => 'required|in:sangat_segera,segera,biasa,rahasia',
+            'sifat_surat'  => 'required|in:sangat_segera,segera,penting,biasa,rahasia',
         ];
     }
 
@@ -52,7 +52,7 @@ class StoreLetterNumberRequest extends FormRequest
             'destination.required'       => 'Tujuan surat wajib diisi.',
             'destination.max'            => 'Tujuan surat maksimal 255 karakter.',
             'sifat_surat.required'       => 'Sifat surat wajib dipilih.',
-            'sifat_surat.in'             => 'Sifat surat tidak valid. Pilih: Sangat Segera, Segera, Biasa, atau Rahasia.',
+            'sifat_surat.in'             => 'Sifat surat tidak valid. Pilih: Sangat Segera, Segera, Penting, Biasa, atau Rahasia.',
         ];
     }
 }

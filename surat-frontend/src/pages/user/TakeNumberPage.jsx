@@ -52,6 +52,7 @@ export default function TakeNumberPage() {
   const SIFAT_SURAT_OPTIONS = [
     { value: 'sangat_segera', label: 'Sangat Segera' },
     { value: 'segera', label: 'Segera' },
+    { value: 'penting', label: 'Penting' },
     { value: 'biasa', label: 'Biasa' },
     { value: 'rahasia', label: 'Rahasia' },
   ];
@@ -246,7 +247,7 @@ export default function TakeNumberPage() {
             <label className="block text-xs font-medium uppercase tracking-wide text-primary/80 mb-2">
               Sifat Surat <span className="text-red-500">*</span>
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {SIFAT_SURAT_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -341,6 +342,7 @@ export default function TakeNumberPage() {
                   {{
                     sangat_segera: 'Sangat Segera',
                     segera: 'Segera',
+                    penting: 'Penting',
                     biasa: 'Biasa',
                     rahasia: 'Rahasia',
                   }[resultData.sifat_surat] ?? resultData.sifat_surat}
