@@ -60,7 +60,13 @@ class ExportService
         }
 
         if (!empty($filters['status'])) {
-            $query->where('letter_numbers.status', $filters['status']);
+            if ($filters['status'] === 'active_regular') {
+                $query->where('letter_numbers.status', 'active')
+                      ->where('letter_numbers.source', 'regular');
+            } elseif ($filters['status'] === 'active_gap') {
+                $query->where('letter_numbers.status', 'active')
+                      ->where('letter_numbers.source', 'gap');
+            }
         }
 
         if (!empty($filters['sifat_surat'])) {

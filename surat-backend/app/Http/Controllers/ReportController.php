@@ -61,7 +61,7 @@ class ReportController extends Controller
             'classification_ids' => 'nullable|array',
             'classification_ids.*' => 'integer|exists:letter_classifications,id',
             'work_unit'          => 'nullable|string|max:255',
-            'status'             => 'nullable|in:active,voided',
+            'status'             => 'nullable|in:active_regular,active_gap',
             'sifat_surat'        => 'nullable|string|max:100',
             'user_name'          => 'nullable|string|max:255',
         ]);
@@ -99,7 +99,15 @@ class ReportController extends Controller
 
             // Filter berdasarkan status
             if ($request->filled('status')) {
-                $q->where('letter_numbers.status', $request->status);
+                if ($request->status === 'active_regular') {
+                    $q->where('letter_numbers.status', 'active')
+                      ->where('letter_numbers.source', 'regular');
+                } elseif ($request->status === 'active_gap') {
+                    $q->where('letter_numbers.status', 'active')
+                      ->where('letter_numbers.source', 'gap');
+                } else {
+                    $q->where('letter_numbers.status', $request->status);
+                }
             }
 
             // Filter berdasarkan sifat surat
@@ -174,7 +182,7 @@ class ReportController extends Controller
             'classification_ids' => 'nullable|array',
             'classification_ids.*' => 'integer|exists:letter_classifications,id',
             'work_unit'          => 'nullable|string|max:255',
-            'status'             => 'nullable|in:active,voided',
+            'status'             => 'nullable|in:active_regular,active_gap',
             'sifat_surat'        => 'nullable|string|max:100',
             'user_name'          => 'nullable|string|max:255',
             'format'             => 'nullable|in:csv,pdf,json',

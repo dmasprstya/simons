@@ -616,15 +616,15 @@ export default function ReportsPage() {
                   <label className="block text-[10px] font-black text-[#64748B] uppercase tracking-widest ml-1 mb-2">
                     D. Status
                   </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className={inputBaseClass}
-                  >
-                    <option value="">Semua Status</option>
-                    <option value="active">Aktif</option>
-                    <option value="voided">Dibatalkan (Voided)</option>
-                  </select>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className={inputBaseClass}
+                    >
+                      <option value="">Semua Status</option>
+                      <option value="active_regular">Aktif (Reguler)</option>
+                      <option value="active_gap">Aktif (Kosong)</option>
+                    </select>
                 </div>
 
                 <div>
