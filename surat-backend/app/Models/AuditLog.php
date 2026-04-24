@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AuditLog extends Model
 {
+    use Prunable;
     /**
      * Insert-only table — tidak ada update atau delete.
      * Hanya created_at yang digunakan sebagai timestamp aksi.
@@ -41,5 +43,10 @@ class AuditLog extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function prunable()
+    {
+        return static::where('created_at', '<=', now()->subDays(env('AUDIT_LOG_RETENTION_DAYS', 30)));
     }
 }

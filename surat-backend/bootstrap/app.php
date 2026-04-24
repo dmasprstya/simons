@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
         ]);
     })
+    ->withSchedule(function ($schedule) {
+        $schedule->command('model:prune')->daily();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Lock timeout / deadlock di NumberingService → 409 Conflict
         $exceptions->render(function (NumberingLockException $e) {
