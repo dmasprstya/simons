@@ -26,6 +26,7 @@ class GapRequestResource extends JsonResource
             'gap_date'    => $this->gap_date?->format('Y-m-d'),
             'subject'     => $this->subject,
             'destination' => $this->destination,
+            'sifat_surat' => $this->sifat_surat,
             'reason'      => $this->reason,
             'rejection_reason' => $this->rejection_reason,
             'status'      => $this->status,

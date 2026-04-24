@@ -8,6 +8,10 @@ import {
   PencilSquareIcon,
   XMarkIcon,
   DocumentTextIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  AdjustmentsHorizontalIcon,
+  BriefcaseIcon,
 } from '@heroicons/react/24/outline';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
 import Card from '../../components/ui/Card';
@@ -35,6 +39,9 @@ export default function MyLettersPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [classificationId, setClassificationId] = useState(null);
+  const [search, setSearch] = useState('');
+  const [source, setSource] = useState('');
+  const [sifatSurat, setSifatSurat] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Edit modal state
@@ -49,12 +56,15 @@ export default function MyLettersPage() {
   const buildParams = useCallback(
     (page = 1) => {
       const params = { page };
+      if (search) params.search = search;
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
       if (classificationId) params.classification_id = classificationId;
+      if (source) params.source = source;
+      if (sifatSurat) params.sifat_surat = sifatSurat;
       return params;
     },
-    [dateFrom, dateTo, classificationId]
+    [search, dateFrom, dateTo, classificationId, source, sifatSurat]
   );
 
   // Fetch data saat mount dan saat filter/page berubah
@@ -70,9 +80,12 @@ export default function MyLettersPage() {
   };
 
   const handleResetFilter = () => {
+    setSearch('');
     setDateFrom('');
     setDateTo('');
     setClassificationId(null);
+    setSource('');
+    setSifatSurat('');
     setCurrentPage(1);
     fetchMyLetters({ page: 1 });
   };
@@ -231,37 +244,54 @@ export default function MyLettersPage() {
 
       {/* Filter bar */}
       <Card padding="md" className="border-slate-200 overflow-visible">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* KIRI: Klasifikasi */}
-          <div className="space-y-2.5">
+          <div className="lg:col-span-6 space-y-2.5">
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
               <TagIcon className="h-3.5 w-3.5" />
               Filter Klasifikasi
             </label>
-            <ClassificationPicker
-              value={classificationId}
-              onChange={setClassificationId}
-            />
+            <div className="bg-slate-50/50 rounded-2xl p-1.5 border border-slate-100 h-full min-h-[250px]">
+              <ClassificationPicker
+                value={classificationId}
+                onChange={setClassificationId}
+              />
+            </div>
           </div>
 
-          {/* KANAN: Tanggal & Aksi */}
-          <div className="flex flex-col h-full">
+          {/* KANAN: Semua filter lainnya */}
+          <div className="lg:col-span-6 flex flex-col gap-6">
+            {/* Atas: Search */}
             <div className="space-y-2.5">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                <CalendarDaysIcon className="h-3.5 w-3.5" />
-                Rentang Tanggal
+                <MagnifyingGlassIcon className="h-3.5 w-3.5" />
+                Cari Surat
               </label>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <div className="w-full sm:flex-1">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari perihal, tujuan, atau nomor..."
+                className={inputBaseClass}
+              />
+            </div>
+
+            {/* Tengah: Grid Filter */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5">
+              {/* Tanggal */}
+              <div className="md:col-span-2 space-y-2.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                  <CalendarDaysIcon className="h-3.5 w-3.5" />
+                  Rentang Tanggal
+                </label>
+                <div className="flex items-center gap-2">
                   <input
                     type="date"
                     value={dateFrom}
                     onChange={(e) => setDateFrom(e.target.value)}
                     className={inputBaseClass}
                   />
-                </div>
-                <span className="text-slate-300 font-medium text-xs text-center sm:text-left">s/d</span>
-                <div className="w-full sm:flex-1">
+                  <span className="text-slate-300 font-medium text-xs">s/d</span>
                   <input
                     type="date"
                     value={dateTo}
@@ -270,13 +300,54 @@ export default function MyLettersPage() {
                   />
                 </div>
               </div>
+
+              {/* Status (Ex-Sumber) */}
+              <div className="space-y-2.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                  <FunnelIcon className="h-3.5 w-3.5" />
+                  Status
+                </label>
+                <select
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  className={inputBaseClass}
+                >
+                  <option value="">Semua Status</option>
+                  <option value="regular">Nomor Aktif (Regular)</option>
+                  <option value="gap">Nomor Kosong (Gap)</option>
+                </select>
+              </div>
+
+              {/* Sifat Surat */}
+              <div className="md:col-span-3 space-y-2.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                  <BriefcaseIcon className="h-3.5 w-3.5" />
+                  Sifat Surat
+                </label>
+                <select
+                  value={sifatSurat}
+                  onChange={(e) => setSifatSurat(e.target.value)}
+                  className={inputBaseClass}
+                >
+                  <option value="">Semua Sifat</option>
+                  <option value="biasa">Biasa</option>
+                  <option value="penting">Penting</option>
+                  <option value="segera">Segera</option>
+                  <option value="sangat_segera">Sangat Segera</option>
+                  <option value="rahasia">Rahasia</option>
+                </select>
+              </div>
             </div>
 
-            <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-4">
-              <div className="flex items-center gap-3">
+            {/* Bawah: Action Buttons */}
+            <div className="mt-auto pt-6 border-t border-slate-100 flex items-center justify-between gap-4">
+              <p className="text-[11px] text-slate-400 italic hidden sm:block px-1">
+                * Gunakan filter untuk pencarian spesifik
+              </p>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
                   onClick={handleResetFilter}
-                  className="flex-1 text-xs font-bold text-slate-400 hover:text-slate-600 px-4 py-2 rounded-xl transition-colors text-center border border-slate-100 hover:border-slate-200"
+                  className="flex-1 sm:flex-none text-xs font-bold text-slate-400 hover:text-slate-600 px-6 py-2 rounded-xl transition-colors border border-slate-100 hover:border-slate-200"
                 >
                   Reset
                 </button>
@@ -284,14 +355,11 @@ export default function MyLettersPage() {
                   variant="primary"
                   size="sm"
                   onClick={handleFilter}
-                  className="flex-[2] px-8 h-10 shadow-lg shadow-primary/20 bg-primary"
+                  className="flex-[2] sm:flex-none px-10 h-10 shadow-lg shadow-primary/20"
                 >
                   Terapkan Filter
                 </Button>
               </div>
-              <p className="text-[11px] text-slate-400 italic text-right px-1">
-                * Gunakan filter untuk mencari surat secara spesifik
-              </p>
             </div>
           </div>
         </div>

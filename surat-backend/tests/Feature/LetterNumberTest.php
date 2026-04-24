@@ -199,6 +199,7 @@ class LetterNumberTest extends TestCase
             'issued_date'       => Carbon::yesterday()->toDateString(),
             'subject'           => 'Surat Kemarin',
             'destination'       => 'Tujuan',
+            'sifat_surat'       => 'biasa',
             'status'            => 'active',
         ]);
 

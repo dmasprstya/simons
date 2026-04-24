@@ -71,6 +71,7 @@ class GapRequestTest extends TestCase
             'destination'       => 'Tujuan Surat Testing',
             'reason'            => 'Alasan pengajuan gap request untuk keperluan testing',
             'status'            => 'pending',
+            'sifat_surat'       => 'biasa',
             'number'            => $gapNumber,
         ]);
     }
@@ -101,6 +102,7 @@ class GapRequestTest extends TestCase
                              ],
                              'subject'           => 'Perihal Surat Testing',
                              'destination'       => 'Tujuan Surat Testing',
+                             'sifat_surat'       => 'biasa',
                              'reason'            => 'Surat yang sebelumnya hilang perlu diganti dengan nomor cadangan',
                          ]);
 

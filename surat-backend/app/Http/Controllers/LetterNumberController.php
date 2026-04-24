@@ -34,7 +34,17 @@ class LetterNumberController extends Controller
     {
         $query = LetterNumber::with('classification')->where('user_id', Auth::id());
 
-        // Filter rentang tanggal issued_date — terima date_from/date_to (frontend) atau issued_date_from/issued_date_to
+        // Filter pencarian teks — perihal, tujuan, atau formatted_number
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                  ->orWhere('destination', 'like', "%{$search}%")
+                  ->orWhere('formatted_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter rentang tanggal issued_date
         $dateFrom = $request->input('date_from', $request->input('issued_date_from'));
         $dateTo   = $request->input('date_to', $request->input('issued_date_to'));
 
@@ -49,6 +59,16 @@ class LetterNumberController extends Controller
         // Filter berdasarkan klasifikasi
         if ($request->filled('classification_id')) {
             $query->where('classification_id', $request->classification_id);
+        }
+
+        // Filter berdasarkan sumber (regular/gap)
+        if ($request->filled('source')) {
+            $query->where('source', $request->source);
+        }
+
+        // Filter berdasarkan sifat surat
+        if ($request->filled('sifat_surat')) {
+            $query->where('sifat_surat', $request->sifat_surat);
         }
 
         $perPage = (int) $request->input('per_page', 20);

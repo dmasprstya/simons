@@ -32,6 +32,7 @@ class GapRequest extends Model
         'status',
         'subject',
         'destination',
+        'sifat_surat',
         'reason',
         'rejection_reason',
         'reviewed_at',

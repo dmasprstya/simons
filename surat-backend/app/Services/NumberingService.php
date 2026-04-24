@@ -166,6 +166,7 @@ class NumberingService
                 'issued_date'  => $gapRequest->gap_date,
                 'subject'      => $gapRequest->subject,
                 'destination'  => $gapRequest->destination,
+                'sifat_surat'  => $gapRequest->sifat_surat,
                 'source'       => 'gap',
                 'status'       => 'active',
             ]);

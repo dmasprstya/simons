@@ -36,6 +36,7 @@ class StoreGapRequestRequest extends FormRequest
             'items.*.gap_date' => 'required|date',
             'subject'          => 'required|string|max:255',
             'destination'      => 'required|string|max:255',
+            'sifat_surat'      => 'required|string|in:sangat_segera,segera,penting,biasa,rahasia',
             'reason'           => 'required|string|min:10|max:1000',
         ];
     }
@@ -59,6 +60,8 @@ class StoreGapRequestRequest extends FormRequest
             'subject.max'                   => 'Perihal surat maksimal 255 karakter.',
             'destination.required'          => 'Tujuan surat wajib diisi.',
             'destination.max'               => 'Tujuan surat maksimal 255 karakter.',
+            'sifat_surat.required'          => 'Sifat surat wajib dipilih.',
+            'sifat_surat.in'                => 'Sifat surat yang dipilih tidak valid.',
             'reason.required'               => 'Alasan pengajuan gap wajib diisi.',
             'reason.min'                    => 'Alasan pengajuan gap minimal 10 karakter.',
             'reason.max'                    => 'Alasan pengajuan gap maksimal 1000 karakter.',

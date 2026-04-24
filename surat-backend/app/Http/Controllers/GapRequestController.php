@@ -126,6 +126,7 @@ class GapRequestController extends Controller
                     'gap_date'          => $item['gap_date'],
                     'subject'           => $validated['subject'],
                     'destination'       => $validated['destination'],
+                    'sifat_surat'       => $validated['sifat_surat'],
                     'reason'            => $validated['reason'],
                     'status'            => 'pending',
                 ]);

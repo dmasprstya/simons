@@ -41,6 +41,7 @@ export default function GapRequestPage() {
   const [selectedItems, setSelectedItems] = useState([]); // Array of { number, date }
   const [subject, setSubject] = useState('');
   const [destination, setDestination] = useState('');
+  const [sifatSurat, setSifatSurat] = useState('');
   const [reason, setReason] = useState('');
 
   // === UI state ===
@@ -59,6 +60,15 @@ export default function GapRequestPage() {
   // === Expand state untuk tree view nomor kosong ===
   const [expandedMonths, setExpandedMonths] = useState({});
   const [expandedDates, setExpandedDates] = useState({});
+
+  // Opsi dropdown Sifat Surat — nilai enum sesuai backend
+  const SIFAT_SURAT_OPTIONS = [
+    { value: 'sangat_segera', label: 'Sangat Segera' },
+    { value: 'segera', label: 'Segera' },
+    { value: 'penting', label: 'Penting' },
+    { value: 'biasa', label: 'Biasa' },
+    { value: 'rahasia', label: 'Rahasia' },
+  ];
 
   // Grouping vacantNumbers → { monthKey: { label, dates: { dateKey: { label, numbers[] } } } }
   const groupedVacant = (() => {
@@ -143,6 +153,9 @@ export default function GapRequestPage() {
     } else if (destination.trim().length > 255) {
       errors.destination = 'Tujuan maksimal 255 karakter.';
     }
+    if (!sifatSurat) {
+      errors.sifat_surat = 'Sifat surat wajib dipilih.';
+    }
     if (!reason.trim()) {
       errors.reason = 'Alasan wajib diisi.';
     } else if (reason.trim().length < REASON_MIN) {
@@ -161,6 +174,7 @@ export default function GapRequestPage() {
     setSelectedItems([]);
     setSubject('');
     setDestination('');
+    setSifatSurat('');
     setReason('');
     setSubmitError(null);
     setValidationErrors({});
@@ -181,6 +195,7 @@ export default function GapRequestPage() {
         items: selectedItems,
         subject: subject.trim(),
         destination: destination.trim(),
+        sifat_surat: sifatSurat,
         reason: reason.trim(),
       });
 
@@ -229,6 +244,23 @@ export default function GapRequestPage() {
       ),
     },
     {
+      key: 'subject',
+      label: 'Perihal & Tujuan',
+      render: (_value, row) => (
+        <div className="flex flex-col py-1 min-w-[180px] max-w-[250px]">
+          <span className="font-semibold text-navy text-xs leading-snug line-clamp-2" title={row.subject}>
+            {row.subject || '-'}
+          </span>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="shrink-0 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ke:</span>
+            <span className="text-[10px] text-slate-500 truncate" title={row.destination}>
+              {row.destination || '-'}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
       key: 'gap_date',
       label: 'Tanggal Gap',
       render: (value) => {
@@ -248,6 +280,21 @@ export default function GapRequestPage() {
       render: (value) => (
         <span className="max-w-[200px] truncate block text-xs text-[#64748B]" title={value}>
           {value || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'sifat_surat',
+      label: 'Sifat',
+      render: (value) => (
+        <span className="text-xs font-medium text-[#475569]">
+          {{
+            sangat_segera: 'Sangat Segera',
+            segera: 'Segera',
+            penting: 'Penting',
+            biasa: 'Biasa',
+            rahasia: 'Rahasia',
+          }[value] ?? value}
         </span>
       ),
     },
@@ -559,8 +606,37 @@ export default function GapRequestPage() {
               </div>
             </div>
           </div>
+          
+          {/* 5. Sifat Surat */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
+              Sifat Surat <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {SIFAT_SURAT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSifatSurat(opt.value)}
+                  disabled={submitting}
+                  className={`
+                    px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 border
+                    ${sifatSurat === opt.value
+                      ? 'bg-[#2A7FD4] border-[#2A7FD4] text-white shadow-lg shadow-[#2A7FD4]/20'
+                      : 'bg-white border-[#E2E8F0] text-slate-500 hover:border-[#2A7FD4] hover:text-[#2A7FD4]'
+                    }
+                  `}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {validationErrors.sifat_surat && (
+              <p className="mt-1.5 text-xs text-red-600">{validationErrors.sifat_surat}</p>
+            )}
+          </div>
 
-          {/* 5. Alasan */}
+          {/* 6. Alasan */}
           <div>
             <label
               htmlFor="reason"

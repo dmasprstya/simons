@@ -129,6 +129,7 @@ class NumberingServiceTest extends TestCase
             'status'            => 'approved',
             'subject'           => 'Perihal Surat Testing',
             'destination'       => 'Tujuan Surat Testing',
+            'sifat_surat'       => 'biasa',
             'reason'            => 'Butuh nomor mundur',
         ]);
 
@@ -155,6 +156,7 @@ class NumberingServiceTest extends TestCase
             'status'            => 'approved',
             'subject'           => 'Perihal Surat Testing',
             'destination'       => 'Tujuan Surat Testing',
+            'sifat_surat'       => 'biasa',
             'reason'            => 'Ngawur',
         ]);
 
