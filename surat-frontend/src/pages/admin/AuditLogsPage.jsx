@@ -345,9 +345,7 @@ export default function AuditLogsPage() {
               <option value="Klasifikasi Dihapus">Klasifikasi Dihapus</option>
               <option value="Laporan Diekspor">Laporan Diekspor</option>
               <option value="Masuk">Masuk</option>
-
-
-
+              <option value="Keluar">Keluar</option>
             </select>
           </div>
 

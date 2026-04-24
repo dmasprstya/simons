@@ -47,7 +47,9 @@ return [
         'sequence.updated' => 'Sequence Diperbarui',
         'report.exported' => 'Laporan Diekspor',
         'auth.login' => 'Masuk',
+        'auth.logout' => 'Keluar',
     ],
+
     'table' => [
         'letter_numbers' => 'Nomor Surat',
         'gap_requests' => 'Permintaan Gap',
