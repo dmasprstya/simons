@@ -22,7 +22,9 @@ class AuditLogResource extends JsonResource
     {
         return [
             'id'         => $this->id,
-            'action'     => $this->action,
+            'action'     => trans("audit.action.{$this->action}") === "audit.action.{$this->action}" 
+                ? $this->action 
+                : trans("audit.action.{$this->action}"),
             'table_name' => trans("audit.table.{$this->table_name}") === "audit.table.{$this->table_name}" 
                 ? $this->table_name 
                 : trans("audit.table.{$this->table_name}"),

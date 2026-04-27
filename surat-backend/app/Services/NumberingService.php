@@ -98,7 +98,8 @@ class NumberingService
                     } 
                     // 3. Hari yang sama atau penggunaan pertama kali
                     else {
-                        if ($seq->last_number === 0) {
+                        // Gunakan default_start HANYA jika benar-benar pertama kali (null date)
+                        if ($seq->last_number === 0 && $seq->last_issued_date === null) {
                             $candidate = config('numbering.default_start', 1000);
                         } else {
                             $candidate = $seq->last_number + 1;

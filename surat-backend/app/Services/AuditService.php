@@ -29,16 +29,9 @@ class AuditService
         ?array $newData = null,
         ?int $userId = null
     ): AuditLog {
-        $translatedAction = trans("audit.action.{$action}");
-        
-        if ($translatedAction === "audit.action.{$action}") {
-            $translatedAction = $action;
-        }
-
-
         return AuditLog::create([
             'user_id'    => $userId ?? Auth::id(),
-            'action'     => $translatedAction,
+            'action'     => $action,
             'table_name' => $tableName,
             'record_id'  => $recordId,
             'old_data'   => $oldData,
