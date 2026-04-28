@@ -2,50 +2,80 @@
 
 return [
     'action' => [
-        // Letter Actions
+        // Letter Actions (from LetterNumberObserver)
+        'letter' => [
+            'created' => 'Surat Dibuat',
+            'updated' => 'Detail Surat Diperbarui',
+            'voided' => 'Surat Dibatalkan',
+        ],
+
+        // Gap Actions (from GapRequestService & Controller)
+        'gap' => [
+            'approved' => 'Gap Disetujui',
+            'rejected' => 'Gap Ditolak',
+            'requested' => 'Gap Diminta',
+            'created' => 'Permintaan Gap Diajukan', // gap_request.created
+        ],
+
+        'gap_request' => [
+            'created' => 'Permintaan Gap Diajukan',
+            'status_changed' => 'Status Gap Diubah',
+        ],
+
+        // User Actions (from UserController)
+        'user' => [
+            'create' => 'User Dibuat',
+            'created' => 'User Dibuat',
+            'update' => 'User Diperbarui',
+            'updated' => 'User Diperbarui',
+            'delete' => 'User Dihapus',
+            'deleted' => 'User Dihapus',
+            'toggle_active' => 'Status User Diubah',
+            'change_password' => 'Password User Direset',
+            'status_changed' => 'Status User Diubah',
+            'password_changed' => 'Password User Direset',
+        ],
+
+        // Profile Actions (from ProfileController)
+        'profile' => [
+            'update' => 'Profil Diperbarui',
+            'change_password' => 'Password Profil Diubah',
+            'photo_upload' => 'Foto Profil Diunggah',
+            'photo_delete' => 'Foto Profil Dihapus',
+            'avatar_uploaded' => 'Foto Profil Diunggah',
+            'avatar_deleted' => 'Foto Profil Dihapus',
+        ],
+
+        // Classification Actions (from LetterClassificationController)
+        'classification' => [
+            'create' => 'Klasifikasi Dibuat',
+            'created' => 'Klasifikasi Dibuat',
+            'update' => 'Klasifikasi Diperbarui',
+            'updated' => 'Klasifikasi Diperbarui',
+            'delete' => 'Klasifikasi Dihapus',
+            'deleted' => 'Klasifikasi Dihapus',
+            'toggle_active' => 'Status Klasifikasi Diubah',
+            'restore' => 'Klasifikasi Dipulihkan',
+        ],
+
+        // Other Actions
+        'sequence' => [
+            'updated' => 'Sequence Diperbarui',
+        ],
+        'report' => [
+            'exported' => 'Laporan Diekspor',
+        ],
+        'auth' => [
+            'login' => 'Masuk',
+            'logout' => 'Keluar',
+        ],
+
+        // Fallbacks for underscore keys (if any)
         'letter_created' => 'Surat Dibuat',
-        'letter_create' => 'Surat Dibuat',
-        'letter_voided' => 'Surat Dibatalkan',
         'letter_updated' => 'Detail Surat Diperbarui',
-        
-        // Gap Actions
         'gap_approved' => 'Gap Disetujui',
         'gap_rejected' => 'Gap Ditolak',
-        'gap_requested' => 'Gap Diminta',
-        'gap_request_created' => 'Permintaan Gap Diajukan',
-        'gap_request_status_changed' => 'Status Gap Diubah',
-        
-        // User Actions
         'user_created' => 'User Dibuat',
-        'user_create' => 'User Dibuat',
-        'user_updated' => 'User Diperbarui',
-        'user_update' => 'User Diperbarui',
-        'user_deleted' => 'User Dihapus',
-        'user_delete' => 'User Dihapus',
-        'user_toggled' => 'Status User Diubah',
-        'user_toggle_active' => 'Status User Diubah',
-        'user_change_password' => 'Password User Diubah',
-        
-        // Profile Actions
-        'profile_update' => 'Profil Diperbarui',
-        'profile_change_password' => 'Password Profil Diubah',
-        'profile_photo_upload' => 'Foto Profil Diunggah',
-        'profile_photo_delete' => 'Foto Profil Dihapus',
-        
-        // Classification Actions
-        'classification_created' => 'Klasifikasi Dibuat',
-        'classification_create' => 'Klasifikasi Dibuat',
-        'classification_updated' => 'Klasifikasi Diperbarui',
-        'classification_update' => 'Klasifikasi Diperbarui',
-        'classification_toggled' => 'Status Klasifikasi Diubah',
-        'classification_toggle_active' => 'Status Klasifikasi Diubah',
-        'classification_deleted' => 'Klasifikasi Dihapus',
-        'classification_delete' => 'Klasifikasi Dihapus',
-        'classification_restored' => 'Klasifikasi Dipulihkan',
-        
-        // Other Actions
-        'sequence_updated' => 'Sequence Diperbarui',
-        'report_exported' => 'Laporan Diekspor',
         'auth_login' => 'Masuk',
         'auth_logout' => 'Keluar',
     ],
@@ -57,6 +87,7 @@ return [
         'letter_classifications' => 'Klasifikasi Surat',
         'global_sequences' => 'Urutan Global',
     ],
+
     'field' => [
         'subject' => 'Perihal',
         'destination' => 'Tujuan',
@@ -90,6 +121,7 @@ return [
         'created_at' => 'Waktu Dibuat',
         'updated_at' => 'Waktu Diperbarui',
     ],
+
     'status' => [
         'pending' => 'Menunggu',
         'approved' => 'Disetujui',
