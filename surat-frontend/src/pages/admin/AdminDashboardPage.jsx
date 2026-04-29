@@ -7,6 +7,7 @@ import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import StatusChip from '../../components/ui/StatusChip';
+import { getActionLabel, getDashboardActionColor } from '../../utils/auditLabels';
 
 /**
  * AdminDashboardPage — Halaman dashboard untuk role admin.
@@ -178,29 +179,13 @@ export default function AdminDashboardPage() {
     {
       key: 'action',
       label: 'Aksi',
-      render: (value) => {
-        const val = value?.toLowerCase() || '';
-        let colorClass = 'bg-[#F7F9FC] text-[#64748B]';
-
-        if (val.includes('dibuat') || val.includes('disetujui') || val.includes('masuk')) {
-          colorClass = 'bg-emerald-50 text-emerald-700';
-        } else if (val.includes('dibatalkan') || val.includes('ditolak') || val.includes('dihapus')) {
-          colorClass = 'bg-red-50 text-red-700';
-        } else if (val.includes('diperbarui') || val.includes('diubah') || val.includes('password')) {
-          colorClass = 'bg-primary-light text-primary';
-        } else if (val.includes('diminta')) {
-          colorClass = 'bg-amber-50 text-amber-700';
-        }
-
-        return (
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClass}`}
-          >
-            {value || '-'}
-          </span>
-        );
-      },
-
+      render: (value) => (
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getDashboardActionColor(value)}`}
+        >
+          {getActionLabel(value)}
+        </span>
+      ),
     },
   ];
 
