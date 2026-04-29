@@ -154,7 +154,7 @@ export default function SequenceSettingsPage() {
       label: 'Tanggal Terakhir',
       render: (value) => {
         if (!value) return <span className="text-xs text-[#94A3B8]">Belum ada nomor</span>;
-        const date = new Date(value + 'T00:00:00');
+        const date = new Date(value.includes('T') ? value : value + 'T00:00:00');
         return (
           <span className="text-xs text-[#64748B]">
             {date.toLocaleDateString('id-ID', {

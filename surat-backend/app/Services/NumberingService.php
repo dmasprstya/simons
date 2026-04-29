@@ -196,7 +196,7 @@ class NumberingService
             'next_number'      => $nextNumber,
             'last_number'      => $seq->last_number,
             'gap_size'         => $seq->gap_size,
-            'last_issued_date' => $seq->last_issued_date,
+            'last_issued_date' => $seq->last_issued_date?->toDateString(),
             'updated_at'       => $seq->updated_at,
         ];
     }
@@ -222,13 +222,20 @@ class NumberingService
 
             // Arsipkan gap hari terakhir yang tercatat
             if ($seq->last_number > 0) {
-                $this->archiveGapZone($seq->last_issued_date, $seq->last_number + 1, $seq->last_number + $seq->gap_size);
-            }
+                $gapEnd = $seq->last_number + $seq->gap_size;
+                $this->archiveGapZone($seq->last_issued_date, $seq->last_number + 1, $gapEnd);
 
-            if ($isNewYear) {
-                // Reset ke 0 agar saat acquireNumber() dipanggil berikutnya, candidate = 1
-                $seq->last_number = 0;
-                Log::info('NumberingService@ensureDayIsCurrent: yearly reset triggered');
+                if ($isNewYear) {
+                    // Reset ke 0 agar saat acquireNumber() dipanggil berikutnya, candidate = 1
+                    $seq->last_number = 0;
+                    Log::info('NumberingService@ensureDayIsCurrent: yearly reset triggered');
+                } else {
+                    // Majukan nomor terakhir melewati gap untuk hari baru
+                    $seq->last_number = $gapEnd;
+                    Log::info('NumberingService@ensureDayIsCurrent: daily rollover applied', [
+                        'gap_end' => $gapEnd
+                    ]);
+                }
             }
 
             $seq->last_issued_date = today();
