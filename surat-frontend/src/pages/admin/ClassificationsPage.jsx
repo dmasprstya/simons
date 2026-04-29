@@ -255,35 +255,50 @@ export default function ClassificationsPage() {
   });
   const [formErrors, setFormErrors] = useState({});
 
-  // Build filter params
+  // Applied filters (only trigger fetch when this state changes)
+  const [appliedFilters, setAppliedFilters] = useState({
+    type: '',
+    status: '',
+    search: '',
+  });
+
+  // Build filter params dari applied filters
   const buildParams = useCallback(() => {
     const params = {};
-    if (typeFilter) params.type = typeFilter;
-    if (statusFilter) params.is_active = statusFilter;
-    if (searchTerm.trim()) params.search = searchTerm.trim();
+    if (appliedFilters.type) params.type = appliedFilters.type;
+    if (appliedFilters.status) params.is_active = appliedFilters.status;
+    if (appliedFilters.search.trim()) params.search = appliedFilters.search.trim();
     return params;
-  }, [typeFilter, statusFilter, searchTerm]);
+  }, [appliedFilters]);
 
-  // Fetch roots saat mount
+  // Fetch data saat mount dan saat appliedFilters berubah
   useEffect(() => {
-    fetchRoots(buildParams());
-  }, [fetchRoots, buildParams]);
-
-  // Handler filter
-  const handleFilter = () => {
     const params = buildParams();
-    if (searchTerm.trim()) {
+    if (appliedFilters.search.trim()) {
       searchClassifications(params);
     } else {
       fetchRoots(params);
     }
+  }, [fetchRoots, searchClassifications, buildParams, appliedFilters]);
+
+  // Handler filter
+  const handleFilter = () => {
+    setAppliedFilters({
+      type: typeFilter,
+      status: statusFilter,
+      search: searchTerm,
+    });
   };
 
   const handleResetFilter = () => {
     setTypeFilter('');
     setStatusFilter('');
     setSearchTerm('');
-    fetchRoots({});
+    setAppliedFilters({
+      type: '',
+      status: '',
+      search: '',
+    });
   };
 
   // === Validasi Form ===

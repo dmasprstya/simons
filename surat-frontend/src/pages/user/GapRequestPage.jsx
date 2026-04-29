@@ -61,6 +61,12 @@ export default function GapRequestPage() {
   const [expandedMonths, setExpandedMonths] = useState({});
   const [expandedDates, setExpandedDates] = useState({});
 
+  // === Applied filter state untuk nomor kosong ===
+  const [appliedVacantFilters, setAppliedVacantFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
+  });
+
   // Opsi dropdown Sifat Surat — nilai enum sesuai backend
   const SIFAT_SURAT_OPTIONS = [
     { value: 'sangat_segera', label: 'Sangat Segera' },
@@ -106,8 +112,20 @@ export default function GapRequestPage() {
 
   // Fetch nomor kosong saat mount, saat filter tanggal berubah, atau saat page berubah
   useEffect(() => {
-    fetchVacantNumbers({ date_from: vacantDateFrom, date_to: vacantDateTo, page: vacantPage });
-  }, [vacantDateFrom, vacantDateTo, vacantPage]); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchVacantNumbers({ 
+      date_from: appliedVacantFilters.dateFrom, 
+      date_to: appliedVacantFilters.dateTo, 
+      page: vacantPage 
+    });
+  }, [appliedVacantFilters, vacantPage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleFilterVacant = () => {
+    setVacantPage(1);
+    setAppliedVacantFilters({
+      dateFrom: vacantDateFrom,
+      dateTo: vacantDateTo,
+    });
+  };
 
   // === Pilih nomor dari tabel ===
   const handleSelectNumber = (row) => {
@@ -403,6 +421,13 @@ export default function GapRequestPage() {
                     className="flex-1 h-7 rounded border border-[#E2E8F0] bg-white px-2 text-[10px] text-[#0B1F3A] focus:outline-none focus:ring-1 focus:ring-[#2A7FD4]/20"
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={handleFilterVacant}
+                  className="h-7 px-3 bg-[#2A7FD4] text-white text-[10px] font-bold rounded hover:bg-[#185FA5] transition-colors"
+                >
+                  Cari
+                </button>
               </div>
             </div>
 

@@ -198,18 +198,27 @@ export default function AuditLogsPage() {
   // === Modal detail state ===
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Build params dari filter
+  // Applied filters (only trigger fetch when this state changes)
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: '',
+    action: '',
+    tableName: '',
+    dateFrom: '',
+    dateTo: '',
+  });
+
+  // Build params dari applied filters
   const buildParams = useCallback(
     (page = 1) => {
       const params = { page, per_page: 50 };
-      if (search.trim()) params.search = search.trim();
-      if (actionFilter) params.action = actionFilter;
-      if (tableFilter.trim()) params.table_name = tableFilter.trim();
-      if (dateFrom) params.date_from = dateFrom;
-      if (dateTo) params.date_to = dateTo;
+      if (appliedFilters.search.trim()) params.search = appliedFilters.search.trim();
+      if (appliedFilters.action) params.action = appliedFilters.action;
+      if (appliedFilters.tableName.trim()) params.table_name = appliedFilters.tableName.trim();
+      if (appliedFilters.dateFrom) params.date_from = appliedFilters.dateFrom;
+      if (appliedFilters.dateTo) params.date_to = appliedFilters.dateTo;
       return params;
     },
-    [search, actionFilter, tableFilter, dateFrom, dateTo]
+    [appliedFilters]
   );
 
   // Fetch data saat mount dan saat filter/page berubah
@@ -225,7 +234,13 @@ export default function AuditLogsPage() {
   // Handler apply filter
   const handleFilter = () => {
     setCurrentPage(1);
-    fetchLogs(buildParams(1));
+    setAppliedFilters({
+      search,
+      action: actionFilter,
+      tableName: tableFilter,
+      dateFrom,
+      dateTo,
+    });
   };
 
   // Handler reset filter
@@ -236,7 +251,13 @@ export default function AuditLogsPage() {
     setDateFrom('');
     setDateTo('');
     setCurrentPage(1);
-    fetchLogs({ page: 1, per_page: 50 });
+    setAppliedFilters({
+      search: '',
+      action: '',
+      tableName: '',
+      dateFrom: '',
+      dateTo: '',
+    });
   };
 
   // Handler klik baris → buka detail modal
@@ -338,6 +359,7 @@ export default function AuditLogsPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
               placeholder="Nama user..."
               className={inputBaseClass}
             />
@@ -386,6 +408,7 @@ export default function AuditLogsPage() {
               type="text"
               value={tableFilter}
               onChange={(e) => setTableFilter(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
               placeholder="Nama model..."
               className={inputBaseClass}
             />

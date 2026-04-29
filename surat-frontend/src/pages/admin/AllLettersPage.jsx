@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminLetters } from '../../hooks/useAdminLetters';
+import { useReports } from '../../hooks/useReports';
 import { exportReport } from '../../api/reports.api';
 import { useToast } from '../../hooks/useToast';
 import ClassificationPicker from '../../components/ui/ClassificationPicker';
@@ -22,6 +23,7 @@ import { DocumentChartBarIcon, DocumentIcon, DocumentTextIcon } from '@heroicons
  */
 export default function AllLettersPage() {
   const { letters, loading, error, meta, fetchAllLetters } = useAdminLetters();
+  const { workUnits, fetchWorkUnits } = useReports();
   const toast = useToast();
 
   // === Filter state ===
@@ -36,25 +38,39 @@ export default function AllLettersPage() {
   // === Export state ===
   const [exporting, setExporting] = useState(null); // 'excel' | 'pdf' | null
 
-  // Build params dari filter
+  // Applied filters (only trigger fetch when this state changes)
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: '',
+    classificationId: null,
+    dateFrom: '',
+    dateTo: '',
+    status: '',
+    workUnit: '',
+  });
+
+  // Build params dari applied filter
   const buildParams = useCallback(
     (page = 1) => {
       const params = { page };
-      if (search.trim()) params.search = search.trim();
-      if (classificationId) params.classification_id = classificationId;
-      if (dateFrom) params.date_from = dateFrom;
-      if (dateTo) params.date_to = dateTo;
-      if (status) params.status = status;
-      if (workUnit.trim()) params.work_unit = workUnit.trim();
+      if (appliedFilters.search.trim()) params.search = appliedFilters.search.trim();
+      if (appliedFilters.classificationId) params.classification_id = appliedFilters.classificationId;
+      if (appliedFilters.dateFrom) params.date_from = appliedFilters.dateFrom;
+      if (appliedFilters.dateTo) params.date_to = appliedFilters.dateTo;
+      if (appliedFilters.status) params.status = appliedFilters.status;
+      if (appliedFilters.workUnit.trim()) params.work_unit = appliedFilters.workUnit.trim();
       return params;
     },
-    [search, classificationId, dateFrom, dateTo, status, workUnit]
+    [appliedFilters]
   );
 
   // Fetch data saat mount dan saat filter/page berubah
   useEffect(() => {
     fetchAllLetters(buildParams(currentPage));
   }, [fetchAllLetters, buildParams, currentPage]);
+
+  useEffect(() => {
+    fetchWorkUnits();
+  }, [fetchWorkUnits]);
 
   // Handler ganti halaman
   const handlePageChange = (page) => {
@@ -64,7 +80,14 @@ export default function AllLettersPage() {
   // Handler apply filter
   const handleFilter = () => {
     setCurrentPage(1);
-    fetchAllLetters(buildParams(1));
+    setAppliedFilters({
+      search,
+      classificationId,
+      dateFrom,
+      dateTo,
+      status,
+      workUnit,
+    });
   };
 
   // Handler reset filter
@@ -76,7 +99,14 @@ export default function AllLettersPage() {
     setStatus('');
     setWorkUnit('');
     setCurrentPage(1);
-    fetchAllLetters({ page: 1 });
+    setAppliedFilters({
+      search: '',
+      classificationId: null,
+      dateFrom: '',
+      dateTo: '',
+      status: '',
+      workUnit: '',
+    });
   };
 
   // Handler export
@@ -236,6 +266,7 @@ export default function AllLettersPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
               placeholder="Ketik nama atau perihal..."
               className={inputBaseClass}
             />
@@ -267,7 +298,6 @@ export default function AllLettersPage() {
             />
           </div>
 
-          {/* Status */}
           <div className="w-full sm:w-32">
             <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Status
@@ -279,22 +309,27 @@ export default function AllLettersPage() {
             >
               <option value="">Semua</option>
               <option value="active">Aktif</option>
-              <option value="voided">Dibatalkan</option>
+              <option value="active_regular">Reguler</option>
+              <option value="active_gap">Kosong</option>
             </select>
           </div>
 
-          {/* Unit Kerja */}
-          <div className="w-full sm:w-36">
+          <div className="w-full sm:w-48">
             <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
               Unit Kerja
             </label>
-            <input
-              type="text"
+            <select
               value={workUnit}
               onChange={(e) => setWorkUnit(e.target.value)}
-              placeholder="Nama unit kerja..."
               className={inputBaseClass}
-            />
+            >
+              <option value="">Semua Unit</option>
+              {workUnits.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Filter action buttons */}

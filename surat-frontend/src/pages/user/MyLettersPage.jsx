@@ -52,19 +52,29 @@ export default function MyLettersPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState(null);
 
-  // Build params dari filter
+  // Applied filters (only trigger fetch when this state changes)
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: '',
+    dateFrom: '',
+    dateTo: '',
+    classificationId: null,
+    source: '',
+    sifatSurat: '',
+  });
+
+  // Build params dari applied filter
   const buildParams = useCallback(
     (page = 1) => {
       const params = { page };
-      if (search) params.search = search;
-      if (dateFrom) params.date_from = dateFrom;
-      if (dateTo) params.date_to = dateTo;
-      if (classificationId) params.classification_id = classificationId;
-      if (source) params.source = source;
-      if (sifatSurat) params.sifat_surat = sifatSurat;
+      if (appliedFilters.search) params.search = appliedFilters.search;
+      if (appliedFilters.dateFrom) params.date_from = appliedFilters.dateFrom;
+      if (appliedFilters.dateTo) params.date_to = appliedFilters.dateTo;
+      if (appliedFilters.classificationId) params.classification_id = appliedFilters.classificationId;
+      if (appliedFilters.source) params.source = appliedFilters.source;
+      if (appliedFilters.sifatSurat) params.sifat_surat = appliedFilters.sifatSurat;
       return params;
     },
-    [search, dateFrom, dateTo, classificationId, source, sifatSurat]
+    [appliedFilters]
   );
 
   // Fetch data saat mount dan saat filter/page berubah
@@ -76,7 +86,14 @@ export default function MyLettersPage() {
 
   const handleFilter = () => {
     setCurrentPage(1);
-    fetchMyLetters(buildParams(1));
+    setAppliedFilters({
+      search,
+      dateFrom,
+      dateTo,
+      classificationId,
+      source,
+      sifatSurat,
+    });
   };
 
   const handleResetFilter = () => {
@@ -87,7 +104,14 @@ export default function MyLettersPage() {
     setSource('');
     setSifatSurat('');
     setCurrentPage(1);
-    fetchMyLetters({ page: 1 });
+    setAppliedFilters({
+      search: '',
+      dateFrom: '',
+      dateTo: '',
+      classificationId: null,
+      source: '',
+      sifatSurat: '',
+    });
   };
 
   // Cek apakah surat dapat diedit:
@@ -271,6 +295,7 @@ export default function MyLettersPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
                 placeholder="Cari perihal, tujuan, atau nomor..."
                 className={inputBaseClass}
               />

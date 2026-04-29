@@ -71,16 +71,23 @@ export default function UsersPage() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
 
-  // Build params dari filter
+  // Applied filters (only trigger fetch when this state changes)
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: '',
+    role: '',
+    status: '',
+  });
+
+  // Build params dari applied filter
   const buildParams = useCallback(
     (page = 1) => {
       const params = { page };
-      if (search.trim()) params.search = search.trim();
-      if (roleFilter) params.role = roleFilter;
-      if (statusFilter) params.is_active = statusFilter;
+      if (appliedFilters.search.trim()) params.search = appliedFilters.search.trim();
+      if (appliedFilters.role) params.role = appliedFilters.role;
+      if (appliedFilters.status) params.is_active = appliedFilters.status;
       return params;
     },
-    [search, roleFilter, statusFilter]
+    [appliedFilters]
   );
 
   // Fetch data saat mount dan saat filter/page berubah
@@ -96,7 +103,11 @@ export default function UsersPage() {
   // Handler apply filter
   const handleFilter = () => {
     setCurrentPage(1);
-    fetchUsers(buildParams(1));
+    setAppliedFilters({
+      search,
+      role: roleFilter,
+      status: statusFilter,
+    });
   };
 
   // Handler reset filter
@@ -105,7 +116,11 @@ export default function UsersPage() {
     setRoleFilter('');
     setStatusFilter('');
     setCurrentPage(1);
-    fetchUsers({ page: 1 });
+    setAppliedFilters({
+      search: '',
+      role: '',
+      status: '',
+    });
   };
 
   // === Validasi Form ===
@@ -670,6 +685,7 @@ export default function UsersPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
               placeholder="Ketik nama atau email..."
               className={inputBaseClass}
             />

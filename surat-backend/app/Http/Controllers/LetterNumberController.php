@@ -309,7 +309,13 @@ class LetterNumberController extends Controller
 
         // Filter berdasarkan status
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'active_regular') {
+                $query->where('status', 'active')->where('source', 'regular');
+            } elseif ($request->status === 'active_gap') {
+                $query->where('status', 'active')->where('source', 'gap');
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
         // Filter berdasarkan Unit Kerja user
