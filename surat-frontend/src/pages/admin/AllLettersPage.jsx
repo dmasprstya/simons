@@ -308,7 +308,6 @@ export default function AllLettersPage() {
               className={inputBaseClass}
             >
               <option value="">Semua</option>
-              <option value="active">Aktif</option>
               <option value="active_regular">Reguler</option>
               <option value="active_gap">Kosong</option>
             </select>

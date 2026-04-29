@@ -490,99 +490,101 @@ export default function UsersPage() {
 
     return (
       <div className="space-y-4">
-        {/* Foto Profil */}
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-2">
-            Foto Profil
-          </label>
-          <div className="flex items-center gap-4">
-            {photoPreview ? (
-              <img
-                src={photoPreview}
-                alt="Preview"
-                className="w-16 h-16 rounded-full object-cover border-2 border-[#1B2F6E]/20"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-[#1B2F6E]/10 flex items-center justify-center text-[#1B2F6E]/40">
-                <UserIcon className="h-8 w-8" />
+        {/* Foto Profil & Nama dalam satu baris flex */}
+        <div className="flex flex-col md:flex-row gap-5 items-start">
+          <div className="flex-shrink-0">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-2">
+              Foto Profil
+            </label>
+            <div className="flex items-center gap-3">
+              {photoPreview ? (
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-[#1B2F6E]/20"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-[#1B2F6E]/10 flex items-center justify-center text-[#1B2F6E]/40">
+                  <UserIcon className="h-7 w-7" />
+                </div>
+              )}
+              <div>
+                <label
+                  htmlFor="photo-upload"
+                  className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] px-2.5 py-1.5 text-[10px] font-semibold text-[#0B1F3A] hover:bg-white hover:border-primary transition-colors"
+                >
+                  <PhotoIcon className="h-3.5 w-3.5" />
+                  {photoPreview ? 'Ganti' : 'Pilih'}
+                </label>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/jpg,image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={handlePhotoChange}
+                />
               </div>
-            )}
-            <div className="flex-1">
-              <label
-                htmlFor="photo-upload"
-                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] px-3 py-1.5 text-xs font-medium text-[#0B1F3A] hover:bg-white hover:border-primary transition-colors"
-              >
-                <PhotoIcon className="h-4 w-4" />
-                {photoPreview ? 'Ganti Foto' : 'Pilih Foto'}
-              </label>
-              <input
-                id="photo-upload"
-                type="file"
-                accept="image/jpg,image/jpeg,image/png,image/webp"
-                className="sr-only"
-                onChange={handlePhotoChange}
-              />
-              <p className="mt-1 text-[10px] text-[#64748B]">JPG, PNG, atau WEBP. Maks 2MB.</p>
             </div>
+          </div>
+
+          <div className="flex-1 w-full">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
+              Nama Lengkap <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={handleInputChange('name')}
+              placeholder="Masukkan nama lengkap"
+              className={formErrors.name ? inputErrorClass : inputBaseClass}
+            />
+            {formErrors.name && (
+              <p className="mt-1 text-[10px] text-red-600">{formErrors.name}</p>
+            )}
           </div>
         </div>
 
-        {/* Nama */}
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-            Nama <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={handleInputChange('name')}
-            placeholder="Masukkan nama lengkap"
-            className={formErrors.name ? inputErrorClass : inputBaseClass}
-          />
-          {formErrors.name && (
-            <p className="mt-1 text-xs text-red-600">{formErrors.name}</p>
-          )}
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* NIP */}
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
+              NIP <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.nip}
+              onChange={handleInputChange('nip')}
+              placeholder="Masukkan NIP"
+              className={formErrors.nip ? inputErrorClass : inputBaseClass}
+            />
+            {formErrors.nip && (
+              <p className="mt-1 text-[10px] text-red-600">{formErrors.nip}</p>
+            )}
+          </div>
 
-        {/* NIP */}
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-            NIP <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.nip}
-            onChange={handleInputChange('nip')}
-            placeholder="Masukkan NIP"
-            className={formErrors.nip ? inputErrorClass : inputBaseClass}
-          />
-          {formErrors.nip && (
-            <p className="mt-1 text-xs text-red-600">{formErrors.nip}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-            Email <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange('email')}
-            placeholder="contoh@email.com"
-            className={formErrors.email ? inputErrorClass : inputBaseClass}
-          />
-          {formErrors.email && (
-            <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>
-          )}
+          {/* Email */}
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange('email')}
+              placeholder="contoh@email.com"
+              className={formErrors.email ? inputErrorClass : inputBaseClass}
+            />
+            {formErrors.email && (
+              <p className="mt-1 text-[10px] text-red-600">{formErrors.email}</p>
+            )}
+          </div>
         </div>
 
         {/* Password — hanya tampil saat tambah user baru */}
         {!isEdit && (
-          <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
                 Password <span className="text-red-500">*</span>
               </label>
               <input
@@ -593,12 +595,12 @@ export default function UsersPage() {
                 className={formErrors.password ? inputErrorClass : inputBaseClass}
               />
               {formErrors.password && (
-                <p className="mt-1 text-xs text-red-600">{formErrors.password}</p>
+                <p className="mt-1 text-[10px] text-red-600">{formErrors.password}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
                 Konfirmasi Password <span className="text-red-500">*</span>
               </label>
               <input
@@ -609,46 +611,48 @@ export default function UsersPage() {
                 className={formErrors.password_confirmation ? inputErrorClass : inputBaseClass}
               />
               {formErrors.password_confirmation && (
-                <p className="mt-1 text-xs text-red-600">{formErrors.password_confirmation}</p>
+                <p className="mt-1 text-[10px] text-red-600">{formErrors.password_confirmation}</p>
               )}
             </div>
-          </>
+          </div>
         )}
 
-        {/* Unit Kerja */}
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-            Unit Kerja <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.work_unit}
-            onChange={handleInputChange('work_unit')}
-            className={formErrors.work_unit ? inputErrorClass : inputBaseClass}
-          >
-            <option value="">-- Pilih Unit Kerja --</option>
-            <option value="Bidang P3H">Bidang P3H</option>
-            <option value="Layanan KI">Layanan KI</option>
-            <option value="Layanan AHU">Layanan AHU</option>
-            <option value="Bagian TUM">Bagian TUM</option>
-          </select>
-          {formErrors.work_unit && (
-            <p className="mt-1 text-xs text-red-600">{formErrors.work_unit}</p>
-          )}
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Unit Kerja */}
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
+              Unit Kerja <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.work_unit}
+              onChange={handleInputChange('work_unit')}
+              className={formErrors.work_unit ? inputErrorClass : inputBaseClass}
+            >
+              <option value="">-- Pilih Unit Kerja --</option>
+              <option value="Divisi Peraturan Perundangan-undangan dan Pembinaan Hukum">Divisi Peraturan Perundangan-undangan dan Pembinaan Hukum</option>
+              <option value="Bidang Pelayanan Administrasi Hukum Umum">Bidang Pelayanan Administrasi Hukum Umum</option>
+              <option value="Bidang Pelayanan Kekayaan Intelektual">Bidang Pelayanan Kekayaan Intelektual</option>
+              <option value="Bagian Tata Usaha dan Umum">Bagian Tata Usaha dan Umum</option>
+            </select>
+            {formErrors.work_unit && (
+              <p className="mt-1 text-[10px] text-red-600">{formErrors.work_unit}</p>
+            )}
+          </div>
 
-        {/* Role */}
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
-            Role
-          </label>
-          <select
-            value={formData.role}
-            onChange={handleInputChange('role')}
-            className={inputBaseClass}
-          >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
+          {/* Role */}
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
+              Role
+            </label>
+            <select
+              value={formData.role}
+              onChange={handleInputChange('role')}
+              className={inputBaseClass}
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
         </div>
 
         {/* Action error dari API */}
@@ -754,7 +758,7 @@ export default function UsersPage() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Tambah User Baru"
-        size="md"
+        size="lg"
       >
         <form onSubmit={handleSubmitAdd}>
           {renderFormFields(false)}
@@ -787,7 +791,7 @@ export default function UsersPage() {
           setEditingUser(null);
         }}
         title="Edit User"
-        size="md"
+        size="lg"
       >
         <form onSubmit={handleSubmitEdit}>
           {renderFormFields(true)}
