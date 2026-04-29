@@ -46,6 +46,53 @@ class NumberingService
     }
 
     /**
+     * Menangani rollover harian dan tahunan untuk semua hari yang terlewat.
+     * Mengabaikan hari Sabtu dan Minggu sesuai aturan hari libur.
+     *
+     * @param  GlobalSequence  $seq
+     * @return void
+     */
+    private function performRollover(GlobalSequence $seq): void
+    {
+        if ($seq->last_issued_date === null) {
+            return;
+        }
+
+        $cursorDate = $seq->last_issued_date->copy();
+        $today = today();
+
+        while ($cursorDate->lt($today)) {
+            // Abaikan Sabtu dan Minggu untuk pembuatan gap
+            if (!$cursorDate->isWeekend() && $seq->last_number > 0) {
+                $gapStart = $seq->last_number + 1;
+                $gapEnd   = $seq->last_number + $seq->gap_size;
+
+                $this->archiveGapZone($cursorDate, $gapStart, $gapEnd);
+
+                $seq->last_number = $gapEnd;
+
+                Log::info('NumberingService: daily rollover gap applied', [
+                    'date' => $cursorDate->toDateString(),
+                    'gap' => "{$gapStart}–{$gapEnd}",
+                ]);
+            }
+
+            $prevYear = $cursorDate->year;
+            $cursorDate->addDay();
+
+            // Deteksi Ganti Tahun dalam perulangan lompatan hari
+            if ($cursorDate->year > $prevYear) {
+                $seq->last_number = 0;
+                Log::info('NumberingService: yearly reset applied during rollover', [
+                    'new_year' => $cursorDate->year,
+                ]);
+            }
+        }
+
+        $seq->last_issued_date = $today;
+    }
+
+    /**
      * Mengambil (acquire) nomor surat berikutnya dari GlobalSequence.
      * Mengikuti alur linear dengan gap saat ganti hari (rollover).
      *
@@ -66,44 +113,13 @@ class NumberingService
                         $seq = GlobalSequence::getInstance();
                     }
 
-                    // 1. Deteksi Ganti Tahun
-                    $isNewYear = $seq->last_issued_date !== null && 
-                                 $seq->last_issued_date->format('Y') !== today()->format('Y');
-
-                    if ($isNewYear) {
-                        // Arsipkan gap terakhir dari tahun lalu
-                        $this->archiveGapZone($seq->last_issued_date, $seq->last_number + 1, $seq->last_number + $seq->gap_size);
-                        
-                        // Mulai dari 1 untuk tahun baru
-                        $candidate = 1;
-
-                        Log::info('NumberingService: yearly reset applied', [
-                            'old_year' => $seq->last_issued_date->format('Y'),
-                            'new_year' => today()->format('Y'),
-                        ]);
-                    } 
-                    // 2. Deteksi Ganti Hari (dalam tahun yang sama)
-                    elseif ($seq->last_issued_date !== null && $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d')) {
-                        $gapStart = $seq->last_number + 1;
-                        $gapEnd   = $seq->last_number + $seq->gap_size;
-
-                        $this->archiveGapZone($seq->last_issued_date, $gapStart, $gapEnd);
-
-                        $candidate = $gapEnd + 1;
-
-                        Log::info('NumberingService: daily rollover gap applied', [
-                            'old_date' => $seq->last_issued_date->toDateString(),
-                            'gap' => "{$gapStart}–{$gapEnd}",
-                        ]);
-                    } 
-                    // 3. Hari yang sama atau penggunaan pertama kali
-                    else {
-                        // Gunakan default_start HANYA jika benar-benar pertama kali (null date)
-                        if ($seq->last_number === 0 && $seq->last_issued_date === null) {
-                            $candidate = config('numbering.default_start', 1000);
-                        } else {
-                            $candidate = $seq->last_number + 1;
-                        }
+                    if ($seq->last_issued_date === null) {
+                        // Penggunaan pertama kali
+                        $candidate = config('numbering.default_start', 1000);
+                    } else {
+                        // Jalankan rollover (harian/tahunan/lompatan hari)
+                        $this->performRollover($seq);
+                        $candidate = $seq->last_number + 1;
                     }
 
                     // Verifikasi nomor belum dipakai di tahun yang sama
@@ -128,6 +144,7 @@ class NumberingService
             }
         }
     }
+
 
     /**
      * Menerbitkan nomor dari zona gap berdasarkan GapRequest yang sudah diapprove.
@@ -209,39 +226,15 @@ class NumberingService
         DB::transaction(function () {
             $seq = $this->withLock(GlobalSequence::query()->where('id', 1))->first();
 
-            if (!$seq || $seq->last_issued_date === null) {
+            if (!$seq || $seq->last_issued_date === null || $seq->last_issued_date->isToday()) {
                 return;
             }
 
-            $isNewYear = $seq->last_issued_date->format('Y') !== today()->format('Y');
-            $isNewDay  = $seq->last_issued_date->format('Y-m-d') !== today()->format('Y-m-d');
-
-            if (!$isNewDay) {
-                return;
-            }
-
-            // Arsipkan gap hari terakhir yang tercatat
-            if ($seq->last_number > 0) {
-                $gapEnd = $seq->last_number + $seq->gap_size;
-                $this->archiveGapZone($seq->last_issued_date, $seq->last_number + 1, $gapEnd);
-
-                if ($isNewYear) {
-                    // Reset ke 0 agar saat acquireNumber() dipanggil berikutnya, candidate = 1
-                    $seq->last_number = 0;
-                    Log::info('NumberingService@ensureDayIsCurrent: yearly reset triggered');
-                } else {
-                    // Majukan nomor terakhir melewati gap untuk hari baru
-                    $seq->last_number = $gapEnd;
-                    Log::info('NumberingService@ensureDayIsCurrent: daily rollover applied', [
-                        'gap_end' => $gapEnd
-                    ]);
-                }
-            }
-
-            $seq->last_issued_date = today();
+            $this->performRollover($seq);
             $seq->save();
         });
     }
+
 
 
     /**

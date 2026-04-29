@@ -164,4 +164,75 @@ class NumberingServiceTest extends TestCase
         $this->service->releaseGapNumber($gapRequest);
     }
 
+    /**
+     * Test 6: Mengabaikan hari Sabtu dan Minggu saat rollover.
+     */
+    public function test_rollover_mengabaikan_sabtu_dan_minggu(): void
+    {
+        // Jumat, 2026-04-24
+        Carbon::setTestNow('2026-04-24 10:00:00');
+        $this->service->acquireNumber(); // 1000
+
+        // Senin, 2026-04-27
+        Carbon::setTestNow('2026-04-27 10:00:00');
+        $n2 = $this->service->acquireNumber(); 
+        
+        // Terakhir Jumat: 1000.
+        // Sabtu & Minggu libur -> tidak ada gap.
+        // Rollover Jumat -> Gap 1001-1010.
+        // Nomor Senin = 1011.
+        $this->assertEquals(1011, $n2);
+
+        // Verifikasi arsip gap hanya untuk Jumat
+        $this->assertDatabaseHas('daily_gaps', ['date' => '2026-04-24 00:00:00']);
+        $this->assertDatabaseMissing('daily_gaps', ['date' => '2026-04-25 00:00:00']); // Sabtu
+        $this->assertDatabaseMissing('daily_gaps', ['date' => '2026-04-26 00:00:00']); // Minggu
+    }
+
+    /**
+     * Test 7: Menangani lompatan beberapa hari kerja (misal Senin ke Rabu).
+     */
+    public function test_rollover_menangani_lompatan_beberapa_hari_kerja(): void
+    {
+        // Senin, 2026-04-20
+        Carbon::setTestNow('2026-04-20 10:00:00');
+        $this->service->acquireNumber(); // 1000
+
+        // Rabu, 2026-04-22 (Selasa dilewati)
+        Carbon::setTestNow('2026-04-22 10:00:00');
+        $n2 = $this->service->acquireNumber(); 
+        
+        // Senin: terakhir 1000.
+        // Rollover Senin -> Gap 1001-1010.
+        // Selasa (kerja) dilewati -> Gap 1011-1020.
+        // Nomor Rabu = 1021.
+        $this->assertEquals(1021, $n2);
+
+        $this->assertDatabaseHas('daily_gaps', ['date' => '2026-04-20 00:00:00', 'gap_start' => 1001, 'gap_end' => 1010]);
+        $this->assertDatabaseHas('daily_gaps', ['date' => '2026-04-21 00:00:00', 'gap_start' => 1011, 'gap_end' => 1020]);
+    }
+
+    /**
+     * Test 8: Reset tahunan tetap berjalan di dalam lompatan hari.
+     * New year harus selalu mulai dari 1, meskipun hari pertama kerja di tahun baru terlewati.
+     */
+    public function test_rollover_menangani_reset_tahunan_di_tengah_lompatan(): void
+    {
+        // Rabu, 2025-12-31 
+        Carbon::setTestNow('2025-12-31 10:00:00');
+        $this->service->acquireNumber(); // 1000
+
+        // Jumat, 2026-01-02 (Jan 1 Kamis dilewati)
+        Carbon::setTestNow('2026-01-02 10:00:00');
+        $n2 = $this->service->acquireNumber(); 
+        
+        // Des 31: 1000.
+        // Rollover Des 31 -> Gap diarsipkan.
+        // Masuk Jan 1 -> Reset ke 0. 
+        // Karena last_number = 0, Jan 1 tidak dibuatkan gap (start of year clean slate).
+        // Jan 2 -> Candidate 1.
+        $this->assertEquals(1, $n2);
+    }
 }
+
+
