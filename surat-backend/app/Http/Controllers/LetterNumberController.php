@@ -49,11 +49,11 @@ class LetterNumberController extends Controller
         $dateTo   = $request->input('date_to', $request->input('issued_date_to'));
 
         if ($dateFrom) {
-            $query->whereDate('issued_date', '>=', $dateFrom);
+            $query->where('issued_date', '>=', $dateFrom);
         }
 
         if ($dateTo) {
-            $query->whereDate('issued_date', '<=', $dateTo);
+            $query->where('issued_date', '<=', $dateTo);
         }
 
         // Filter berdasarkan klasifikasi
@@ -285,15 +285,17 @@ class LetterNumberController extends Controller
      */
     public function all(Request $request): JsonResponse
     {
-        $query = LetterNumber::with(['user', 'classification']);
+        $query = LetterNumber::select('letter_numbers.*')
+            ->with(['user', 'classification'])
+            ->join('users', 'users.id', '=', 'letter_numbers.user_id');
 
         // Filter pencarian teks — nama user, perihal, nomor, atau formatted_number
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('formatted_number', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+                $q->where('letter_numbers.subject', 'like', "%{$search}%")
+                  ->orWhere('letter_numbers.formatted_number', 'like', "%{$search}%")
+                  ->orWhere('users.name', 'like', "%{$search}%");
             });
         }
 
@@ -320,7 +322,7 @@ class LetterNumberController extends Controller
 
         // Filter berdasarkan Unit Kerja user
         if ($request->filled('work_unit')) {
-            $query->whereHas('user', fn ($u) => $u->where('work_unit', 'like', '%' . $request->work_unit . '%'));
+            $query->where('users.work_unit', $request->work_unit);
         }
 
         // Filter rentang tanggal issued_date — terima date_from/date_to atau issued_date_from/issued_date_to
@@ -328,14 +330,15 @@ class LetterNumberController extends Controller
         $dateTo   = $request->input('date_to', $request->input('issued_date_to'));
 
         if ($dateFrom) {
-            $query->whereDate('issued_date', '>=', $dateFrom);
+            $query->where('issued_date', '>=', $dateFrom);
         }
 
         if ($dateTo) {
-            $query->whereDate('issued_date', '<=', $dateTo);
+            $query->where('issued_date', '<=', $dateTo);
         }
 
-        $letters = $query->orderByDesc('issued_date')->orderByDesc('number')->paginate(20);
+        $perPage = (int) $request->input('per_page', 50);
+        $letters = $query->orderByDesc('issued_date')->orderByDesc('number')->paginate($perPage);
 
         return response()->json([
             'data'    => LetterNumberResource::collection($letters),

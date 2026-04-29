@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\NumberingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -101,16 +102,14 @@ class DashboardController extends Controller
     {
         $today = now()->toDateString();
 
-        // === Stats: 3 COUNT query — lebih ringan dari getSummary() yang punya 4 sub-query ===
-
-        // Surat hari ini (semua user)
-        $todayLettersCount = LetterNumber::whereDate('issued_date', $today)->count();
-
-        // Gap request yang menunggu persetujuan
-        $pendingGapsCount = GapRequest::where('status', 'pending')->count();
-
-        // Total user aktif
-        $activeUsersCount = User::where('is_active', true)->count();
+        // === Stats: Cached for 60 seconds ===
+        $stats = Cache::remember('admin_dashboard_stats', 60, function () use ($today) {
+            return [
+                'today_letters' => LetterNumber::where('issued_date', $today)->count(),
+                'pending_gaps'  => GapRequest::where('status', 'pending')->count(),
+                'active_users'  => User::where('is_active', true)->count(),
+            ];
+        });
 
         // 10 surat terbaru dari semua user — eager load user + classification
         $allRecentLetters = LetterNumber::with(['user', 'classification'])
@@ -133,11 +132,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'data' => [
-                'stats' => [
-                    'today_letters' => $todayLettersCount,
-                    'pending_gaps'  => $pendingGapsCount,
-                    'active_users'  => $activeUsersCount,
-                ],
+                'stats' => $stats,
                 'all_recent_letters' => LetterNumberResource::collection($allRecentLetters),
                 'audit_logs'         => AuditLogResource::collection($auditLogs),
                 'sequence'           => $sequence,

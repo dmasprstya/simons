@@ -12,8 +12,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 /**
  * Hitung range halaman yang ditampilkan (max 5 halaman)
  */
-function getPageNumbers(currentPage, lastPage) {
-  const maxVisible = 5;
+function getPageNumbers(currentPage, lastPage, maxVisible = 5) {
   const pages = [];
 
   if (lastPage <= maxVisible) {
@@ -34,7 +33,7 @@ function getPageNumbers(currentPage, lastPage) {
   return pages;
 }
 
-export default function Pagination({ meta, onPageChange }) {
+export default function Pagination({ meta, onPageChange, maxVisible = 5, labelMultiplier = 1 }) {
   const current_page = meta?.current_page ?? 1;
   const last_page = meta?.last_page ?? 1;
   const total = meta?.total ?? 0;
@@ -42,8 +41,8 @@ export default function Pagination({ meta, onPageChange }) {
 
   // Hook harus dipanggil tanpa kondisi (Rules of Hooks)
   const pages = useMemo(
-    () => getPageNumbers(current_page, last_page),
-    [current_page, last_page]
+    () => getPageNumbers(current_page, last_page, maxVisible),
+    [current_page, last_page, maxVisible]
   );
 
   if (!meta || last_page <= 1) return null;
@@ -91,7 +90,7 @@ export default function Pagination({ meta, onPageChange }) {
             `}
             aria-current={page === current_page ? 'page' : undefined}
           >
-            {page}
+            {page * labelMultiplier}
           </button>
         ))}
 

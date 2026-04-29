@@ -51,7 +51,7 @@ export default function AllLettersPage() {
   // Build params dari applied filter
   const buildParams = useCallback(
     (page = 1) => {
-      const params = { page };
+      const params = { page, per_page: 50 };
       if (appliedFilters.search.trim()) params.search = appliedFilters.search.trim();
       if (appliedFilters.classificationId) params.classification_id = appliedFilters.classificationId;
       if (appliedFilters.dateFrom) params.date_from = appliedFilters.dateFrom;
@@ -346,6 +346,9 @@ export default function AllLettersPage() {
       {/* Error state */}
       {error && <ErrorMessage error={error} />}
 
+      {/* Pagination Atas */}
+      <Pagination meta={meta} onPageChange={handlePageChange} maxVisible={10} labelMultiplier={10} />
+
       {/* Tabel surat */}
       <Table
         columns={columns}
@@ -356,7 +359,7 @@ export default function AllLettersPage() {
       />
 
       {/* Pagination */}
-      <Pagination meta={meta} onPageChange={handlePageChange} />
+      <Pagination meta={meta} onPageChange={handlePageChange} maxVisible={10} labelMultiplier={10} />
     </div>
   );
 }

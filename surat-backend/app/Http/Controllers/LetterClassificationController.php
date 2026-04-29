@@ -84,6 +84,7 @@ class LetterClassificationController extends Controller
                 $q->where('name', 'like', "%{$term}%")
                   ->orWhere('code', 'like', "%{$term}%");
             })
+            ->orderBy('is_leaf', 'desc')
             ->orderBy('code')
             ->limit(20)
             ->get();

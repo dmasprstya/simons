@@ -128,7 +128,14 @@ export default function ClassificationPicker({ value, onChange, disabled = false
     // ancestors + item itself
     const fullPath = [...(item.ancestors || []), item];
     setPath(fullPath);
-    onChange?.(String(item.id));
+
+    if (item.is_leaf) {
+      onChange?.(String(item.id));
+    } else {
+      onChange?.(null);
+      // Pre-fetch children for the non-leaf item to populate the options list
+      fetchChildrenCached(item.id);
+    }
 
     // Pre-cache children for ancestors so breadcrumb navigation works smoothly
     item.ancestors?.forEach(anc => {
@@ -136,7 +143,7 @@ export default function ClassificationPicker({ value, onChange, disabled = false
         getChildren(anc.id).then(res => setChildren(anc.id, res.data || []));
       }
     });
-  }, [childrenMap, setChildren, onChange]);
+  }, [childrenMap, setChildren, onChange, fetchChildrenCached]);
 
   // Navigate back to a level in the path
   const handleBreadcrumbClick = (index) => {
@@ -186,14 +193,26 @@ export default function ClassificationPicker({ value, onChange, disabled = false
                 <li
                   key={item.id}
                   onMouseDown={() => handleSearchSelect(item)}
-                  className="px-5 py-3.5 cursor-pointer hover:bg-[#F8FAFC] transition-colors duration-150 border-b border-slate-50 last:border-0 group"
+                  className="px-5 py-3.5 cursor-pointer hover:bg-[#F8FAFC] transition-colors duration-150 border-b border-slate-50 last:border-0 group flex items-center justify-between"
                 >
-                  <div className="text-sm font-bold text-[#1B2F6E] group-hover:text-[var(--color-primary)]">{item.name}</div>
-                  <div className="text-[11px] text-[#94A3B8] flex items-center gap-1 mt-1 font-medium">
-                    <span className="text-[var(--color-secondary-dark)] font-bold">{item.code}</span>
-                    <span className="mx-1">•</span>
-                    {item.ancestors?.map((a) => a.name).join(' › ')} {item.ancestors?.length > 0 && '›'} <span className="text-[#1B2F6E]">{item.name}</span>
+                  <div className="flex-1">
+                    <div className="text-sm font-bold text-[#1B2F6E] group-hover:text-[var(--color-primary)]">{item.name}</div>
+                    <div className="text-[11px] text-[#94A3B8] flex items-center gap-1 mt-1 font-medium">
+                      <span className="text-[var(--color-secondary-dark)] font-bold">{item.code}</span>
+                      <span className="mx-1">•</span>
+                      {item.ancestors?.map((a) => a.name).join(' › ')} {item.ancestors?.length > 0 && '›'} <span className="text-[#1B2F6E]">{item.name}</span>
+                    </div>
                   </div>
+
+                  {item.is_leaf ? (
+                    <span className="ml-4 px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase rounded-lg border border-emerald-100 group-hover:bg-emerald-500 group-hover:text-white transition-all whitespace-nowrap">
+                      Pilih
+                    </span>
+                  ) : (
+                    <span className="ml-4 px-2.5 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-lg border border-blue-100 group-hover:bg-blue-500 group-hover:text-white transition-all whitespace-nowrap flex items-center gap-1.5">
+                      Sub <ChevronRightIcon className="w-2.5 h-2.5" />
+                    </span>
+                  )}
                 </li>
               ))
             )}

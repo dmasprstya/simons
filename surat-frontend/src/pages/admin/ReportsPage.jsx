@@ -245,9 +245,9 @@ export default function ReportsPage() {
     setDateFrom(from);
     setDateTo(to);
 
-    fetchSummary({ date_from: from, date_to: to });
+    // fetchSummary({ date_from: from, date_to: to }); // REMOVED: Initial fetch on mount
     fetchWorkUnits();
-  }, [fetchSummary, fetchWorkUnits]);
+  }, [fetchWorkUnits]);
 
   // Debounced user search
   useEffect(() => {
@@ -363,7 +363,7 @@ export default function ReportsPage() {
     setStatus('');
     setSifatSurat('');
     setUserName('');
-    fetchSummary({ date_from: from, date_to: to });
+    // fetchSummary({ date_from: from, date_to: to }); // REMOVED: Initial fetch on reset
   };
 
   // Handler export dengan toast notification
