@@ -304,7 +304,7 @@ export default function TakeNumberPage() {
       >
         {resultData && (
           <div className="space-y-4">
-            {/* Detail nomor surat terformat (W7-{kode}-{nomor}) */}
+            {/* Detail nomor surat terformat (W7.{kode}-{nomor}) */}
             <div className="bg-primary-light rounded-2xl p-4 md:p-5 text-center">
               <p className="text-[10px] md:text-xs text-primary font-bold uppercase tracking-widest opacity-70">
                 Nomor Surat

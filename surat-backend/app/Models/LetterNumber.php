@@ -50,10 +50,11 @@ class LetterNumber extends Model
      */
     public static function buildFormattedNumber(string $classificationCode, int $number): string
     {
-        $prefix    = config('numbering.prefix');      // W7
-        $separator = config('numbering.separator');    // -
+        $prefix    = config('numbering.prefix');
+        $ps        = config('numbering.prefix_separator');
+        $separator = config('numbering.separator');
 
-        return "{$prefix}{$separator}{$classificationCode}{$separator}{$number}";
+        return "{$prefix}{$ps}{$classificationCode}{$separator}{$number}";
     }
 
     // ─── Relasi ──────────────────────────────────────────────────────────────

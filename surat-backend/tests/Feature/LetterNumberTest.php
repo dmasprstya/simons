@@ -76,11 +76,11 @@ class LetterNumberTest extends TestCase
         // default_start = 1000, nomor pertama harus >= 1000
         $this->assertGreaterThanOrEqual(1000, $response->json('data.number'));
 
-        // formatted_number harus mengikuti pola W7-{kode}-{angka}
+        // formatted_number harus mengikuti pola W7.{kode}-{angka}
         $this->assertMatchesRegularExpression(
-            '/^W7-.+-.+$/',
+            '/^W7\..+-.+$/',
             $response->json('data.formatted_number'),
-            'formatted_number harus mengikuti pola W7-{kode}-{angka}'
+            'formatted_number harus mengikuti pola W7.{kode}-{angka}'
         );
     }
 

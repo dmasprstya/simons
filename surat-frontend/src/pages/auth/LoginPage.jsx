@@ -29,15 +29,15 @@ export default function LoginPage() {
   const passwordRef = useRef(null);
 
   // Validasi client-side sederhana
-  const isFormValid = nip.trim().length > 0 && password.length > 0;
+  const isFormValid = nip.length === 18 && password.length > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     // Cek validasi sebelum kirim
-    if (!nip.trim()) {
-      setError('NIP tidak boleh kosong.');
+    if (nip.length !== 18) {
+      setError('NIP harus berjumlah 18 angka.');
       return;
     }
     if (!password) {
@@ -107,7 +107,7 @@ export default function LoginPage() {
                 id="login-nip"
                 type="text"
                 value={nip}
-                onChange={(e) => setNip(e.target.value)}
+                onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 18))}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && nip.trim()) {
                     e.preventDefault();
@@ -115,6 +115,7 @@ export default function LoginPage() {
                   }
                 }}
                 placeholder="Masukkan NIP"
+                maxLength="18"
                 disabled={loading}
                 autoComplete="username"
                 className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] text-sm text-primary placeholder-[#94A3B8]

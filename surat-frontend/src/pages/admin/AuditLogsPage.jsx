@@ -124,11 +124,40 @@ function formatDateTime(dateStr) {
   });
 }
 
+const ACTION_LABELS = {
+  'letter.created': 'Surat Dibuat',
+  'letter.updated': 'Detail Surat Diperbarui',
+  'letter.voided': 'Surat Dibatalkan',
+  'gap_request.created': 'Permintaan Gap Diajukan',
+  'gap_request.status_changed': 'Status Permintaan Gap Diubah',
+  'gap.approved': 'Gap Disetujui',
+  'gap.rejected': 'Gap Ditolak',
+  'user.create': 'User Dibuat',
+  'user.update': 'User Diperbarui',
+  'user.delete': 'User Dihapus',
+  'user.toggle_active': 'Status User Diubah',
+  'user.change_password': 'Password User Direset',
+  'auth.login': 'Masuk',
+  'auth.logout': 'Keluar',
+  'profile.update': 'Profil Diperbarui',
+  'profile.change_password': 'Password Profil Diubah',
+  'profile.photo_upload': 'Foto Profil Diunggah',
+  'profile.photo_delete': 'Foto Profil Dihapus',
+  'classification.create': 'Klasifikasi Dibuat',
+  'classification.update': 'Klasifikasi Diperbarui',
+  'classification.delete': 'Klasifikasi Dihapus',
+  'report.exported': 'Laporan Diekspor',
+};
+
+function getActionLabel(action) {
+  return ACTION_LABELS[action] || action;
+}
+
 /**
  * Helper: warna badge untuk aksi
  */
 function getActionColor(action) {
-  const act = action?.toLowerCase() || '';
+  const act = getActionLabel(action).toLowerCase();
   if (act.includes('dibuat') || act.includes('disetujui') || act.includes('masuk')) {
     return 'text-[#065F46] bg-[#ECFDF5]';
   }
@@ -247,7 +276,7 @@ export default function AuditLogsPage() {
       label: 'Aksi',
       render: (value) => (
         <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${getActionColor(value)}`}>
-          {value}
+          {getActionLabel(value)}
         </span>
       ),
     },
@@ -325,27 +354,26 @@ export default function AuditLogsPage() {
               className={inputBaseClass}
             >
               <option value="">Semua</option>
-              <option value="Surat Dibuat">Surat Dibuat</option>
-              <option value="Surat Dibatalkan">Surat Dibatalkan</option>
-              <option value="Detail Surat Diperbarui">Detail Surat Diperbarui</option>
-              <option value="Gap Disetujui">Gap Disetujui</option>
-              <option value="Gap Ditolak">Gap Ditolak</option>
-              <option value="Gap Diminta">Gap Diminta</option>
-              <option value="Permintaan Gap Diajukan">Permintaan Gap Diajukan</option>
-              <option value="Status Gap Diubah">Status Gap Diubah</option>
-              <option value="User Dibuat">User Dibuat</option>
-              <option value="User Diperbarui">User Diperbarui</option>
-              <option value="User Dihapus">User Dihapus</option>
-              <option value="Profil Diperbarui">Profil Diperbarui</option>
-              <option value="Password Profil Diubah">Password Profil Diubah</option>
-              <option value="Foto Profil Diunggah">Foto Profil Diunggah</option>
-              <option value="Foto Profil Dihapus">Foto Profil Dihapus</option>
-              <option value="Klasifikasi Dibuat">Klasifikasi Dibuat</option>
-              <option value="Klasifikasi Diperbarui">Klasifikasi Diperbarui</option>
-              <option value="Klasifikasi Dihapus">Klasifikasi Dihapus</option>
-              <option value="Laporan Diekspor">Laporan Diekspor</option>
-              <option value="Masuk">Masuk</option>
-              <option value="Keluar">Keluar</option>
+              <option value="letter.created">Surat Dibuat</option>
+              <option value="letter.voided">Surat Dibatalkan</option>
+              <option value="letter.updated">Detail Surat Diperbarui</option>
+              <option value="gap.approved">Gap Disetujui</option>
+              <option value="gap.rejected">Gap Ditolak</option>
+              <option value="gap_request.created">Permintaan Gap Diajukan</option>
+              <option value="gap_request.status_changed">Status Gap Diubah</option>
+              <option value="user.create">User Dibuat</option>
+              <option value="user.update">User Diperbarui</option>
+              <option value="user.delete">User Dihapus</option>
+              <option value="profile.update">Profil Diperbarui</option>
+              <option value="profile.change_password">Password Profil Diubah</option>
+              <option value="profile.photo_upload">Foto Profil Diunggah</option>
+              <option value="profile.photo_delete">Foto Profil Dihapus</option>
+              <option value="classification.create">Klasifikasi Dibuat</option>
+              <option value="classification.update">Klasifikasi Diperbarui</option>
+              <option value="classification.delete">Klasifikasi Dihapus</option>
+              <option value="report.exported">Laporan Diekspor</option>
+              <option value="auth.login">Masuk</option>
+              <option value="auth.logout">Keluar</option>
             </select>
           </div>
 
@@ -505,7 +533,7 @@ export default function AuditLogsPage() {
               <div className="bg-[#F7F9FC] rounded-lg p-3">
                 <p className="text-[10px] font-medium text-[#64748B] uppercase">Aksi</p>
                 <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium mt-0.5 ${getActionColor(selectedLog.action)}`}>
-                  {selectedLog.action}
+                  {getActionLabel(selectedLog.action)}
                 </span>
               </div>
               <div className="bg-[#F7F9FC] rounded-lg p-3">

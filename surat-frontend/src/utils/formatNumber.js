@@ -12,13 +12,13 @@ export function displayLetterNumber(letter) {
 
 /**
  * Validasi format nomor surat (untuk keperluan display/debug).
- * Pola: W7-{KODE}-{ANGKA}
+ * Pola: W7.{KODE}-{ANGKA}
  *
  * @param {string} str - String yang akan divalidasi
- * @returns {boolean} true jika sesuai pola W7-{kode}-{angka}
+ * @returns {boolean} true jika sesuai pola W7.{kode}-{angka}
  */
 export function isFormattedNumber(str) {
-  return /^W7-[\w.]+(-\d+)$/.test(str);
+  return /^W7\.[\w.]+(-\d+)$/.test(str);
 }
 
 /**

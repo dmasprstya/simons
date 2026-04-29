@@ -28,8 +28,11 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
-            'nip'      => ['required', 'string'],
+            'nip'      => ['required', 'digits:18'],
             'password' => ['required'],
+        ], [
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.digits'   => 'NIP harus berjumlah 18 angka.',
         ]);
 
         // Coba autentikasi; jika gagal kembalikan 401
