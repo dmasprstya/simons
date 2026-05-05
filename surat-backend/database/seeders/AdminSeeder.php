@@ -18,7 +18,7 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@surat.local'],
             [
                 'name'      => 'Administrator',
-                'nip'       => 'ADM-0001',
+                'nip'       => '000000000000000000',
                 'password'  => bcrypt('password'),
                 'work_unit' => 'Bagian TUM',
                 'role'      => 'admin',
