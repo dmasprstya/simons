@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERD SIMONS — Entity Relationship Diagram</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #000000;
+      --text-muted: #1e293b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --pk: #d97706;
+      --fk: #059669;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-main: #020617;
+        --bg-card: #0f172a;
+        --text-main: #ffffff;
+        --text-muted: #cbd5e1;
+        --border: #1e293b;
+        --primary: #60a5fa;
+        --primary-light: rgba(96, 165, 250, 0.1);
+        --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+      }
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      margin: 0;
+      padding: 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .container {
+      flex: 1;
+      background: var(--bg-card);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-info {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      z-index: 10;
+    }
+
+    .title-group h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .title-group p {
+      margin: 4px 0 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 2px; }
+    .dot.pk { background-color: var(--pk); }
+    .dot.fk { background-color: var(--fk); }
+
+    #erd-wrapper {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      background-image: 
+        radial-gradient(var(--border) 1px, transparent 1px);
+      background-size: 30px 30px;
+      cursor: grab;
+    }
+
+    #erd-wrapper:active { cursor: grabbing; }
+
+    #erd {
+      width: 100%;
+      height: 100%;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .zoom-hint {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 99px;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-info">
+    <div class="title-group">
+      <h1>Sistem Informasi Manajemen Penomoran Surat</h1>
+      <p>Entity Relationship Diagram (ERD) — Data Structure</p>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="dot pk"></span> Primary Key</div>
+      <div class="legend-item"><span class="dot fk"></span> Foreign Key</div>
+      <div class="legend-item"><span style="color:var(--primary)">●</span> Relationships</div>
+    </div>
+  </div>
+
+  <div id="erd-wrapper">
+    <div id="erd"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="zoom-in">+</button>
+    <button class="btn" id="zoom-out">−</button>
+    <button class="btn" id="reset">⟲</button>
+  </div>
+
+  <div class="zoom-hint">Gunakan mouse wheel untuk zoom • Drag untuk geser</div>
+</div>
+
+<script src="https://bumbu.github.io/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+<script type="module">
+  import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+  
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    themeVariables: {
+      darkMode: isDark,
+      fontSize: '14px',
+      
+      // Node Colors
+      primaryColor: isDark ? '#1e293b' : '#f8fafc',
+      primaryTextColor: isDark ? '#ffffff' : '#000000',
+      primaryBorderColor: isDark ? '#3b82f6' : '#2563eb',
+      
+      // Relationship Colors
+      lineColor: isDark ? '#64748b' : '#475569',
+      secondaryColor: isDark ? '#0f172a' : '#ffffff',
+      tertiaryColor: isDark ? '#020617' : '#f1f5f9',
+      
+      // Attribute Colors
+      attributeBackgroundColor: isDark ? '#0f172a' : '#ffffff',
+      attributeTextColor: isDark ? '#cbd5e1' : '#334155',
+    },
+    er: {
+      useMaxWidth: false,
+      layoutDirection: 'TB',
+    }
+  });
+
+  const erdCode = `erDiagram
+  users {
+    bigint id PK
+    string name
+    string email
+    string password
+    string nip
+    string work_unit
+    enum role
+    string photo_path
+    boolean is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  letter_classifications {
+    bigint id PK
+    bigint parent_id FK
+    string name
+    string code
+    boolean is_selectable
+    boolean is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  global_sequence {
+    bigint id PK
+    int last_number
+    int gap_size
+    date last_issued_date
+    timestamp updated_at
+  }
+
+  daily_gaps {
+    bigint id PK
+    date date
+    int gap_start
+    int gap_end
+    timestamp created_at
+  }
+
+  letter_numbers {
+    bigint id PK
+    bigint user_id FK
+    bigint classification_id FK
+    int number
+    string formatted_number
+    date issued_date
+    string subject
+    string destination
+    string source
+    enum sifat_surat
+    enum status
+    timestamp voided_at
+    bigint voided_by FK
+    timestamp created_at
+  }
+
+  gap_requests {
+    bigint id PK
+    bigint requested_by FK
+    bigint classification_id FK
+    bigint reviewed_by FK
+    int number
+    date gap_date
+    string subject
+    string destination
+    enum sifat_surat
+    enum status
+    string rejection_reason
+    timestamp reviewed_at
+    timestamp created_at
+  }
+
+  audit_logs {
+    bigint id PK
+    bigint user_id FK
+    string action
+    string table_name
+    bigint record_id
+    json old_data
+    json new_data
+    string ip_address
+    timestamp created_at
+  }
+
+  users ||--o{ letter_numbers : "menerbitkan"
+  users ||--o{ gap_requests : "mengajukan"
+  users ||--o{ audit_logs : "tercatat"
+  letter_classifications ||--o{ letter_numbers : "dikategorikan"
+  letter_classifications ||--o{ gap_requests : "dikategorikan"
+  letter_classifications ||--o{ letter_classifications : "sub-klasifikasi"
+  daily_gaps }o--|| global_sequence : "arsip gap"
+  gap_requests }o--o| users : "direview"
+  letter_numbers }o--o| users : "divoid oleh"
+`;
+
+  const { svg } = await mermaid.render('erd-svg', erdCode);
+  document.getElementById('erd').innerHTML = svg;
+
+  const svgEl = document.querySelector('#erd svg');
+  svgEl.style.width = '100%';
+  svgEl.style.height = '100%';
+
+  // Post-process for readability
+  document.querySelectorAll('#erd svg.erDiagram .node').forEach(node => {
+    const paths = node.querySelectorAll('path');
+    const texts = node.querySelectorAll('text');
+    
+    // Entity Header (Table Name)
+    if (texts[0]) {
+      texts[0].style.fontWeight = 'bold';
+      texts[0].style.fill = 'var(--primary)';
+    }
+
+    // Attributes
+    texts.forEach((t, i) => {
+      if (i > 0) {
+        if (t.textContent === 'PK') {
+          t.style.fill = 'var(--pk)';
+          t.style.fontWeight = '700';
+        } else if (t.textContent === 'FK') {
+          t.style.fill = 'var(--fk)';
+          t.style.fontWeight = '700';
+        } else {
+          t.style.fill = 'var(--text-main)';
+        }
+      }
+    });
+
+    // Boxes
+    paths.forEach(p => {
+      p.style.stroke = 'var(--border)';
+      if (p.getAttribute('class')?.includes('entityBox')) {
+        p.style.stroke = 'var(--primary)';
+        p.style.strokeWidth = '2px';
+        p.style.fill = isDark ? '#1e293b' : '#f8fafc';
+      } else {
+        p.style.fill = isDark ? '#0f172a' : '#ffffff';
+      }
+    });
+  });
+
+  // Initialize Pan Zoom
+  const panZoom = svgPanZoom('#erd svg', {
+    zoomEnabled: true,
+    controlIconsEnabled: false,
+    fit: true,
+    center: true,
+    minZoom: 0.1,
+    maxZoom: 10
+  });
+
+  document.getElementById('zoom-in').addEventListener('click', () => panZoom.zoomIn());
+  document.getElementById('zoom-out').addEventListener('click', () => panZoom.zoomOut());
+  document.getElementById('reset').addEventListener('click', () => {
+    panZoom.resetZoom();
+    panZoom.center();
+  });
+
+  window.addEventListener('resize', () => {
+    panZoom.resize();
+    panZoom.fit();
+    panZoom.center();
+  });
+
+</script>
+
+</body>
+</html>
+
+</body>
+</html>

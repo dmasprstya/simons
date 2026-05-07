@@ -1,0 +1,161 @@
+<style>
+.tree-wrap { font-family: var(--font-mono); font-size: 13px; line-height: 1.8; color: var(--color-text-primary); padding: 4px 0 1rem; }
+.folder { color: var(--color-text-info); font-weight: 500; }
+.file { color: var(--color-text-primary); }
+.comment { color: var(--color-text-tertiary); font-size: 12px; margin-left: 6px; font-family: var(--font-sans); }
+.indent1 { padding-left: 20px; }
+.indent2 { padding-left: 40px; }
+.indent3 { padding-left: 60px; }
+.indent4 { padding-left: 80px; }
+.section-label { font-family: var(--font-sans); font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin: 1.4rem 0 6px; padding-bottom: 6px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.highlight { background: var(--color-background-warning); border-radius: 3px; padding: 1px 4px; font-size: 12px; color: var(--color-text-warning); margin-left: 6px; font-family: var(--font-sans); }
+</style>
+
+<div class="tree-wrap">
+
+  <p class="section-label">Backend — Laravel</p>
+
+  <div><span class="folder">surat-backend/</span></div>
+  <div class="indent1"><span class="folder">app/</span></div>
+
+  <div class="indent2"><span class="folder">Http/</span></div>
+  <div class="indent3"><span class="folder">Controllers/</span></div>
+  <div class="indent4"><span class="file">AuthController.php</span><span class="comment">login, logout, me</span></div>
+  <div class="indent4"><span class="file">UserController.php</span><span class="comment">CRUD user & toggle aktif</span></div>
+  <div class="indent4"><span class="file">LetterClassificationController.php</span><span class="comment">CRUD klasifikasi surat</span></div>
+  <div class="indent4"><span class="file">LetterNumberController.php</span><span class="comment">ambil nomor, void, list</span></div>
+  <div class="indent4"><span class="file">DailySequenceController.php</span><span class="comment">info sequence & ubah gap</span></div>
+  <div class="indent4"><span class="file">GapRequestController.php</span><span class="comment">request, approve, reject</span></div>
+  <div class="indent4"><span class="file">GapNumberController.php</span><span class="comment">list nomor gap tersedia</span></div>
+  <div class="indent4"><span class="file">DashboardController.php</span><span class="comment">statistik dashboard</span></div>
+  <div class="indent4"><span class="file">ProfileController.php</span><span class="comment">update profil & foto</span></div>
+  <div class="indent4"><span class="file">AuditLogController.php</span><span class="comment">list & detail log</span></div>
+  <div class="indent4"><span class="file">ReportController.php</span><span class="comment">summary & export</span></div>
+
+  <div class="indent3"><span class="folder">Middleware/</span></div>
+  <div class="indent4"><span class="file">RoleMiddleware.php</span><span class="comment">cek role admin vs user</span></div>
+  <div class="indent4"><span class="file">EnsureUserIsActive.php</span><span class="comment">blok user nonaktif</span></div>
+
+  <div class="indent3"><span class="folder">Requests/</span></div>
+  <div class="indent4"><span class="file">StoreLetterNumberRequest.php</span><span class="comment">validasi ambil nomor</span></div>
+  <div class="indent4"><span class="file">StoreGapRequestRequest.php</span><span class="comment">validasi request gap</span></div>
+  <div class="indent4"><span class="file">UpdateGapSizeRequest.php</span><span class="comment">validasi ubah gap</span></div>
+  <div class="indent4"><span class="file">StoreUserRequest.php</span></div>
+  <div class="indent4"><span class="file">UpdateUserRequest.php</span></div>
+
+  <div class="indent3"><span class="folder">Resources/</span></div>
+  <div class="indent4"><span class="file">UserResource.php</span></div>
+  <div class="indent4"><span class="file">LetterClassificationResource.php</span></div>
+  <div class="indent4"><span class="file">LetterNumberResource.php</span></div>
+  <div class="indent4"><span class="file">GapRequestResource.php</span></div>
+  <div class="indent4"><span class="file">DailySequenceResource.php</span></div>
+  <div class="indent4"><span class="file">AuditLogResource.php</span></div>
+
+  <div class="indent2"><span class="folder">Models/</span></div>
+  <div class="indent3"><span class="file">User.php</span></div>
+  <div class="indent3"><span class="file">LetterClassification.php</span></div>
+  <div class="indent3"><span class="file">LetterNumber.php</span></div>
+  <div class="indent3"><span class="file">GlobalSequence.php</span></div>
+  <div class="indent3"><span class="file">DailyGap.php</span></div>
+  <div class="indent3"><span class="file">GapRequest.php</span></div>
+  <div class="indent3"><span class="file">AuditLog.php</span></div>
+
+  <div class="indent2"><span class="folder">Services/</span><span class="highlight">penting</span></div>
+  <div class="indent3"><span class="file">NumberingService.php</span><span class="comment">core logic: lock, increment, gap</span></div>
+  <div class="indent3"><span class="file">GapRequestService.php</span><span class="comment">approve & terbitkan nomor gap</span></div>
+  <div class="indent3"><span class="file">AuditService.php</span><span class="comment">catat log otomatis tiap aksi</span></div>
+  <div class="indent3"><span class="file">ExportService.php</span><span class="comment">generate Excel & PDF</span></div>
+
+  <div class="indent2"><span class="folder">Jobs/</span></div>
+  <div class="indent3"><span class="comment">(Tidak ada job background — rollover dijalankan on-demand)</span></div>
+
+  <div class="indent2"><span class="folder">Observers/</span></div>
+  <div class="indent3"><span class="file">LetterNumberObserver.php</span><span class="comment">auto audit log saat create/void</span></div>
+  <div class="indent3"><span class="file">GapRequestObserver.php</span><span class="comment">auto audit log saat approve/reject</span></div>
+
+  <div class="indent1"><span class="folder">database/</span></div>
+  <div class="indent2"><span class="folder">migrations/</span></div>
+  <div class="indent3"><span class="file">..._create_users_table.php</span></div>
+  <div class="indent3"><span class="file">..._create_letter_classifications_table.php</span></div>
+  <div class="indent3"><span class="file">..._create_global_sequence_table.php</span></div>
+  <div class="indent3"><span class="file">..._create_daily_gaps_table.php</span></div>
+  <div class="indent3"><span class="file">..._create_letter_numbers_table.php</span></div>
+  <div class="indent3"><span class="file">..._create_gap_requests_table.php</span></div>
+  <div class="indent3"><span class="file">..._create_audit_logs_table.php</span></div>
+  <div class="indent2"><span class="folder">seeders/</span></div>
+  <div class="indent3"><span class="file">AdminSeeder.php</span><span class="comment">user admin default pertama kali</span></div>
+  <div class="indent3"><span class="file">LetterClassificationSeeder.php</span><span class="comment">klasifikasi default</span></div>
+  <div class="indent3"><span class="file">DailySequenceSeeder.php</span><span class="comment">sequence awal: start 1000, gap 10</span></div>
+
+  <div class="indent1"><span class="folder">routes/</span></div>
+  <div class="indent2"><span class="file">api.php</span><span class="comment">semua endpoint REST API</span></div>
+
+  <div class="indent1"><span class="folder">config/</span></div>
+  <div class="indent2"><span class="file">numbering.php</span><span class="comment">default gap size, start number</span></div>
+
+  <p class="section-label">Frontend — React + Vite</p>
+
+  <div><span class="folder">surat-frontend/</span></div>
+  <div class="indent1"><span class="folder">src/</span></div>
+
+  <div class="indent2"><span class="folder">api/</span></div>
+  <div class="indent3"><span class="file">axios.js</span><span class="comment">instance axios + interceptor token</span></div>
+  <div class="indent3"><span class="file">auth.api.js</span></div>
+  <div class="indent3"><span class="file">letters.api.js</span></div>
+  <div class="indent3"><span class="file">gapRequests.api.js</span></div>
+  <div class="indent3"><span class="file">users.api.js</span></div>
+  <div class="indent3"><span class="file">sequences.api.js</span></div>
+  <div class="indent3"><span class="file">reports.api.js</span></div>
+
+  <div class="indent2"><span class="folder">components/</span></div>
+  <div class="indent3"><span class="folder">ui/</span><span class="comment">komponen reusable</span></div>
+  <div class="indent4"><span class="file">Badge.jsx</span></div>
+  <div class="indent4"><span class="file">StatusChip.jsx</span><span class="comment">active/voided/pending</span></div>
+  <div class="indent4"><span class="file">Modal.jsx</span></div>
+  <div class="indent4"><span class="file">Table.jsx</span></div>
+  <div class="indent4"><span class="file">Pagination.jsx</span></div>
+  <div class="indent4"><span class="file">ConfirmDialog.jsx</span></div>
+  <div class="indent3"><span class="folder">layout/</span></div>
+  <div class="indent4"><span class="file">Sidebar.jsx</span></div>
+  <div class="indent4"><span class="file">Navbar.jsx</span></div>
+  <div class="indent4"><span class="file">AdminLayout.jsx</span></div>
+  <div class="indent4"><span class="file">UserLayout.jsx</span></div>
+  <div class="indent4"><span class="file">ProtectedRoute.jsx</span><span class="comment">redirect kalau belum login</span></div>
+
+  <div class="indent2"><span class="folder">pages/</span></div>
+  <div class="indent3"><span class="folder">auth/</span></div>
+  <div class="indent4"><span class="file">Login.jsx</span></div>
+  <div class="indent3"><span class="folder">user/</span></div>
+  <div class="indent4"><span class="file">Dashboard.jsx</span><span class="comment">sequence hari ini + tombol ambil nomor</span></div>
+  <div class="indent4"><span class="file">TakeNumber.jsx</span><span class="comment">form ambil nomor surat</span></div>
+  <div class="indent4"><span class="file">MyLetters.jsx</span><span class="comment">riwayat nomor milik user</span></div>
+  <div class="indent4"><span class="file">GapRequest.jsx</span><span class="comment">form + status request gap</span></div>
+  <div class="indent3"><span class="folder">admin/</span></div>
+  <div class="indent4"><span class="file">Dashboard.jsx</span><span class="comment">monitoring: sequence, gap, aktivitas</span></div>
+  <div class="indent4"><span class="file">AllLetters.jsx</span><span class="comment">semua nomor surat seluruh user</span></div>
+  <div class="indent4"><span class="file">GapRequests.jsx</span><span class="comment">list + approve/reject</span></div>
+  <div class="indent4"><span class="file">SequenceSettings.jsx</span><span class="comment">ubah gap size</span></div>
+  <div class="indent4"><span class="file">Users.jsx</span><span class="comment">CRUD user</span></div>
+  <div class="indent4"><span class="file">AuditLogs.jsx</span></div>
+  <div class="indent4"><span class="file">Reports.jsx</span><span class="comment">export Excel/PDF</span></div>
+
+  <div class="indent2"><span class="folder">store/</span><span class="comment">Zustand — state management</span></div>
+  <div class="indent3"><span class="file">authStore.js</span><span class="comment">user, token, role</span></div>
+  <div class="indent3"><span class="file">sequenceStore.js</span><span class="comment">data sequence hari ini</span></div>
+
+  <div class="indent2"><span class="folder">hooks/</span></div>
+  <div class="indent3"><span class="file">useAuth.js</span></div>
+  <div class="indent3"><span class="file">useLetters.js</span></div>
+  <div class="indent3"><span class="file">useGapRequests.js</span></div>
+  <div class="indent3"><span class="file">useSequence.js</span></div>
+
+  <div class="indent2"><span class="folder">utils/</span></div>
+  <div class="indent3"><span class="file">formatNumber.js</span><span class="comment">format nomor surat untuk display</span></div>
+  <div class="indent3"><span class="file">formatDate.js</span></div>
+  <div class="indent3"><span class="file">roleGuard.js</span><span class="comment">helper cek role</span></div>
+
+  <div class="indent2"><span class="file">App.jsx</span><span class="comment">routing utama (React Router)</span></div>
+  <div class="indent2"><span class="file">main.jsx</span></div>
+  <div class="indent1"><span class="file">.env</span><span class="comment">VITE_API_URL=http://localhost:8000</span></div>
+
+</div>

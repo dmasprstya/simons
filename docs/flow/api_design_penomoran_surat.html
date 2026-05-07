@@ -1,0 +1,356 @@
+<style>
+.api-section { margin-bottom: 2rem; }
+.section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.endpoint-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.endpoint-row:last-child { border-bottom: none; }
+.method { font-size: 11px; font-weight: 500; padding: 3px 7px; border-radius: 4px; min-width: 48px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+.get    { background: #EAF3DE; color: #27500A; }
+.post   { background: #E6F1FB; color: #0C447C; }
+.put    { background: #FAEEDA; color: #633806; }
+.patch  { background: #FBEAF0; color: #72243E; }
+.delete { background: #FCEBEB; color: #791F1F; }
+.ep-path { font-size: 13px; font-family: var(--font-mono); color: var(--color-text-primary); min-width: 280px; flex-shrink: 0; line-height: 1.5; }
+.ep-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.role-badge { font-size: 11px; padding: 2px 7px; border-radius: 99px; margin-left: 6px; flex-shrink: 0; }
+.role-admin { background: #FAECE7; color: #712B13; }
+.role-user  { background: #E1F5EE; color: #085041; }
+.role-both  { background: #EEEDFE; color: #3C3489; }
+.ep-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+</style>
+
+<div style="padding: 4px 0 1rem;">
+
+  <!-- AUTH -->
+  <div class="api-section">
+    <p class="section-title">Auth</p>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/auth/login</div>
+        <div class="ep-meta"><span class="ep-desc">Login, return Bearer token</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/auth/logout</div>
+        <div class="ep-meta"><span class="ep-desc">Revoke token aktif</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/auth/me</div>
+        <div class="ep-meta"><span class="ep-desc">Data user yang sedang login</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/auth/change-password</div>
+        <div class="ep-meta"><span class="ep-desc">Ganti password sendiri</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="api-section">
+    <p class="section-title">User management</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/users</div>
+        <div class="ep-meta"><span class="ep-desc">List semua user, filter by role/divisi</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/users</div>
+        <div class="ep-meta"><span class="ep-desc">Tambah user baru</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/users/{id}</div>
+        <div class="ep-meta"><span class="ep-desc">Detail user by ID</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method put">PUT</span>
+      <div>
+        <div class="ep-path">/api/users/{id}</div>
+        <div class="ep-meta"><span class="ep-desc">Update data user</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method patch">PATCH</span>
+      <div>
+        <div class="ep-path">/api/users/{id}/toggle-active</div>
+        <div class="ep-meta"><span class="ep-desc">Aktifkan / nonaktifkan user</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LETTER CLASSIFICATIONS -->
+  <div class="api-section">
+    <p class="section-title">Klasifikasi surat</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/classifications</div>
+        <div class="ep-meta"><span class="ep-desc">List semua klasifikasi surat (hierarkis)</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/classifications/search</div>
+        <div class="ep-meta"><span class="ep-desc">Cari klasifikasi by nama/kode</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/classifications/all</div>
+        <div class="ep-meta"><span class="ep-desc">List semua klasifikasi (flat)</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/classifications</div>
+        <div class="ep-meta"><span class="ep-desc">Tambah klasifikasi baru</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method put">PUT</span>
+      <div>
+        <div class="ep-path">/api/classifications/{id}</div>
+        <div class="ep-meta"><span class="ep-desc">Update klasifikasi</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method delete">DEL</span>
+      <div>
+        <div class="ep-path">/api/classifications/{id}</div>
+        <div class="ep-meta"><span class="ep-desc">Hapus klasifikasi</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LETTER NUMBERS -->
+  <div class="api-section">
+    <p class="section-title">Penomoran surat</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/letters</div>
+        <div class="ep-meta"><span class="ep-desc">List nomor surat milik user</span><span class="role-badge role-user">user</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/letters/recent</div>
+        <div class="ep-meta"><span class="ep-desc">5-10 nomor surat terbaru seluruh sistem</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/letters/all</div>
+        <div class="ep-meta"><span class="ep-desc">List semua nomor surat (seluruh user)</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/letters</div>
+        <div class="ep-meta"><span class="ep-desc">Ambil nomor surat baru (auto rollover + lock)</span><span class="role-badge role-user">user</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/letters/{id}</div>
+        <div class="ep-meta"><span class="ep-desc">Detail satu nomor surat</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method patch">PATCH</span>
+      <div>
+        <div class="ep-path">/api/letters/{id}</div>
+        <div class="ep-meta"><span class="ep-desc">Update metadata (perihal, tujuan)</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method patch">PATCH</span>
+      <div>
+        <div class="ep-path">/api/letters/{id}/void</div>
+        <div class="ep-meta"><span class="ep-desc">Void / batalkan nomor surat</span><span class="role-badge role-user">user</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAILY SEQUENCE -->
+  <div class="api-section">
+    <p class="section-title">Sequence & gap harian</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/sequences/today</div>
+        <div class="ep-meta"><span class="ep-desc">Info sequence hari ini (nomor terakhir, gap, start besok)</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/sequences</div>
+        <div class="ep-meta"><span class="ep-desc">Riwayat sequence per hari</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method patch">PATCH</span>
+      <div>
+        <div class="ep-path">/api/sequences/gap</div>
+        <div class="ep-meta"><span class="ep-desc">Ubah ukuran gap (berlaku hari berikutnya)</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP REQUESTS -->
+  <div class="api-section">
+    <p class="section-title">Request nomor gap</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/gap-numbers</div>
+        <div class="ep-meta"><span class="ep-desc">List nomor gap tersedia per tanggal</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/gap-requests</div>
+        <div class="ep-meta"><span class="ep-desc">List request milik user sendiri</span><span class="role-badge role-user">user</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/gap-requests</div>
+        <div class="ep-meta"><span class="ep-desc">Buat request nomor di zona gap</span><span class="role-badge role-user">user</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/gap-requests/all</div>
+        <div class="ep-meta"><span class="ep-desc">List semua request (semua user)</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method patch">PATCH</span>
+      <div>
+        <div class="ep-path">/api/gap-requests/{id}/approve</div>
+        <div class="ep-meta"><span class="ep-desc">Approve request, nomor langsung diterbitkan</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method patch">PATCH</span>
+      <div>
+        <div class="ep-path">/api/gap-requests/{id}/reject</div>
+        <div class="ep-meta"><span class="ep-desc">Reject request dengan alasan</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="api-section">
+    <p class="section-title">Profil user</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/profile</div>
+        <div class="ep-meta"><span class="ep-desc">Detail profil sendiri</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method put">PUT</span>
+      <div>
+        <div class="ep-path">/api/profile</div>
+        <div class="ep-meta"><span class="ep-desc">Update profil (nama, email, nip, dll)</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <div>
+        <div class="ep-path">/api/profile/photo</div>
+        <div class="ep-meta"><span class="ep-desc">Upload foto profil</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method delete">DEL</span>
+      <div>
+        <div class="ep-path">/api/profile/photo</div>
+        <div class="ep-meta"><span class="ep-desc">Hapus foto profil</span><span class="role-badge role-both">semua</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT LOGS -->
+  <div class="api-section">
+    <p class="section-title">Audit log</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/audit-logs</div>
+        <div class="ep-meta"><span class="ep-desc">List log, filter by user/aksi/tanggal</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/audit-logs/{id}</div>
+        <div class="ep-meta"><span class="ep-desc">Detail satu log (old_data vs new_data)</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="api-section">
+    <p class="section-title">Laporan & export</p>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/reports/summary</div>
+        <div class="ep-meta"><span class="ep-desc">Ringkasan: total surat per hari/divisi/kategori</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/reports/work-units</div>
+        <div class="ep-meta"><span class="ep-desc">List unit kerja untuk filter laporan</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <div>
+        <div class="ep-path">/api/reports/export</div>
+        <div class="ep-meta"><span class="ep-desc">Export ke Excel/PDF, filter tanggal & klasifikasi</span><span class="role-badge role-admin">admin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div style="display:flex; gap:16px; padding-top: 8px; border-top: 0.5px solid var(--color-border-tertiary); flex-wrap: wrap;">
+    <div style="display:flex; align-items:center; gap:6px;"><span class="role-badge role-both" style="margin:0;">semua</span><span style="font-size:12px; color:var(--color-text-secondary);">User & admin</span></div>
+    <div style="display:flex; align-items:center; gap:6px;"><span class="role-badge role-user" style="margin:0;">user</span><span style="font-size:12px; color:var(--color-text-secondary);">User biasa saja</span></div>
+    <div style="display:flex; align-items:center; gap:6px;"><span class="role-badge role-admin" style="margin:0;">admin</span><span style="font-size:12px; color:var(--color-text-secondary);">Admin saja</span></div>
+    <div style="display:flex; align-items:center; gap:6px; margin-left:auto;"><span style="font-size:12px; color:var(--color-text-tertiary);">Semua endpoint pakai prefix: /api + Bearer token</span></div>
+  </div>
+
+</div>
