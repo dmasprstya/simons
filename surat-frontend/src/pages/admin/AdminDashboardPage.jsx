@@ -112,9 +112,9 @@ export default function AdminDashboardPage() {
   });
 
   const pieData = distributions.map(d => {
-    // Buat singkatan: hapus prefix Bagian, Divisi, Bidang, Subbagian, Subbidang
+    // Buat singkatan: hapus prefix Bagian, Divisi, Bidang, Subbagian, Subbidang, Pelayanan
     const shortenedName = (d.name || 'Lainnya')
-      .replace(/^(Bagian|Divisi|Bidang|Subbagian|Subbidang)\s+/i, '')
+      .replace(/^(Bagian|Divisi|Bidang|Subbagian|Subbidang|Pelayanan|Kantor Wilayah)\s+/i, '')
       .trim();
     
     return {
@@ -369,7 +369,7 @@ export default function AdminDashboardPage() {
             <h2 className="text-base font-bold text-navy">Distribusi Divisi</h2>
             <p className="text-xs text-muted">Sebaran nomor surat berdasarkan divisi.</p>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-80 w-full">
             {loading ? (
               <div className="w-full h-full bg-slate-50 animate-pulse rounded-xl" />
             ) : pieData.length > 0 ? (
@@ -378,9 +378,9 @@ export default function AdminDashboardPage() {
                   <Pie
                     data={pieData}
                     cx="50%"
-                    cy="50%"
+                    cy="40%"
                     innerRadius={60}
-                    outerRadius={80}
+                    outerRadius={75}
                     paddingAngle={5}
                     dataKey="value"
                   >
