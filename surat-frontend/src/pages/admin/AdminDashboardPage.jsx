@@ -291,10 +291,10 @@ export default function AdminDashboardPage() {
               subtext="Total seluruh nomor yang terbit"
             />
             <SummaryCard
-              icon={UsersIcon}
-              label="User Aktif"
-              value={stats.active_users}
-              subtext="Pengguna aktif saat ini"
+              icon={HashtagIcon}
+              label="Nomor Terakhir"
+              value={sequence?.last_number ?? '-'}
+              subtext="Nomor surat global saat ini"
             />
           </>
         )}
