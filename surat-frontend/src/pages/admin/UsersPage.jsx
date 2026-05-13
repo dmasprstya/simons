@@ -9,7 +9,7 @@ import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import ErrorMessage from '../../components/ui/ErrorMessage';
-import { UserIcon, PhotoIcon, UsersIcon } from '@heroicons/react/24/outline';
+import { UserIcon, PhotoIcon, UsersIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 /**
  * UsersPage — Halaman admin: kelola user.
@@ -56,6 +56,10 @@ export default function UsersPage() {
   const [togglingUser, setTogglingUser] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingUser, setDeletingUser] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showChangePwd, setShowChangePwd] = useState(false);
+  const [showChangeConfirmPwd, setShowChangeConfirmPwd] = useState(false);
 
   // === Form state (tambah & edit) ===
   const [formData, setFormData] = useState({
@@ -133,6 +137,8 @@ export default function UsersPage() {
 
     if (!formData.nip.trim()) {
       errors.nip = 'NIP wajib diisi.';
+    } else if (formData.nip.length !== 18) {
+      errors.nip = 'NIP harus 18 digit.';
     }
 
     if (!formData.email.trim()) {
@@ -553,8 +559,14 @@ export default function UsersPage() {
             <input
               type="text"
               value={formData.nip}
-              onChange={handleInputChange('nip')}
-              placeholder="Masukkan NIP"
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 18) {
+                  handleInputChange('nip')({ target: { value } });
+                }
+              }}
+              placeholder="Masukkan 18 digit NIP"
+              maxLength={18}
               className={formErrors.nip ? inputErrorClass : inputBaseClass}
             />
             {formErrors.nip && (
@@ -583,33 +595,51 @@ export default function UsersPage() {
         {/* Password — hanya tampil saat tambah user baru */}
         {!isEdit && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="relative">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
                 Password <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={handleInputChange('password')}
-                placeholder="Minimal 8 karakter"
-                className={formErrors.password ? inputErrorClass : inputBaseClass}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleInputChange('password')}
+                  placeholder="Minimal 8 karakter"
+                  className={`${formErrors.password ? inputErrorClass : inputBaseClass} pr-10`}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                </button>
+              </div>
               {formErrors.password && (
                 <p className="mt-1 text-[10px] text-red-600">{formErrors.password}</p>
               )}
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
                 Konfirmasi Password <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                value={formData.password_confirmation}
-                onChange={handleInputChange('password_confirmation')}
-                placeholder="Ulangi password"
-                className={formErrors.password_confirmation ? inputErrorClass : inputBaseClass}
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.password_confirmation}
+                  onChange={handleInputChange('password_confirmation')}
+                  placeholder="Ulangi password"
+                  className={`${formErrors.password_confirmation ? inputErrorClass : inputBaseClass} pr-10`}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                </button>
+              </div>
               {formErrors.password_confirmation && (
                 <p className="mt-1 text-[10px] text-red-600">{formErrors.password_confirmation}</p>
               )}
@@ -867,13 +897,22 @@ export default function UsersPage() {
             <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
               Password Baru <span className="text-red-500">*</span>
             </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              placeholder="Minimal 8 karakter"
-              className={formErrors.password ? inputErrorClass : inputBaseClass}
-            />
+            <div className="relative">
+              <input
+                type={showChangePwd ? "text" : "password"}
+                value={formData.password}
+                onChange={handleInputChange('password')}
+                placeholder="Minimal 8 karakter"
+                className={`${formErrors.password ? inputErrorClass : inputBaseClass} pr-10`}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                onClick={() => setShowChangePwd(!showChangePwd)}
+              >
+                {showChangePwd ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+              </button>
+            </div>
             {formErrors.password && (
               <p className="mt-1 text-xs text-red-600">{formErrors.password}</p>
             )}
@@ -883,13 +922,22 @@ export default function UsersPage() {
             <label className="block text-xs font-medium uppercase tracking-wide text-[#0B1F3A] mb-1">
               Konfirmasi Password Baru <span className="text-red-500">*</span>
             </label>
-            <input
-              type="password"
-              value={formData.password_confirmation}
-              onChange={handleInputChange('password_confirmation')}
-              placeholder="Ulangi password"
-              className={formErrors.password_confirmation ? inputErrorClass : inputBaseClass}
-            />
+            <div className="relative">
+              <input
+                type={showChangeConfirmPwd ? "text" : "password"}
+                value={formData.password_confirmation}
+                onChange={handleInputChange('password_confirmation')}
+                placeholder="Ulangi password"
+                className={`${formErrors.password_confirmation ? inputErrorClass : inputBaseClass} pr-10`}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                onClick={() => setShowChangeConfirmPwd(!showChangeConfirmPwd)}
+              >
+                {showChangeConfirmPwd ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+              </button>
+            </div>
             {formErrors.password_confirmation && (
               <p className="mt-1 text-xs text-red-600">{formErrors.password_confirmation}</p>
             )}

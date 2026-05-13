@@ -25,7 +25,7 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name'     => 'required|string|max:100',
-            'nip'      => 'required|string|max:50|unique:users,nip',
+            'nip'      => 'required|string|size:18|unique:users,nip',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:8',
             'work_unit' => 'required|string|max:100',
@@ -45,7 +45,7 @@ class StoreUserRequest extends FormRequest
             'name.required'     => 'Nama wajib diisi.',
             'name.max'          => 'Nama maksimal 100 karakter.',
             'nip.required'      => 'NIP wajib diisi.',
-            'nip.max'           => 'NIP maksimal 50 karakter.',
+            'nip.size'          => 'NIP harus 18 digit.',
             'nip.unique'        => 'NIP sudah digunakan oleh user lain.',
             'email.required'    => 'Email wajib diisi.',
             'email.email'       => 'Format email tidak valid.',
