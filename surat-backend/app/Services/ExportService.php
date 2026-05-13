@@ -77,6 +77,15 @@ class ExportService
             $query->where('users.name', 'like', '%' . $filters['user_name'] . '%');
         }
 
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('letter_numbers.subject', 'like', "%{$search}%")
+                  ->orWhere('letter_numbers.formatted_number', 'like', "%{$search}%")
+                  ->orWhere('users.name', 'like', "%{$search}%");
+            });
+        }
+
         return $query
             ->orderByDesc('letter_numbers.issued_date')
             ->orderByDesc('letter_numbers.id')

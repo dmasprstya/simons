@@ -23,7 +23,7 @@ import { DocumentChartBarIcon, DocumentIcon, DocumentTextIcon } from '@heroicons
  */
 export default function AllLettersPage() {
   const { letters, loading, error, meta, fetchAllLetters } = useAdminLetters();
-  const { workUnits, fetchWorkUnits } = useReports();
+  const { workUnits, fetchWorkUnits, handleExport: handleReportExport, handleExcelExport } = useReports();
   const toast = useToast();
 
   // === Filter state ===
@@ -114,15 +114,23 @@ export default function AllLettersPage() {
     setExporting(format);
 
     try {
-      const params = { ...buildParams(1), format };
+      const params = { ...buildParams(1) };
       delete params.page; // Export tidak perlu pagination
-      await exportReport(params);
+      
+      let result;
+      if (format === 'excel') {
+        result = await handleExcelExport(params);
+      } else {
+        result = await handleReportExport(format, params);
+      }
 
-      toast.success(`File ${format.toUpperCase()} berhasil diunduh.`);
+      if (result.success) {
+        toast.success(`File ${format.toUpperCase()} berhasil diunduh.`);
+      } else {
+        toast.error(result.error || `Gagal mengekspor ${format.toUpperCase()}.`);
+      }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || `Gagal mengekspor ${format.toUpperCase()}.`
-      );
+      toast.error(`Gagal mengekspor ${format.toUpperCase()}.`);
     } finally {
       setExporting(null);
     }

@@ -64,6 +64,7 @@ class ReportController extends Controller
             'status'             => 'nullable|in:active_regular,active_gap',
             'sifat_surat'        => 'nullable|string|max:100',
             'user_name'          => 'nullable|string|max:255',
+            'search'             => 'nullable|string|max:255',
         ]);
 
         // Merge classification_id into classification_ids for consistency
@@ -118,6 +119,15 @@ class ReportController extends Controller
             // Filter berdasarkan Nama User
             if ($request->filled('user_name')) {
                 $q->where('users.name', 'like', '%' . $request->user_name . '%');
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $q->where(function ($query) use ($search) {
+                    $query->where('letter_numbers.subject', 'like', "%{$search}%")
+                          ->orWhere('letter_numbers.formatted_number', 'like', "%{$search}%")
+                          ->orWhere('users.name', 'like', "%{$search}%");
+                });
             }
 
             return $q;
@@ -185,6 +195,7 @@ class ReportController extends Controller
             'status'             => 'nullable|in:active_regular,active_gap',
             'sifat_surat'        => 'nullable|string|max:100',
             'user_name'          => 'nullable|string|max:255',
+            'search'             => 'nullable|string|max:255',
             'format'             => 'nullable|in:csv,pdf,json',
         ]);
 
@@ -197,6 +208,7 @@ class ReportController extends Controller
             'status',
             'sifat_surat',
             'user_name',
+            'search',
         ]);
         $format = $request->input('format', 'csv');
         $rows = $this->exportService->getReportRows($filters);
