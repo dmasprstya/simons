@@ -107,7 +107,7 @@ export default function Table({
                     className="px-3 py-2 text-xs text-[#0B1F3A]"
                   >
                     {col.render
-                      ? col.render(row[col.key], row)
+                      ? col.render(row[col.key], row, rowIndex)
                       : row[col.key]}
                   </td>
                 ))}

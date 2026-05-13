@@ -131,6 +131,15 @@ export default function AllLettersPage() {
   // Kolom tabel
   const columns = [
     {
+      key: 'index',
+      label: '#',
+      render: (_v, _r, index) => (
+        <span className="text-[#64748B] font-medium">
+          {meta?.from ? meta.from + index : index + 1}
+        </span>
+      ),
+    },
+    {
       key: 'number',
       label: 'Nomor Surat',
       render: (_value, row) => (
