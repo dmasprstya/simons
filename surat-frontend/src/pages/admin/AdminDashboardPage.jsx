@@ -2,6 +2,19 @@ import { useEffect } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { ShieldCheckIcon, DocumentTextIcon, ClockIcon, HashtagIcon, UsersIcon } from '@heroicons/react/24/outline';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
@@ -28,9 +41,11 @@ function SkeletonCard() {
   );
 }
 
+
+
 function SummaryCard({ icon: Icon, label, value, subtext }) {
   return (
-    <Card hover>
+    <Card hover className="h-full">
       <div className="flex items-start gap-4">
         <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary-light text-primary shrink-0">
           <Icon className="h-6 w-6" />
@@ -47,11 +62,15 @@ function SummaryCard({ icon: Icon, label, value, subtext }) {
   );
 }
 
+const COLORS = ['#1B2F6E', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B'];
+
 export default function AdminDashboardPage() {
   const {
     stats,
     allRecentLetters,
     auditLogs,
+    trends,
+    distributions,
     sequence,
     loading,
     error,
@@ -68,6 +87,24 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  // Transform trends data for charts
+  const chartData = trends.map(t => ({
+    date: new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
+    count: t.count
+  }));
+
+  const pieData = distributions.map(d => {
+    // Buat singkatan: hapus prefix Bagian, Divisi, Bidang, Subbagian, Subbidang
+    const shortenedName = (d.name || 'Lainnya')
+      .replace(/^(Bagian|Divisi|Bidang|Subbagian|Subbidang)\s+/i, '')
+      .trim();
+    
+    return {
+      name: shortenedName,
+      value: d.count
+    };
+  });
 
   // Jika request gagal total, tampilkan error + tombol retry di level dashboard
   if (error) {
@@ -208,7 +245,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {loading ? (
           <>
             <SkeletonCard />
@@ -222,28 +259,114 @@ export default function AdminDashboardPage() {
               icon={DocumentTextIcon}
               label="Surat Hari Ini"
               value={stats.today_letters}
-              subtext="Total nomor surat yang diambil hari ini"
+              subtext="Nomor surat diambil hari ini"
             />
             <SummaryCard
               icon={ClockIcon}
-              label="Gap Request Pending"
+              label="Pending Gap"
               value={stats.pending_gaps}
-              subtext="Request yang menunggu persetujuan"
+              subtext="Request menunggu persetujuan"
             />
             <SummaryCard
               icon={HashtagIcon}
-              label="Nomor Terakhir"
-              value={sequence?.last_number ?? '-'}
-              subtext="Nomor surat terakhir yang diambil"
+              label="Total Surat"
+              value={stats.total_letters}
+              subtext="Total seluruh nomor yang terbit"
             />
             <SummaryCard
               icon={UsersIcon}
               label="User Aktif"
               value={stats.active_users}
-              subtext="Total pengguna sistem yang aktif"
+              subtext="Pengguna aktif saat ini"
             />
           </>
         )}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Trend Chart */}
+        <Card className="lg:col-span-2 space-y-4">
+          <div>
+            <h2 className="text-base font-bold text-navy">Tren Penomoran Surat</h2>
+            <p className="text-xs text-muted">Jumlah nomor yang diterbitkan dalam 7 hari terakhir.</p>
+          </div>
+          <div className="h-64 w-full">
+            {loading ? (
+              <div className="w-full h-full bg-slate-50 animate-pulse rounded-xl" />
+            ) : chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#64748B', fontSize: 10 }}
+                    dy={10}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#64748B', fontSize: 10 }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: '#F1F5F9' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar dataKey="count" fill="#1B2F6E" radius={[4, 4, 0, 0]} barSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted">
+                Tidak ada data tren.
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Distribution Chart */}
+        <Card className="space-y-4">
+          <div>
+            <h2 className="text-base font-bold text-navy">Top Divisi</h2>
+            <p className="text-xs text-muted">5 divisi yang paling aktif mengambil nomor.</p>
+          </div>
+          <div className="h-64 w-full">
+            {loading ? (
+              <div className="w-full h-full bg-slate-50 animate-pulse rounded-xl" />
+            ) : pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    formatter={(value) => <span className="text-[10px] text-muted font-medium">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted">
+                Tidak ada data klasifikasi.
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
 
       {/* Tabel Riwayat Pengambilan Nomor dari SEMUA User */}

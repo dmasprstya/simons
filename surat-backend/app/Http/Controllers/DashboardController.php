@@ -108,8 +108,31 @@ class DashboardController extends Controller
                 'today_letters' => LetterNumber::where('issued_date', $today)->count(),
                 'pending_gaps'  => GapRequest::where('status', 'pending')->count(),
                 'active_users'  => User::where('is_active', true)->count(),
+                'total_letters' => LetterNumber::count(),
             ];
         });
+
+        // Data untuk grafik tren surat (7 hari terakhir)
+        $trends = LetterNumber::select(
+            DB::raw('DATE(issued_date) as date'),
+            DB::raw('count(*) as count')
+        )
+            ->where('issued_date', '>=', now()->subDays(6))
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->get();
+
+        // Data untuk grafik distribusi divisi (Top 5)
+        $distributions = LetterNumber::select(
+            'users.work_unit as name',
+            DB::raw('count(*) as count')
+        )
+            ->join('users', 'letter_numbers.user_id', '=', 'users.id')
+            ->whereNotNull('users.work_unit')
+            ->groupBy('users.work_unit')
+            ->orderBy('count', 'DESC')
+            ->limit(5)
+            ->get();
 
         // 10 surat terbaru dari semua user — eager load user + classification
         $allRecentLetters = LetterNumber::with(['user', 'classification'])
@@ -132,7 +155,9 @@ class DashboardController extends Controller
 
         return response()->json([
             'data' => [
-                'stats' => $stats,
+                'stats'              => $stats,
+                'trends'             => $trends,
+                'distributions'      => $distributions,
                 'all_recent_letters' => LetterNumberResource::collection($allRecentLetters),
                 'audit_logs'         => AuditLogResource::collection($auditLogs),
                 'sequence'           => $sequence,

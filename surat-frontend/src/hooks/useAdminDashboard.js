@@ -12,9 +12,11 @@ import { getAdminDashboardData } from '../api/dashboard.api';
  * ulang (retry) tanpa menyebabkan re-render loop.
  */
 export function useAdminDashboard() {
-  const [stats, setStats] = useState({ today_letters: 0, pending_gaps: 0, active_users: 0 });
+  const [stats, setStats] = useState({ today_letters: 0, pending_gaps: 0, active_users: 0, total_letters: 0 });
   const [allRecentLetters, setAllRecentLetters] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [trends, setTrends] = useState([]);
+  const [distributions, setDistributions] = useState([]);
   const [sequence, setSequence] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,8 @@ export function useAdminDashboard() {
       setStats(d.stats);
       setAllRecentLetters(d.all_recent_letters || []);
       setAuditLogs(d.audit_logs || []);
+      setTrends(d.trends || []);
+      setDistributions(d.distributions || []);
       setSequence(d.sequence);
     } catch (err) {
       setError(err.response?.data?.message || 'Gagal memuat data dashboard admin.');
@@ -41,6 +45,8 @@ export function useAdminDashboard() {
     stats,
     allRecentLetters,
     auditLogs,
+    trends,
+    distributions,
     sequence,
     loading,
     error,
