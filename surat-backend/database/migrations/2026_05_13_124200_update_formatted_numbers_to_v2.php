@@ -2,6 +2,7 @@
 
 use App\Models\LetterNumber;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -14,12 +15,14 @@ return new class extends Migration
             ->chunkById(100, function ($letters) {
                 foreach ($letters as $letter) {
                     if ($letter->classification) {
-                        $letter->update([
-                            'formatted_number' => LetterNumber::buildFormattedNumber(
-                                $letter->classification->code,
-                                $letter->number
-                            ),
-                        ]);
+                        $newFormattedNumber = LetterNumber::buildFormattedNumber(
+                            $letter->classification->code,
+                            $letter->number
+                        );
+
+                        DB::table('letter_numbers')
+                            ->where('id', $letter->id)
+                            ->update(['formatted_number' => $newFormattedNumber]);
                     }
                 }
             });
