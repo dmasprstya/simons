@@ -121,8 +121,7 @@ class DashboardController extends Controller
                 DB::raw("DATE_FORMAT(issued_date, '%Y-%m') as date"),
                 DB::raw('count(*) as count')
             )
-                ->where('issued_date', '>=', now()->subMonths(11)->startOfMonth())
-                ->groupBy('date')
+                ->groupBy(DB::raw("DATE_FORMAT(issued_date, '%Y-%m')"))
                 ->orderBy('date', 'ASC')
                 ->get();
         } elseif ($period === 'yearly') {
@@ -130,7 +129,7 @@ class DashboardController extends Controller
                 DB::raw("DATE_FORMAT(issued_date, '%Y') as date"),
                 DB::raw('count(*) as count')
             )
-                ->groupBy('date')
+                ->groupBy(DB::raw("DATE_FORMAT(issued_date, '%Y')"))
                 ->orderBy('date', 'ASC')
                 ->get();
         } else { // daily
@@ -138,22 +137,20 @@ class DashboardController extends Controller
                 DB::raw('DATE(issued_date) as date'),
                 DB::raw('count(*) as count')
             )
-                ->where('issued_date', '>=', now()->subDays(6))
-                ->groupBy('date')
+                ->where('issued_date', '>=', now()->subDays(29))
+                ->groupBy(DB::raw('DATE(issued_date)'))
                 ->orderBy('date', 'ASC')
                 ->get();
         }
 
-        // Data untuk grafik distribusi divisi (Top 5)
+        // Data untuk grafik distribusi divisi (Semua Divisi)
         $distributions = LetterNumber::select(
-            'users.work_unit as name',
+            DB::raw("COALESCE(users.work_unit, 'Lainnya') as name"),
             DB::raw('count(*) as count')
         )
-            ->join('users', 'letter_numbers.user_id', '=', 'users.id')
-            ->whereNotNull('users.work_unit')
-            ->groupBy('users.work_unit')
+            ->leftJoin('users', 'letter_numbers.user_id', '=', 'users.id')
+            ->groupBy(DB::raw("COALESCE(users.work_unit, 'Lainnya')"))
             ->orderBy('count', 'DESC')
-            ->limit(5)
             ->get();
 
         // 10 surat terbaru dari semua user — eager load user + classification

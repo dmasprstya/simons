@@ -366,8 +366,8 @@ export default function AdminDashboardPage() {
         {/* Distribution Chart */}
         <Card className="space-y-4">
           <div>
-            <h2 className="text-base font-bold text-navy">Top Divisi</h2>
-            <p className="text-xs text-muted">5 divisi yang paling aktif mengambil nomor.</p>
+            <h2 className="text-base font-bold text-navy">Distribusi Divisi</h2>
+            <p className="text-xs text-muted">Sebaran nomor surat berdasarkan divisi.</p>
           </div>
           <div className="h-64 w-full">
             {loading ? (
