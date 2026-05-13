@@ -29,8 +29,9 @@ export default function AllLettersPage() {
   // === Filter state ===
   const [search, setSearch] = useState('');
   const [classificationId, setClassificationId] = useState(null);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [year, setYear] = useState('');
+  const [month, setMonth] = useState('');
+  const [day, setDay] = useState('');
   const [status, setStatus] = useState('');
   const [workUnit, setWorkUnit] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,8 +43,9 @@ export default function AllLettersPage() {
   const [appliedFilters, setAppliedFilters] = useState({
     search: '',
     classificationId: null,
-    dateFrom: '',
-    dateTo: '',
+    year: '',
+    month: '',
+    day: '',
     status: '',
     workUnit: '',
   });
@@ -54,8 +56,9 @@ export default function AllLettersPage() {
       const params = { page, per_page: 50 };
       if (appliedFilters.search.trim()) params.search = appliedFilters.search.trim();
       if (appliedFilters.classificationId) params.classification_id = appliedFilters.classificationId;
-      if (appliedFilters.dateFrom) params.date_from = appliedFilters.dateFrom;
-      if (appliedFilters.dateTo) params.date_to = appliedFilters.dateTo;
+      if (appliedFilters.year) params.year = appliedFilters.year;
+      if (appliedFilters.month) params.month = appliedFilters.month;
+      if (appliedFilters.day) params.day = appliedFilters.day;
       if (appliedFilters.status) params.status = appliedFilters.status;
       if (appliedFilters.workUnit.trim()) params.work_unit = appliedFilters.workUnit.trim();
       return params;
@@ -83,8 +86,9 @@ export default function AllLettersPage() {
     setAppliedFilters({
       search,
       classificationId,
-      dateFrom,
-      dateTo,
+      year,
+      month,
+      day,
       status,
       workUnit,
     });
@@ -94,16 +98,18 @@ export default function AllLettersPage() {
   const handleResetFilter = () => {
     setSearch('');
     setClassificationId(null);
-    setDateFrom('');
-    setDateTo('');
+    setYear('');
+    setMonth('');
+    setDay('');
     setStatus('');
     setWorkUnit('');
     setCurrentPage(1);
     setAppliedFilters({
       search: '',
       classificationId: null,
-      dateFrom: '',
-      dateTo: '',
+      year: '',
+      month: '',
+      day: '',
       status: '',
       workUnit: '',
     });
@@ -289,30 +295,57 @@ export default function AllLettersPage() {
             />
           </div>
 
-          {/* Date From */}
-          <div className="w-full sm:w-36">
+          {/* Year */}
+          <div className="w-full sm:w-28">
             <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-              Dari Tanggal
+              Tahun
             </label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
+            <select
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
               className={inputBaseClass}
-            />
+            >
+              <option value="">Semua</option>
+              {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Date To */}
-          <div className="w-full sm:w-36">
+          {/* Month */}
+          <div className="w-full sm:w-32">
             <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
-              Sampai Tanggal
+              Bulan
             </label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
               className={inputBaseClass}
-            />
+            >
+              <option value="">Semua</option>
+              {[
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+              ].map((m, i) => (
+                <option key={i + 1} value={i + 1}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Day */}
+          <div className="w-full sm:w-32">
+            <label className="block text-[10px] font-medium text-[#64748B] uppercase tracking-wide mb-1">
+              Hari
+            </label>
+            <select
+              value={day}
+              onChange={(e) => setDay(e.target.value)}
+              className={inputBaseClass}
+            >
+              <option value="">Semua</option>
+              <option value="today">Hari Ini</option>
+              <option value="this_week">Minggu Ini</option>
+            </select>
           </div>
 
           <div className="w-full sm:w-32">

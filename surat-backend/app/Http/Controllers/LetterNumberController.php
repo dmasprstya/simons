@@ -337,6 +337,26 @@ class LetterNumberController extends Controller
             $query->where('issued_date', '<=', $dateTo);
         }
 
+        // Filter dropdown harian, bulanan, tahunan
+        if ($request->filled('year')) {
+            $query->whereYear('issued_date', $request->year);
+        }
+        if ($request->filled('month')) {
+            $query->whereMonth('issued_date', $request->month);
+        }
+        if ($request->filled('day')) {
+            if ($request->day === 'today') {
+                $query->whereDate('issued_date', today());
+            } elseif ($request->day === 'this_week') {
+                $query->whereBetween('issued_date', [
+                    now()->startOfWeek()->toDateString(),
+                    now()->endOfWeek()->toDateString()
+                ]);
+            } else {
+                $query->whereDay('issued_date', $request->day);
+            }
+        }
+
         $perPage = (int) $request->input('per_page', 50);
         $letters = $query->orderByDesc('issued_date')->orderByDesc('number')->paginate($perPage);
 

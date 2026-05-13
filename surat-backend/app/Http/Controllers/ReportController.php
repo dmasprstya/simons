@@ -65,6 +65,9 @@ class ReportController extends Controller
             'sifat_surat'        => 'nullable|string|max:100',
             'user_name'          => 'nullable|string|max:255',
             'search'             => 'nullable|string|max:255',
+            'year'               => 'nullable|integer',
+            'month'              => 'nullable|integer|between:1,12',
+            'day'                => 'nullable|string|max:20',
         ]);
 
         // Merge classification_id into classification_ids for consistency
@@ -86,6 +89,26 @@ class ReportController extends Controller
             }
             if ($dateTo) {
                 $q->whereDate('letter_numbers.issued_date', '<=', $dateTo);
+            }
+
+            // Filter dropdown harian, bulanan, tahunan
+            if ($request->filled('year')) {
+                $q->whereYear('letter_numbers.issued_date', $request->year);
+            }
+            if ($request->filled('month')) {
+                $q->whereMonth('letter_numbers.issued_date', $request->month);
+            }
+            if ($request->filled('day')) {
+                if ($request->day === 'today') {
+                    $q->whereDate('letter_numbers.issued_date', today());
+                } elseif ($request->day === 'this_week') {
+                    $q->whereBetween('letter_numbers.issued_date', [
+                        now()->startOfWeek()->toDateString(),
+                        now()->endOfWeek()->toDateString()
+                    ]);
+                } else {
+                    $q->whereDay('letter_numbers.issued_date', $request->day);
+                }
             }
 
             // Filter berdasarkan klasifikasi (multiple)
@@ -197,6 +220,9 @@ class ReportController extends Controller
             'user_name'          => 'nullable|string|max:255',
             'search'             => 'nullable|string|max:255',
             'format'             => 'nullable|in:csv,pdf,json',
+            'year'               => 'nullable|integer',
+            'month'              => 'nullable|integer|between:1,12',
+            'day'                => 'nullable|string|max:20',
         ]);
 
         $filters = $request->only([
@@ -209,6 +235,9 @@ class ReportController extends Controller
             'sifat_surat',
             'user_name',
             'search',
+            'year',
+            'month',
+            'day',
         ]);
         $format = $request->input('format', 'csv');
         $rows = $this->exportService->getReportRows($filters);

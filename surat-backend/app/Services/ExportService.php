@@ -45,6 +45,26 @@ class ExportService
             $query->whereDate('letter_numbers.issued_date', '<=', $filters['date_to']);
         }
 
+        // Filter dropdown harian, bulanan, tahunan
+        if (!empty($filters['year'])) {
+            $query->whereYear('letter_numbers.issued_date', $filters['year']);
+        }
+        if (!empty($filters['month'])) {
+            $query->whereMonth('letter_numbers.issued_date', $filters['month']);
+        }
+        if (!empty($filters['day'])) {
+            if ($filters['day'] === 'today') {
+                $query->whereDate('letter_numbers.issued_date', today());
+            } elseif ($filters['day'] === 'this_week') {
+                $query->whereBetween('letter_numbers.issued_date', [
+                    now()->startOfWeek()->toDateString(),
+                    now()->endOfWeek()->toDateString()
+                ]);
+            } else {
+                $query->whereDay('letter_numbers.issued_date', $filters['day']);
+            }
+        }
+
         // Backward compatibility: handle both classification_id and classification_ids
         $classIds = $filters['classification_ids'] ?? [];
         if (!empty($filters['classification_id'])) {
