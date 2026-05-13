@@ -8,8 +8,8 @@ return [
 
     // Prefix dan separator untuk formatted_number.
     // Format hasil: {prefix}{prefix_separator}{classificationCode}{separator}{number}
-    // Contoh: W7.TU.01.02-1001
-    'prefix'           => 'W7',
-    'prefix_separator' => '.',
+    // Contoh: W.7-TU.01.02-1001
+    'prefix'           => 'W.7',
+    'prefix_separator' => '-',
     'separator'        => '-',
 ];
