@@ -112,15 +112,37 @@ class DashboardController extends Controller
             ];
         });
 
-        // Data untuk grafik tren surat (7 hari terakhir)
-        $trends = LetterNumber::select(
-            DB::raw('DATE(issued_date) as date'),
-            DB::raw('count(*) as count')
-        )
-            ->where('issued_date', '>=', now()->subDays(6))
-            ->groupBy('date')
-            ->orderBy('date', 'ASC')
-            ->get();
+        // Data untuk grafik tren surat
+        $period = request()->query('trend_period', 'daily');
+        $trendsQuery = LetterNumber::query();
+
+        if ($period === 'monthly') {
+            $trends = $trendsQuery->select(
+                DB::raw("DATE_FORMAT(issued_date, '%Y-%m') as date"),
+                DB::raw('count(*) as count')
+            )
+                ->where('issued_date', '>=', now()->subMonths(11)->startOfMonth())
+                ->groupBy('date')
+                ->orderBy('date', 'ASC')
+                ->get();
+        } elseif ($period === 'yearly') {
+            $trends = $trendsQuery->select(
+                DB::raw("DATE_FORMAT(issued_date, '%Y') as date"),
+                DB::raw('count(*) as count')
+            )
+                ->groupBy('date')
+                ->orderBy('date', 'ASC')
+                ->get();
+        } else { // daily
+            $trends = $trendsQuery->select(
+                DB::raw('DATE(issued_date) as date'),
+                DB::raw('count(*) as count')
+            )
+                ->where('issued_date', '>=', now()->subDays(6))
+                ->groupBy('date')
+                ->orderBy('date', 'ASC')
+                ->get();
+        }
 
         // Data untuk grafik distribusi divisi (Top 5)
         $distributions = LetterNumber::select(

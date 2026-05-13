@@ -22,11 +22,11 @@ export function useAdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (params = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getAdminDashboardData();
+      const res = await getAdminDashboardData(params);
       const d = res.data;
       setStats(d.stats);
       setAllRecentLetters(d.all_recent_letters || []);

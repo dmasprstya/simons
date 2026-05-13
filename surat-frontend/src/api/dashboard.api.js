@@ -5,7 +5,7 @@ export async function getDashboardData() {
   return response.data;
 }
 
-export async function getAdminDashboardData() {
-  const response = await api.get('/dashboard/admin');
+export async function getAdminDashboardData(params = {}) {
+  const response = await api.get('/dashboard/admin', { params });
   return response.data;
 }

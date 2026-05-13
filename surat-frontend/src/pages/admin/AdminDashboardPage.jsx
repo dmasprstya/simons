@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { ShieldCheckIcon, DocumentTextIcon, ClockIcon, HashtagIcon, UsersIcon } from '@heroicons/react/24/outline';
@@ -84,15 +84,32 @@ export default function AdminDashboardPage() {
     day: 'numeric',
   });
 
+  const [trendPeriod, setTrendPeriod] = useState('daily');
+
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchAll({ trend_period: trendPeriod });
+  }, [fetchAll, trendPeriod]);
 
   // Transform trends data for charts
-  const chartData = trends.map(t => ({
-    date: new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
-    count: t.count
-  }));
+  const chartData = trends.map(t => {
+    let dateLabel = t.date;
+    try {
+      if (trendPeriod === 'daily') {
+        dateLabel = new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+      } else if (trendPeriod === 'monthly') {
+        const [year, month] = t.date.split('-');
+        dateLabel = new Date(year, month - 1).toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+      } else {
+        dateLabel = t.date;
+      }
+    } catch (e) {
+      dateLabel = t.date;
+    }
+    return {
+      date: dateLabel,
+      count: t.count
+    };
+  });
 
   const pieData = distributions.map(d => {
     // Buat singkatan: hapus prefix Bagian, Divisi, Bidang, Subbagian, Subbidang
@@ -287,9 +304,30 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trend Chart */}
         <Card className="lg:col-span-2 space-y-4">
-          <div>
-            <h2 className="text-base font-bold text-navy">Tren Penomoran Surat</h2>
-            <p className="text-xs text-muted">Jumlah nomor yang diterbitkan dalam 7 hari terakhir.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-navy">Tren Penomoran Surat</h2>
+              <p className="text-xs text-muted">Statistik penerbitan nomor surat.</p>
+            </div>
+            <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+              {[
+                { id: 'daily', label: 'Harian' },
+                { id: 'monthly', label: 'Bulanan' },
+                { id: 'yearly', label: 'Tahunan' },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setTrendPeriod(p.id)}
+                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${
+                    trendPeriod === p.id
+                      ? 'bg-white text-primary shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="h-64 w-full">
             {loading ? (
