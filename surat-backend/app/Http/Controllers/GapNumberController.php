@@ -91,23 +91,12 @@ class GapNumberController extends Controller
             }
         }
 
-        // ─── 4. Paginasi manual ──────────────────────────────────────────────
-        $perPage     = 50;
-        $total       = count($vacantNumbers);
-        $currentPage = max(1, (int) $request->query('page', 1));
-        $offset      = ($currentPage - 1) * $perPage;
-        $lastPage    = (int) ceil($total / $perPage) ?: 1;
-
-        $pageItems = array_slice($vacantNumbers, $offset, $perPage);
-
+        // ─── 4. Return all vacant numbers ──────────────────────────────────
         return response()->json([
-            'data'    => $pageItems,
+            'data'    => $vacantNumbers,
             'message' => 'Daftar nomor gap kosong berhasil diambil.',
             'meta'    => [
-                'current_page' => $currentPage,
-                'last_page'    => $lastPage,
-                'per_page'     => $perPage,
-                'total'        => $total,
+                'total' => count($vacantNumbers),
             ],
         ]);
     }

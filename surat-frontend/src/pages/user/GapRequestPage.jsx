@@ -55,7 +55,6 @@ export default function GapRequestPage() {
   // === Nomor Kosong filter state ===
   const [vacantDateFrom, setVacantDateFrom] = useState('');
   const [vacantDateTo, setVacantDateTo] = useState('');
-  const [vacantPage, setVacantPage] = useState(1);
 
   // === Expand state untuk tree view nomor kosong ===
   const [expandedMonths, setExpandedMonths] = useState({});
@@ -110,17 +109,15 @@ export default function GapRequestPage() {
     fetchMyRequests({ page: currentPage });
   }, [fetchMyRequests, currentPage]);
 
-  // Fetch nomor kosong saat mount, saat filter tanggal berubah, atau saat page berubah
+  // Fetch nomor kosong saat mount atau saat filter tanggal berubah
   useEffect(() => {
     fetchVacantNumbers({ 
       date_from: appliedVacantFilters.dateFrom, 
-      date_to: appliedVacantFilters.dateTo, 
-      page: vacantPage 
+      date_to: appliedVacantFilters.dateTo
     });
-  }, [appliedVacantFilters, vacantPage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [appliedVacantFilters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterVacant = () => {
-    setVacantPage(1);
     setAppliedVacantFilters({
       dateFrom: vacantDateFrom,
       dateTo: vacantDateTo,
