@@ -35,6 +35,7 @@ export default function AllLettersPage() {
   const [status, setStatus] = useState('');
   const [workUnit, setWorkUnit] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
 
   // === Export state ===
   const [exporting, setExporting] = useState(null); // 'excel' | 'pdf' | null
@@ -53,7 +54,7 @@ export default function AllLettersPage() {
   // Build params dari applied filter
   const buildParams = useCallback(
     (page = 1) => {
-      const params = { page, per_page: 50 };
+      const params = { page, per_page: perPage };
       if (appliedFilters.search.trim()) params.search = appliedFilters.search.trim();
       if (appliedFilters.classificationId) params.classification_id = appliedFilters.classificationId;
       if (appliedFilters.year) params.year = appliedFilters.year;
@@ -63,7 +64,7 @@ export default function AllLettersPage() {
       if (appliedFilters.workUnit.trim()) params.work_unit = appliedFilters.workUnit.trim();
       return params;
     },
-    [appliedFilters]
+    [appliedFilters, perPage]
   );
 
   // Fetch data saat mount dan saat filter/page berubah
@@ -78,6 +79,12 @@ export default function AllLettersPage() {
   // Handler ganti halaman
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  // Handler ganti jumlah per halaman
+  const handlePerPageChange = (newPerPage) => {
+    setPerPage(newPerPage);
+    setCurrentPage(1); // Reset ke halaman 1 saat per_page berubah
   };
 
   // Handler apply filter
@@ -397,7 +404,12 @@ export default function AllLettersPage() {
       {error && <ErrorMessage error={error} />}
 
       {/* Pagination Atas */}
-      <Pagination meta={meta} onPageChange={handlePageChange} maxVisible={10} labelMultiplier={10} />
+      <Pagination 
+        meta={meta} 
+        perPage={perPage}
+        onPageChange={handlePageChange} 
+        onPerPageChange={handlePerPageChange}
+      />
 
       {/* Tabel surat */}
       <Table
@@ -408,8 +420,13 @@ export default function AllLettersPage() {
         emptyIcon={DocumentTextIcon}
       />
 
-      {/* Pagination */}
-      <Pagination meta={meta} onPageChange={handlePageChange} maxVisible={10} labelMultiplier={10} />
+      {/* Pagination Bawah */}
+      <Pagination 
+        meta={meta} 
+        perPage={perPage}
+        onPageChange={handlePageChange} 
+        onPerPageChange={handlePerPageChange}
+      />
     </div>
   );
 }
