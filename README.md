@@ -38,7 +38,7 @@ Aplikasi penomoran surat resmi berbasis **Permenkumham No. 5 Tahun 2022**. SIMON
 | Fitur | Deskripsi |
 |-------|-----------|
 | 🔢 **Penomoran Otomatis** | Pengambilan nomor surat berurutan secara linear dengan sistem daily gap rollover |
-| 📂 **Klasifikasi Hierarki** | 3 level klasifikasi surat sesuai Permenkumham (Tree View/Breadcrumb) |
+| 📂 **Klasifikasi Hierarki** | 4 level klasifikasi surat sesuai Permenkumham (Tree View/Breadcrumb) |
 | 📋 **Riwayat Surat** | Pencarian, filter, dan pelacakan semua surat yang diterbitkan |
 | 🔄 **Gap Request** | Permintaan nomor dari zona cadangan (gap) dengan approval admin |
 | 📊 **Dashboard & Laporan** | Statistik real-time, grafik, dan ekspor data (PDF/CSV/JSON) |
