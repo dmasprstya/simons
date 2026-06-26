@@ -54,7 +54,7 @@ function SummaryCard({ icon: Icon, label, value, subtext }) {
           <p className="text-xs font-semibold text-muted uppercase tracking-widest">{label}</p>
           <p className="text-3xl font-bold text-navy mt-1">{value ?? '-'}</p>
           {subtext && (
-            <p className="text-xs text-muted mt-1 truncate">{subtext}</p>
+            <p className="text-xs text-muted mt-1">{subtext}</p>
           )}
         </div>
       </div>
@@ -112,13 +112,8 @@ export default function AdminDashboardPage() {
   });
 
   const pieData = distributions.map(d => {
-    // Buat singkatan: hapus prefix Bagian, Divisi, Bidang, Subbagian, Subbidang, Pelayanan
-    const shortenedName = (d.name || 'Lainnya')
-      .replace(/^(Bagian|Divisi|Bidang|Subbagian|Subbidang|Pelayanan|Kantor Wilayah)\s+/i, '')
-      .trim();
-    
     return {
-      name: shortenedName,
+      name: d.name || 'Lainnya',
       value: d.count
     };
   });
@@ -369,7 +364,7 @@ export default function AdminDashboardPage() {
             <h2 className="text-base font-bold text-navy">Distribusi Divisi</h2>
             <p className="text-xs text-muted">Sebaran nomor surat berdasarkan divisi.</p>
           </div>
-          <div className="h-80 w-full">
+          <div className="h-48 w-full">
             {loading ? (
               <div className="w-full h-full bg-slate-50 animate-pulse rounded-xl" />
             ) : pieData.length > 0 ? (
@@ -378,9 +373,9 @@ export default function AdminDashboardPage() {
                   <Pie
                     data={pieData}
                     cx="50%"
-                    cy="40%"
-                    innerRadius={60}
-                    outerRadius={75}
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={60}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -391,11 +386,6 @@ export default function AdminDashboardPage() {
                   <Tooltip
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconType="circle"
-                    formatter={(value) => <span className="text-[10px] text-muted font-medium">{value}</span>}
-                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -404,6 +394,30 @@ export default function AdminDashboardPage() {
               </div>
             )}
           </div>
+          {!loading && pieData.length > 0 && (
+            <div className="mt-4 space-y-2 max-h-48 overflow-y-auto pr-1">
+              {pieData.map((entry, index) => {
+                const totalDistributions = pieData.reduce((sum, d) => sum + d.value, 0);
+                const percentage = totalDistributions > 0
+                  ? Math.round((entry.value / totalDistributions) * 100)
+                  : 0;
+                return (
+                  <div key={entry.name} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 min-w-0 mr-4">
+                      <span
+                        className="h-3 w-3 rounded-full shrink-0"
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <span className="text-slate-600 font-medium truncate" title={entry.name}>
+                        {entry.name}
+                      </span>
+                    </div>
+                    <span className="font-bold text-navy shrink-0">{percentage}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
       </div>
 
