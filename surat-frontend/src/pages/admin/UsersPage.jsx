@@ -9,7 +9,7 @@ import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import ErrorMessage from '../../components/ui/ErrorMessage';
-import { UserIcon, PhotoIcon, UsersIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { UserIcon, PhotoIcon, UsersIcon, EyeIcon, EyeSlashIcon, ArrowUpTrayIcon, KeyIcon, XMarkIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 
 /**
  * UsersPage — Halaman admin: kelola user.
@@ -35,6 +35,7 @@ export default function UsersPage() {
     handleToggleActive,
     handleChangePassword,
     handleDeleteUser,
+    handleImportUsers,
   } = useUsers();
   const toast = useToast();
   const { user: currentUser, updateProfile } = useAuthStore();
@@ -60,6 +61,16 @@ export default function UsersPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showChangePwd, setShowChangePwd] = useState(false);
   const [showChangeConfirmPwd, setShowChangeConfirmPwd] = useState(false);
+
+  // === View password state ===
+  const [showViewPasswordModal, setShowViewPasswordModal] = useState(false);
+  const [viewingUser, setViewingUser] = useState(null);
+  const [showPlainPassword, setShowPlainPassword] = useState(false);
+
+  // === Import CSV state ===
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
+  const [importErrors, setImportErrors] = useState([]);
 
   // === Form state (tambah & edit) ===
   const [formData, setFormData] = useState({
@@ -298,6 +309,61 @@ export default function UsersPage() {
     setShowDeleteConfirm(true);
   };
 
+  // === Handler Lihat Password ===
+  const openViewPasswordModal = (user) => {
+    setViewingUser(user);
+    setShowPlainPassword(false);
+    setShowViewPasswordModal(true);
+  };
+
+  // === Handler Import CSV ===
+  const openImportModal = () => {
+    setCsvFile(null);
+    setImportErrors([]);
+    setShowImportModal(true);
+  };
+
+  const handleSubmitImport = async (e) => {
+    e.preventDefault();
+    if (!csvFile) return;
+
+    try {
+      const response = await handleImportUsers(csvFile);
+      setShowImportModal(false);
+      setCsvFile(null);
+      setImportErrors([]);
+      toast.success(response?.message || 'Import user berhasil.');
+    } catch (err) {
+      const apiErrors = err.response?.data?.errors;
+      if (apiErrors && Array.isArray(apiErrors)) {
+        setImportErrors(apiErrors);
+      } else {
+        toast.error(err.response?.data?.message || 'Gagal mengimport user.');
+      }
+    }
+  };
+
+  // === Handler Download Template CSV ===
+  const handleDownloadTemplate = () => {
+    const headers = ['name', 'nip', 'email', 'password', 'work_unit', 'role'];
+    const sample = [
+      'Budi Santoso',
+      '123456789012345678',
+      'budi@example.com',
+      'password123',
+      'Bagian Tata Usaha dan Umum',
+      'user',
+    ];
+    const csvContent = [headers.join(','), sample.join(',')].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'template_import_user.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleConfirmDelete = async () => {
     if (!deletingUser) return;
 
@@ -449,6 +515,15 @@ export default function UsersPage() {
             onClick={() => openPasswordModal(row)}
           >
             Password
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="!bg-blue-50 !text-blue-700 !border-blue-100 hover:!bg-blue-100"
+            onClick={() => openViewPasswordModal(row)}
+          >
+            <KeyIcon className="h-3.5 w-3.5 mr-1" />
+            Lihat Pwd
           </Button>
           <Button
             variant="outline"
@@ -702,9 +777,19 @@ export default function UsersPage() {
           </p>
         </div>
 
-        <Button variant="primary" size="md" onClick={openAddModal}>
-          + Tambah User
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="md" onClick={handleDownloadTemplate}>
+            <DocumentArrowDownIcon className="h-4 w-4 mr-1.5" />
+            Template CSV
+          </Button>
+          <Button variant="outline" size="md" onClick={openImportModal}>
+            <ArrowUpTrayIcon className="h-4 w-4 mr-1.5" />
+            Import CSV
+          </Button>
+          <Button variant="primary" size="md" onClick={openAddModal}>
+            + Tambah User
+          </Button>
+        </div>
       </div>
 
       {/* Filter bar */}
@@ -964,6 +1049,166 @@ export default function UsersPage() {
               loading={actionLoading}
             >
               Ganti Password
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Lihat Password */}
+      <Modal
+        isOpen={showViewPasswordModal}
+        onClose={() => {
+          setShowViewPasswordModal(false);
+          setViewingUser(null);
+          setShowPlainPassword(false);
+        }}
+        title={`Password: ${viewingUser?.name}`}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex items-start gap-2">
+            <KeyIcon className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700">
+              Informasi ini hanya boleh dibagikan langsung kepada user yang bersangkutan. Jangan disebarkan ke pihak lain.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
+              Password
+            </label>
+            <div className="relative">
+              <div className="flex items-center h-9 rounded-lg border border-[#E2E8F0] bg-[#F7F9FC] px-3 pr-10">
+                <span className="text-sm text-[#0B1F3A] font-mono flex-1">
+                  {viewingUser?.plain_password
+                    ? (showPlainPassword ? viewingUser.plain_password : '••••••••')
+                    : <span className="text-[#94A3B8] italic">Tidak tersedia (user lama)</span>
+                  }
+                </span>
+              </div>
+              {viewingUser?.plain_password && (
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  onClick={() => setShowPlainPassword(!showPlainPassword)}
+                >
+                  {showPlainPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setShowViewPasswordModal(false);
+                setViewingUser(null);
+                setShowPlainPassword(false);
+              }}
+            >
+              Tutup
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Import CSV */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={() => {
+          setShowImportModal(false);
+          setCsvFile(null);
+          setImportErrors([]);
+        }}
+        title="Import User dari CSV"
+        size="md"
+      >
+        <form onSubmit={handleSubmitImport} className="space-y-4">
+          <div className="rounded-lg bg-[#F7F9FC] border border-[#E2E8F0] p-3">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <p className="text-xs font-semibold text-[#0B1F3A]">Format kolom CSV (urutan bebas):</p>
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline flex-shrink-0"
+              >
+                <DocumentArrowDownIcon className="h-3.5 w-3.5" />
+                Unduh Template
+              </button>
+            </div>
+            <code className="text-[10px] text-[#64748B] font-mono block">
+              name, nip, email, password, work_unit, role
+            </code>
+            <p className="text-[10px] text-[#94A3B8] mt-1.5">
+              • <strong>role</strong>: admin / user<br />
+              • <strong>work_unit</strong>: nama unit kerja sesuai sistem<br />
+              • <strong>nip</strong>: wajib 18 digit unik<br />
+              • <strong>password</strong>: minimal 8 karakter
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-1.5">
+              Pilih File CSV <span className="text-red-500">*</span>
+            </label>
+            <div
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#E2E8F0] bg-[#F7F9FC] py-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+              onClick={() => document.getElementById('csv-upload').click()}
+            >
+              <DocumentArrowDownIcon className="h-8 w-8 text-[#94A3B8]" />
+              <span className="text-xs text-[#64748B]">
+                {csvFile ? csvFile.name : 'Klik untuk memilih file .csv'}
+              </span>
+            </div>
+            <input
+              id="csv-upload"
+              type="file"
+              accept=".csv,text/csv"
+              className="sr-only"
+              onChange={(e) => {
+                setCsvFile(e.target.files?.[0] || null);
+                setImportErrors([]);
+              }}
+            />
+          </div>
+
+          {importErrors.length > 0 && (
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3 max-h-36 overflow-y-auto">
+              <p className="text-xs font-semibold text-red-700 mb-1.5">Terdapat error pada baris berikut:</p>
+              {importErrors.map((e, i) => (
+                <div key={i} className="mb-1">
+                  <span className="text-[10px] font-bold text-red-600">Baris {e.row}: </span>
+                  <span className="text-[10px] text-red-500">{e.errors.join(', ')}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {actionError && !importErrors.length && <ErrorMessage error={actionError} />}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setShowImportModal(false);
+                setCsvFile(null);
+                setImportErrors([]);
+              }}
+              disabled={actionLoading}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              loading={actionLoading}
+              disabled={!csvFile}
+            >
+              Import
             </Button>
           </div>
         </form>

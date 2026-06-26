@@ -42,13 +42,23 @@ export default function DashboardPage() {
     ? globalSeq.last_number
     : '-';
 
-  // Format tanggal hari ini dalam bahasa Indonesia
-  const today = new Date().toLocaleDateString('id-ID', {
+  // Format tanggal dan jam real-time
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const today = time.toLocaleDateString('id-ID', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+  const clock = time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   // fetchData didefinisikan di component scope agar tombol retry bisa memanggilnya langsung
   const fetchData = async () => {
@@ -112,11 +122,14 @@ export default function DashboardPage() {
         <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute top-1/2 -left-10 h-32 w-32 rounded-full bg-secondary/10 blur-3xl" />
 
-        <div className="relative">
+        <div className="relative w-fit">
           <h1 className="text-2xl font-bold text-white tracking-tight">
             Selamat datang, <span className="text-secondary">{user?.name || 'User'}</span>
           </h1>
-          <p className="text-slate-400 text-sm mt-1 font-medium">{today}</p>
+          <div className="flex justify-between mt-1 text-white/80 text-sm font-medium">
+            <span>{today}</span>
+            <span className="font-mono text-white/80 text-sm font-medium ml-2">{clock} WIB</span>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 relative">

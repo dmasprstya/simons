@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { logout as logoutApi } from '../../api/auth.api';
+import { getAllRequests } from '../../api/gapRequests.api';
 import {
   ArrowRightOnRectangleIcon,
   ChevronRightIcon,
   Bars3Icon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -40,6 +42,38 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const isAdmin = user?.role === 'admin';
+
+  const fetchNotifications = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await getAllRequests({ status: 'pending', per_page: 5 });
+      setNotifications(res.data || []);
+    } catch (err) {
+      // Silent error for background updates
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin, fetchNotifications]);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('#notification-bell-container')) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [showNotifications]);
 
   // Update document title berdasarkan route aktif
   useEffect(() => {
@@ -153,6 +187,83 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
 
       {/* ── Kanan — Avatar + nama + tombol logout ── */}
       <div className="flex items-center gap-3">
+        {/* Notification Bell (Admin Only) */}
+        {isAdmin && (
+          <div id="notification-bell-container" className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-primary transition-colors shrink-0 relative"
+              title="Notifikasi"
+            >
+              <BellIcon className="h-5 w-5" />
+              {notifications.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+              )}
+            </button>
+
+            {/* Dropdown Menu */}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-slate-100 shadow-xl py-2 z-30 transition-all duration-200">
+                <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-navy uppercase tracking-wider">Gap Requests</h3>
+                  {notifications.length > 0 && (
+                    <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                      {notifications.length} Pending
+                    </span>
+                  )}
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-xs text-slate-400">
+                      Tidak ada permintaan gap pending
+                    </div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <button
+                        key={notif.id}
+                        onClick={() => {
+                          setShowNotifications(false);
+                          navigate('/admin/gap-requests');
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0"
+                      >
+                        <div className="flex justify-between items-start mb-0.5">
+                          <p className="text-xs font-bold text-navy">{notif.requested_by?.name || 'User'}</p>
+                          <span className="text-[10px] text-primary font-bold bg-primary-light px-1.5 py-0.5 rounded">
+                            {notif.classification?.code || '-'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate mb-1">{notif.subject || '-'}</p>
+                        <p className="text-[9px] text-slate-400">
+                          {notif.created_at ? new Date(notif.created_at).toLocaleDateString('id-ID', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          }) : '-'}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+                <div className="px-4 pt-2 pb-1 border-t border-slate-100 text-center">
+                  <button
+                    onClick={() => {
+                      setShowNotifications(false);
+                      navigate('/admin/gap-requests');
+                    }}
+                    className="text-[11px] font-bold text-primary hover:text-primary-dark transition-colors inline-block"
+                  >
+                    Lihat Semua Request
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Avatar + info — klik navigasi ke /profile */}
         <Link
           to="/profile"

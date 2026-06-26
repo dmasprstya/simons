@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { getAllRequests } from '../../api/gapRequests.api';
 import {
   HomeIcon,
   HashtagIcon,
@@ -64,7 +65,7 @@ const adminGroups = [
   },
 ];
 
-function SidebarLink({ to, label, icon: Icon, collapsed }) {
+function SidebarLink({ to, label, icon: Icon, collapsed, badge }) {
   return (
     <NavLink
       to={to}
@@ -75,24 +76,55 @@ function SidebarLink({ to, label, icon: Icon, collapsed }) {
           ? 'bg-primary text-white font-medium shadow-md shadow-primary/20'
           : 'text-slate-500 hover:bg-primary-light hover:text-primary'
         }
-        ${collapsed ? 'justify-center' : ''}`
+        ${collapsed ? 'justify-center relative' : ''}`
       }
       title={collapsed ? label : undefined}
     >
       <Icon className="h-5 w-5 shrink-0" />
-      {!collapsed && <span className="truncate">{label}</span>}
+      {!collapsed && <span className="truncate flex-1">{label}</span>}
+      {badge > 0 && (
+        collapsed ? (
+          <span className="absolute top-1 right-1 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+        ) : (
+          <span className="bg-red-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0 min-w-[18px] text-center">
+            {badge}
+          </span>
+        )
+      )}
     </NavLink>
   );
 }
 
 export default function Sidebar({ isOpen, onClose, collapsed = false }) {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [pendingGapCount, setPendingGapCount] = useState(0);
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
   const divisionLabel =
     typeof user?.work_unit === 'string'
       ? user.work_unit
       : user?.work_unit?.title || user?.work_unit?.name || '-';
+
+  const fetchPendingCount = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await getAllRequests({ status: 'pending', per_page: 1 });
+      setPendingGapCount(res.meta?.total || res.data?.length || 0);
+    } catch (err) {
+      // Silent error for background updates
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchPendingCount();
+      const interval = setInterval(fetchPendingCount, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin, fetchPendingCount]);
 
   return (
     <>
@@ -181,9 +213,17 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
                           {group.title}
                         </p>
                       )}
-                      {group.items.map((item) => (
-                        <SidebarLink key={item.to} {...item} collapsed={collapsed} />
-                      ))}
+                      {group.items.map((item) => {
+                        const badge = item.to === '/admin/gap-requests' ? pendingGapCount : null;
+                        return (
+                          <SidebarLink
+                            key={item.to}
+                            {...item}
+                            collapsed={collapsed}
+                            badge={badge}
+                          />
+                        );
+                      })}
                     </div>
                   ))}
                 </div>

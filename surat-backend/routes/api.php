@@ -38,6 +38,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
     Route::prefix('users')->middleware('role:admin')->group(function (): void {
         Route::get('/', [UserController::class, 'index']);
         Route::post('/', [UserController::class, 'store']);
+        Route::post('/import', [UserController::class, 'import']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::put('/{id}', [UserController::class, 'update']);
         Route::put('/{id}/change-password', [UserController::class, 'changePassword']);

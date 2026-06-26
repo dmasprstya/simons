@@ -29,6 +29,7 @@ class User extends Authenticatable
         'role',
         'is_active',
         'photo_path',
+        'plain_password',
     ];
 
     public function getPhotoUrlAttribute(): ?string

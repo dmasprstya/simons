@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { getUsers, createUser, updateUser, toggleActive, changeUserPassword, deleteUser } from '../api/users.api';
+import { getUsers, createUser, updateUser, toggleActive, changeUserPassword, deleteUser, importUsers } from '../api/users.api';
 
 /**
  * useUsers — custom hook untuk mengelola data user (admin).
@@ -175,6 +175,30 @@ export function useUsers() {
     }
   }, [refetch]);
 
+  /**
+   * Import users from CSV
+   * @param {File} file - File CSV
+   * @returns {Object} response data jika sukses
+   */
+  const handleImportUsers = useCallback(async (file) => {
+    setActionLoading(true);
+    setActionError(null);
+
+    try {
+      const response = await importUsers(file);
+      // Refetch list setelah import
+      await refetch();
+      return response;
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Gagal mengimport user.';
+      setActionError(message);
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  }, [refetch]);
+
   return {
     users,
     loading,
@@ -190,5 +214,6 @@ export function useUsers() {
     handleToggleActive,
     handleChangePassword,
     handleDeleteUser,
+    handleImportUsers,
   };
 }

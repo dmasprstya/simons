@@ -25,6 +25,7 @@ class UserResource extends JsonResource
             'is_active'     => $this->is_active,
             'photo_url'     => $this->photo_url,
             'profile_photo' => $this->photo_url, // Alias for compatibility
+            'plain_password' => $this->plain_password,
             'created_at'    => $this->created_at?->format('Y-m-d H:i'),
         ];
     }

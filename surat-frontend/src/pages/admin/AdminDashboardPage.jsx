@@ -77,12 +77,22 @@ export default function AdminDashboardPage() {
     fetchAll,
   } = useAdminDashboard();
 
-  const today = new Date().toLocaleDateString('id-ID', {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const today = time.toLocaleDateString('id-ID', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+  const clock = time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   const [trendPeriod, setTrendPeriod] = useState('daily');
 
@@ -247,12 +257,15 @@ export default function AdminDashboardPage() {
       >
         <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-white/10 blur-xl" />
-        <div className="relative">
+        <div className="relative w-fit">
           <div className="flex items-center gap-3">
             <ShieldCheckIcon className="h-8 w-8 text-white/80" />
             <h1 className="text-2xl font-bold text-white tracking-tight">Admin Dashboard</h1>
           </div>
-          <p className="text-white/60 text-sm mt-2 font-medium">{today}</p>
+          <div className="flex justify-between mt-2 text-white/80 text-sm font-medium">
+            <span>{today}</span>
+            <span className="font-mono text-white/80 text-sm font-medium ml-2">{clock} WIB</span>
+          </div>
         </div>
       </div>
 

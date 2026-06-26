@@ -78,6 +78,8 @@ class UserController extends Controller
     {
         $validated = $request->validated();
 
+        $validated['plain_password'] = $validated['password'];
+
         // Hash password sebelum simpan ke database
         $validated['password'] = bcrypt($validated['password']);
 
@@ -127,6 +129,7 @@ class UserController extends Controller
 
         // Hash password baru jika disertakan dalam update
         if (isset($validated['password'])) {
+            $validated['plain_password'] = $validated['password'];
             $validated['password'] = bcrypt($validated['password']);
         }
 
@@ -206,6 +209,7 @@ class UserController extends Controller
 
         $user->update([
             'password' => bcrypt($request->password),
+            'plain_password' => $request->password,
         ]);
 
         $this->auditService->log(
@@ -258,5 +262,117 @@ class UserController extends Controller
                 'message' => 'User berhasil dihapus.',
             ]);
         });
+    }
+
+    /**
+     * Import users from CSV.
+     */
+    public function import(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        
+        // Detect separator
+        $separator = ',';
+        $firstLine = fgets($handle);
+        if ($firstLine && strpos($firstLine, ';') !== false && strpos($firstLine, ',') === false) {
+            $separator = ';';
+        }
+        rewind($handle);
+
+        // Read header
+        $header = fgetcsv($handle, 1000, $separator);
+        
+        if ($header) {
+            $header = array_map(function($h) {
+                return trim(strtolower($h));
+            }, $header);
+        }
+
+        $expectedHeaders = ['name', 'nip', 'email', 'password', 'work_unit', 'role'];
+        if (!$header || array_diff($expectedHeaders, $header)) {
+            fclose($handle);
+            return response()->json([
+                'message' => 'Format header CSV tidak valid. Harus mengandung kolom: name, nip, email, password, work_unit, role.',
+            ], 422);
+        }
+
+        $rows = [];
+        while (($data = fgetcsv($handle, 1000, $separator)) !== false) {
+            if (count($data) < count($header)) {
+                continue;
+            }
+            $row = array_combine($header, array_map('trim', $data));
+            $rows[] = $row;
+        }
+        fclose($handle);
+
+        if (empty($rows)) {
+            return response()->json([
+                'message' => 'File CSV kosong atau tidak ada data untuk di-import.',
+            ], 422);
+        }
+
+        // Validate all rows
+        $errors = [];
+        foreach ($rows as $index => $row) {
+            $rowNum = $index + 2; // header is row 1
+            $validator = \Illuminate\Support\Facades\Validator::make($row, [
+                'name'      => 'required|string|max:100',
+                'nip'       => 'required|string|size:18|unique:users,nip',
+                'email'     => 'required|email|unique:users,email',
+                'password'  => 'required|min:8',
+                'work_unit' => 'required|string|max:100',
+                'role'      => 'required|in:admin,user',
+            ]);
+
+            if ($validator->fails()) {
+                $errors[] = [
+                    'row' => $rowNum,
+                    'errors' => $validator->errors()->all()
+                ];
+            }
+        }
+
+        if (!empty($errors)) {
+            return response()->json([
+                'message' => 'Proses import dibatalkan karena terdapat data yang tidak valid.',
+                'errors' => $errors
+            ], 422);
+        }
+
+        $importedCount = 0;
+        DB::transaction(function () use ($rows, &$importedCount) {
+            foreach ($rows as $row) {
+                $user = User::create([
+                    'name'           => $row['name'],
+                    'nip'            => $row['nip'],
+                    'email'          => $row['email'],
+                    'password'       => bcrypt($row['password']),
+                    'plain_password' => $row['password'],
+                    'work_unit'      => $row['work_unit'],
+                    'role'           => $row['role'],
+                    'is_active'      => true,
+                ]);
+
+                $this->auditService->log(
+                    action:    'user.create',
+                    tableName: 'users',
+                    recordId:  $user->id,
+                    newData:   $user->toArray(),
+                );
+
+                $importedCount++;
+            }
+        });
+
+        return response()->json([
+            'message' => "Berhasil mengimport {$importedCount} user.",
+            'data'    => null,
+        ]);
     }
 }

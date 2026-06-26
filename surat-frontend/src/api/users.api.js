@@ -74,3 +74,16 @@ export async function deleteUser(id) {
   const response = await api.delete(`/users/${id}`);
   return response.data;
 }
+
+/**
+ * Import Users — import user via file CSV (admin only)
+ * @param {File} file - File CSV yang akan di-upload
+ */
+export async function importUsers(file) {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await api.post('/users/import', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+}
