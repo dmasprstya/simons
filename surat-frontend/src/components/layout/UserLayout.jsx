@@ -36,6 +36,10 @@ export default function UserLayout() {
     setMobileOpen((prev) => !prev);
   };
 
+  const handleToggleCollapse = () => {
+    setCollapsed((prev) => !prev);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-plus-jakarta">
       {/* Sidebar — fixed di kiri */}
@@ -43,6 +47,7 @@ export default function UserLayout() {
         isOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
         collapsed={collapsed}
+        onToggleCollapse={handleToggleCollapse}
       />
 
       {/* Navbar — fixed di atas */}

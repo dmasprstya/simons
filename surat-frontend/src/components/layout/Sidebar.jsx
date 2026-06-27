@@ -16,6 +16,8 @@ import {
   ChartBarIcon,
   UserCircleIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  Bars3Icon,
   QueueListIcon,
 } from '@heroicons/react/24/outline';
 import logo from '../../assets/logo.png';
@@ -98,7 +100,7 @@ function SidebarLink({ to, label, icon: Icon, collapsed, badge }) {
   );
 }
 
-export default function Sidebar({ isOpen, onClose, collapsed = false }) {
+export default function Sidebar({ isOpen, onClose, collapsed = false, onToggleCollapse }) {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [pendingGapCount, setPendingGapCount] = useState(0);
   const user = useAuthStore((state) => state.user);
@@ -147,17 +149,40 @@ export default function Sidebar({ isOpen, onClose, collapsed = false }) {
         `}
       >
         {/* Logo / Branding */}
-        <div className={`flex items-center gap-3 px-6 py-6 pb-8 ${collapsed ? 'lg:justify-center lg:px-2' : ''}`}>
-          <div className="flex items-center justify-center h-12 w-12 rounded-xl overflow-hidden shadow-sm shrink-0 border border-slate-100/50">
-            <img src={logo} alt="Logo SIMONS" className="h-full w-full object-cover" />
+        {collapsed ? (
+          /* Collapsed: tampilkan hanya tombol hamburger di tengah */
+          <div className="hidden lg:flex justify-center px-2 py-6 pb-8">
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="flex items-center justify-center h-10 w-10 rounded-xl text-slate-500 hover:bg-primary-light hover:text-primary transition-all duration-200"
+              title="Perluas sidebar"
+            >
+              <Bars3Icon className="h-5 w-5" />
+            </button>
           </div>
-          {!collapsed && (
-            <div className="lg:block">
+        ) : (
+          /* Expanded: tampilkan logo + title + tombol panah */
+          <div className="flex items-center gap-3 px-6 py-6 pb-8">
+            <div className="flex items-center justify-center h-12 w-12 rounded-xl shadow-sm shrink-0 border border-slate-100/50 overflow-hidden">
+              <img src={logo} alt="Logo SIMONS" className="h-full w-full object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-xl font-extrabold text-primary tracking-tight leading-tight">SIMONS</h1>
               <p className="text-[11px] font-bold text-secondary uppercase tracking-wider">Management System</p>
             </div>
-          )}
-        </div>
+            {onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                className="hidden lg:flex items-center justify-center h-7 w-7 rounded-lg text-slate-400 hover:bg-primary-light hover:text-primary transition-all duration-200 shrink-0"
+                title="Perkecil sidebar"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Menu Navigasi */}
         <nav className="flex-1 overflow-y-auto sidebar-scroll px-4 pb-4 space-y-1.5 font-plus-jakarta">
