@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth.api';
 import { useAuthStore } from '../../store/authStore';
@@ -7,16 +7,8 @@ import ErrorMessage from '../../components/ui/ErrorMessage';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import logo from '../../assets/logo.png';
 
-/**
- * LoginPage — Halaman login dengan form email + password.
- *
- * Flow submit:
- *  1. Validasi client-side: email format, password tidak kosong
- *  2. Panggil login() dari auth.api.js
- *  3. Simpan user + token ke authStore via setAuth()
- *  4. Redirect ke /dashboard (user) atau /admin/dashboard (admin)
- *  5. Tampilkan pesan error jika gagal (401, 403)
- */
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -26,16 +18,75 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const passwordRef = useRef(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileReady, setTurnstileReady] = useState(!TURNSTILE_SITE_KEY);
 
-  // Validasi client-side sederhana
-  const isFormValid = nip.length === 18 && password.length > 0;
+  const passwordRef = useRef(null);
+  const turnstileContainerRef = useRef(null);
+  const turnstileWidgetIdRef = useRef(null);
+
+  // Verifikasi client-side: form valid jika NIP 18 digit, password ada, dan (jika Turnstile aktif) token sudah didapat
+  const isFormValid = nip.length === 18 && password.length > 0 && (TURNSTILE_SITE_KEY ? turnstileToken.length > 0 : true);
+
+  const renderTurnstile = useCallback(() => {
+    if (!TURNSTILE_SITE_KEY || !turnstileContainerRef.current) return;
+    if (!window.turnstile) return;
+
+    // Jika sudah pernah di-render, reset saja
+    if (turnstileWidgetIdRef.current !== null) {
+      window.turnstile.reset(turnstileWidgetIdRef.current);
+      return;
+    }
+
+    turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: 'light',
+      callback: (token) => {
+        setTurnstileToken(token);
+        setTurnstileReady(true);
+      },
+      'expired-callback': () => {
+        setTurnstileToken('');
+        setTurnstileReady(false);
+      },
+      'error-callback': () => {
+        setTurnstileToken('');
+        setTurnstileReady(false);
+        setError('Verifikasi keamanan (Turnstile) gagal dimuat. Silakan refresh halaman.');
+      },
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return;
+
+    // Tunggu script Turnstile selesai dimuat
+    if (window.turnstile) {
+      renderTurnstile();
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (window.turnstile) {
+        clearInterval(interval);
+        renderTurnstile();
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [renderTurnstile]);
+
+  const resetTurnstile = useCallback(() => {
+    if (!TURNSTILE_SITE_KEY || turnstileWidgetIdRef.current === null) return;
+    window.turnstile?.reset(turnstileWidgetIdRef.current);
+    setTurnstileToken('');
+    setTurnstileReady(false);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    // Cek validasi sebelum kirim
     if (nip.length !== 18) {
       setError('NIP harus berjumlah 18 angka.');
       return;
@@ -44,25 +95,31 @@ export default function LoginPage() {
       setError('Password tidak boleh kosong.');
       return;
     }
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError('Verifikasi keamanan (Turnstile) belum selesai. Mohon tunggu.');
+      return;
+    }
 
     setLoading(true);
     try {
-      const result = await login(nip, password);
+      const result = await login(nip, password, turnstileToken || null);
       const { user, token } = result.data;
 
-      // Simpan ke Zustand store
       setAuth(user, token);
 
-      // Redirect berdasarkan role
       if (user.role === 'admin') {
         navigate('/admin/dashboard', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {
-      // Tangani error dari backend
+      // Reset widget Turnstile otomatis agar user bisa mencoba kembali
+      resetTurnstile();
+
       const status = err.response?.status;
-      if (status === 401) {
+      if (status === 422 && err.response?.data?.errors?.cf_turnstile_response) {
+        setError(err.response.data.errors.cf_turnstile_response[0]);
+      } else if (status === 401) {
         setError('NIP atau password salah.');
       } else if (status === 403) {
         setError('Akun Anda telah dinonaktifkan. Hubungi administrator.');
@@ -160,13 +217,20 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Cloudflare Turnstile Widget */}
+            {TURNSTILE_SITE_KEY && (
+              <div className="flex justify-center">
+                <div ref={turnstileContainerRef} id="cf-turnstile-login" />
+              </div>
+            )}
+
             {/* Submit Button */}
             <Button
               type="submit"
               variant="primary"
               size="lg"
               loading={loading}
-              disabled={!isFormValid}
+              disabled={!isFormValid || loading}
               className="w-full"
             >
               {loading ? 'Memproses...' : 'Masuk'}
@@ -182,3 +246,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

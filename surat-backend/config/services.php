@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // Cloudflare Turnstile — secret key untuk server-side verification
+    'turnstile' => [
+        'secret' => env('TURNSTILE_SECRET_KEY', ''),
+    ],
+
 ];

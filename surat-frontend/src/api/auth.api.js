@@ -3,8 +3,10 @@ import api from './axios';
 /**
  * Login — kirim nip & password, terima token + user data
  */
-export async function login(nip, password) {
-  const response = await api.post('/auth/login', { nip, password });
+export async function login(nip, password, turnstileToken = null) {
+  const payload = { nip, password };
+  if (turnstileToken) payload.cf_turnstile_response = turnstileToken;
+  const response = await api.post('/auth/login', payload);
   return response.data;
 }
 

@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -27,13 +28,37 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'nip'      => ['required', 'digits:18'],
-            'password' => ['required'],
+        $validated = $request->validate([
+            'nip'                    => ['required', 'digits:18'],
+            'password'               => ['required'],
+            'cf_turnstile_response'  => [config('services.turnstile.secret') ? 'required' : 'nullable', 'string'],
         ], [
-            'nip.required' => 'NIP wajib diisi.',
-            'nip.digits'   => 'NIP harus berjumlah 18 angka.',
+            'nip.required'                   => 'NIP wajib diisi.',
+            'nip.digits'                     => 'NIP harus berjumlah 18 angka.',
+            'cf_turnstile_response.required' => 'Verifikasi keamanan (Turnstile) wajib diselesaikan.',
         ]);
+
+        // Verifikasi Cloudflare Turnstile (hanya jika TURNSTILE_SECRET_KEY dikonfigurasi)
+        $turnstileSecret = config('services.turnstile.secret');
+        if ($turnstileSecret && ! empty($validated['cf_turnstile_response'])) {
+            $verify = Http::timeout(5)->asForm()->post(
+                'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                [
+                    'secret'   => $turnstileSecret,
+                    'response' => $validated['cf_turnstile_response'],
+                    'remoteip' => $request->ip(),
+                ]
+            );
+
+            if (! $verify->successful() || ! $verify->json('success')) {
+                return response()->json([
+                    'message' => 'Verifikasi keamanan (Turnstile) gagal. Silakan coba lagi.',
+                    'errors'  => ['cf_turnstile_response' => ['Verifikasi keamanan (Turnstile) gagal. Silakan coba lagi.']],
+                ], 422);
+            }
+        }
+
+        $credentials = ['nip' => $validated['nip'], 'password' => $validated['password']];
 
         // Coba autentikasi; jika gagal kembalikan 401
         if (! Auth::attempt($credentials)) {
