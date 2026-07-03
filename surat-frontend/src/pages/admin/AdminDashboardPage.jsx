@@ -43,11 +43,11 @@ function SkeletonCard() {
 
 
 
-function SummaryCard({ icon: Icon, label, value, subtext }) {
+function SummaryCard({ icon: Icon, label, value, subtext, iconClass }) {
   return (
     <Card hover className="h-full">
       <div className="flex items-start gap-4">
-        <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary-light text-primary shrink-0">
+        <div className={`flex items-center justify-center h-12 w-12 rounded-2xl shrink-0 ${iconClass}`}>
           <Icon className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
@@ -94,32 +94,49 @@ export default function AdminDashboardPage() {
   });
   const clock = time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-  const [trendPeriod, setTrendPeriod] = useState('daily');
+  const [trendPeriod, setTrendPeriod] = useState('weekly');
 
   useEffect(() => {
     fetchAll({ trend_period: trendPeriod });
   }, [fetchAll, trendPeriod]);
 
   // Transform trends data for charts
-  const chartData = trends.map(t => {
-    let dateLabel = t.date;
-    try {
-      if (trendPeriod === 'daily') {
-        dateLabel = new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
-      } else if (trendPeriod === 'monthly') {
-        const [year, month] = t.date.split('-');
-        dateLabel = new Date(year, month - 1).toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
-      } else {
+  const chartData = (() => {
+    if (trendPeriod === 'weekly') {
+      // Selalu tampilkan Senin–Jumat minggu ini, urut dari kiri ke kanan
+      const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+      // Buat peta date-string → count dari data backend
+      const dataMap = {};
+      trends.forEach(t => { dataMap[t.date] = t.count; });
+      // Hitung tanggal Senin minggu ini
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+      const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMonday);
+      return dayNames.map((name, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const key = d.toISOString().split('T')[0]; // YYYY-MM-DD
+        return { date: name, count: dataMap[key] ?? 0 };
+      });
+    }
+    return trends.map(t => {
+      let dateLabel = t.date;
+      try {
+        if (trendPeriod === 'monthly') {
+          // Tampilkan nama bulan saja tanpa tahun/tanggal
+          const [year, month] = t.date.split('-');
+          dateLabel = new Date(year, month - 1).toLocaleDateString('id-ID', { month: 'long' });
+        } else {
+          dateLabel = t.date;
+        }
+      } catch (e) {
         dateLabel = t.date;
       }
-    } catch (e) {
-      dateLabel = t.date;
-    }
-    return {
-      date: dateLabel,
-      count: t.count
-    };
-  });
+      return { date: dateLabel, count: t.count };
+    });
+  })();
 
   const pieData = distributions.map(d => {
     return {
@@ -285,24 +302,28 @@ export default function AdminDashboardPage() {
               label="Surat Hari Ini"
               value={stats.today_letters}
               subtext="Nomor surat diambil hari ini"
+              iconClass="bg-blue-50 text-blue-600"
             />
             <SummaryCard
               icon={ClockIcon}
               label="Pending Gap"
               value={stats.pending_gaps}
               subtext="Request menunggu persetujuan"
+              iconClass="bg-amber-50 text-amber-600"
             />
             <SummaryCard
               icon={HashtagIcon}
               label="Total Surat"
               value={stats.total_letters}
               subtext="Total seluruh nomor yang terbit"
+              iconClass="bg-emerald-50 text-emerald-600"
             />
             <SummaryCard
               icon={HashtagIcon}
               label="Nomor Terakhir"
               value={sequence?.last_number ?? '-'}
               subtext="Nomor surat global saat ini"
+              iconClass="bg-violet-50 text-violet-600"
             />
           </>
         )}
@@ -319,7 +340,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
               {[
-                { id: 'daily', label: 'Harian' },
+                { id: 'weekly', label: 'Mingguan' },
                 { id: 'monthly', label: 'Bulanan' },
                 { id: 'yearly', label: 'Tahunan' },
               ].map((p) => (

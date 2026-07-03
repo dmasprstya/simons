@@ -192,14 +192,13 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
           <div id="notification-bell-container" className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-primary transition-colors shrink-0 relative"
+              className="relative flex items-center justify-center w-8 h-8 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-primary transition-colors shrink-0"
               title="Notifikasi"
             >
-              <BellIcon className="h-5 w-5" />
+              <BellIcon className="h-6 w-6" />
               {notifications.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                  {notifications.length > 99 ? '99+' : notifications.length}
                 </span>
               )}
             </button>

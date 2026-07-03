@@ -151,10 +151,10 @@ export default function DashboardPage() {
         {/* Stat Cards (Left Column) */}
         <div className="lg:col-span-4 space-y-4">
           {[
-            { label: 'Hari Ini', value: userStats.today, icon: CalendarDaysIcon, color: 'bg-primary-light text-primary' },
-            { label: 'Bulan Ini', value: userStats.month, icon: ChartBarIcon, color: 'bg-primary-light text-primary' },
-            { label: 'Total Aktif', value: userStats.active, icon: CheckCircleIcon, color: 'bg-emerald-50 text-emerald-600' },
-            { label: 'Total Surat', value: userStats.total, icon: FolderIcon, color: 'bg-slate-50 text-slate-600' }
+            { label: 'Hari Ini', value: userStats.today, icon: CalendarDaysIcon, color: 'bg-blue-50 text-blue-600' },
+            { label: 'Bulan Ini', value: userStats.month, icon: ChartBarIcon, color: 'bg-emerald-50 text-emerald-600' },
+            { label: 'Total Aktif', value: userStats.active, icon: CheckCircleIcon, color: 'bg-teal-50 text-teal-600' },
+            { label: 'Total Surat', value: userStats.total, icon: FolderIcon, color: 'bg-violet-50 text-violet-600' }
           ].map((stat, idx) => (
             <Card key={idx} padding="md" hover>
               <div className="flex items-center gap-4">

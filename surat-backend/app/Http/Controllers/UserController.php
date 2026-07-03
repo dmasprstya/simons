@@ -319,8 +319,13 @@ class UserController extends Controller
 
         // Validate all rows
         $errors = [];
+        $seenNips = [];
+        $seenEmails = [];
+
         foreach ($rows as $index => $row) {
             $rowNum = $index + 2; // header is row 1
+            $rowErrors = [];
+
             $validator = \Illuminate\Support\Facades\Validator::make($row, [
                 'name'      => 'required|string|max:100',
                 'nip'       => 'required|string|size:18|unique:users,nip',
@@ -331,9 +336,33 @@ class UserController extends Controller
             ]);
 
             if ($validator->fails()) {
+                $rowErrors = $validator->errors()->all();
+            }
+
+            // Check if NIP is already present in previous rows of the CSV
+            $nip = $row['nip'] ?? '';
+            if ($nip !== '') {
+                if (in_array($nip, $seenNips)) {
+                    $rowErrors[] = 'NIP duplikat di dalam file CSV.';
+                } else {
+                    $seenNips[] = $nip;
+                }
+            }
+
+            // Check if Email is already present in previous rows of the CSV
+            $email = $row['email'] ?? '';
+            if ($email !== '') {
+                if (in_array($email, $seenEmails)) {
+                    $rowErrors[] = 'Email duplikat di dalam file CSV.';
+                } else {
+                    $seenEmails[] = $email;
+                }
+            }
+
+            if (!empty($rowErrors)) {
                 $errors[] = [
                     'row' => $rowNum,
-                    'errors' => $validator->errors()->all()
+                    'errors' => $rowErrors,
                 ];
             }
         }

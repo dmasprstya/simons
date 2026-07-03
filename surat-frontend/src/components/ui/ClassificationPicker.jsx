@@ -25,6 +25,12 @@ export default function ClassificationPicker({ value, onChange, disabled = false
   // State for the current path: array of { id, name, code, is_leaf }
   const [path, setPath] = useState([]);
 
+  useEffect(() => {
+    if (!value) {
+      setPath([]);
+    }
+  }, [value]);
+
   // Loading state
   const [loading, setLoading] = useState(false);
 

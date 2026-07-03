@@ -293,7 +293,7 @@ export default function TakeNumberPage() {
       {/* Modal hasil */}
       <Modal
         isOpen={showResult}
-        onClose={() => setShowResult(false)}
+        onClose={resetForm}
         title={
           <div className="flex items-center gap-2">
             <CheckCircleIcon className="h-6 w-6 text-emerald-500" />

@@ -113,10 +113,22 @@ class DashboardController extends Controller
         });
 
         // Data untuk grafik tren surat
-        $period = request()->query('trend_period', 'daily');
+        $period = request()->query('trend_period', 'weekly');
         $trendsQuery = LetterNumber::query();
 
-        if ($period === 'monthly') {
+        if ($period === 'weekly') {
+            // Ambil Senin s/d Jumat minggu ini
+            $monday = now()->startOfWeek(\Carbon\Carbon::MONDAY)->toDateString();
+            $friday = now()->startOfWeek(\Carbon\Carbon::MONDAY)->addDays(4)->toDateString();
+            $trends = $trendsQuery->select(
+                DB::raw('DATE(issued_date) as date'),
+                DB::raw('count(*) as count')
+            )
+                ->whereBetween('issued_date', [$monday, $friday])
+                ->groupBy(DB::raw('DATE(issued_date)'))
+                ->orderBy('date', 'ASC')
+                ->get();
+        } elseif ($period === 'monthly') {
             $trends = $trendsQuery->select(
                 DB::raw("DATE_FORMAT(issued_date, '%Y-%m') as date"),
                 DB::raw('count(*) as count')
@@ -132,7 +144,7 @@ class DashboardController extends Controller
                 ->groupBy(DB::raw("DATE_FORMAT(issued_date, '%Y')"))
                 ->orderBy('date', 'ASC')
                 ->get();
-        } else { // daily
+        } else { // daily fallback
             $trends = $trendsQuery->select(
                 DB::raw('DATE(issued_date) as date'),
                 DB::raw('count(*) as count')
