@@ -24,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('model:prune')->daily();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Unauthenticated request di API → return 401 JSON (mencegah RouteNotFoundException route 'login')
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        });
+
         // Lock timeout / deadlock di NumberingService → 409 Conflict
         $exceptions->render(function (NumberingLockException $e) {
             return response()->json(['message' => 'Nomor sedang diproses, coba lagi.'], 409);

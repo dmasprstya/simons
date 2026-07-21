@@ -1,16 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { getAdminDashboardData } from '../api/dashboard.api';
 
-/**
- * useAdminDashboard — custom hook untuk data dashboard admin.
- *
- * Menggantikan 5 request paralel sebelumnya (getSummary, getAllRequests,
- * getUsers, getRecentLetters, getLogs) dengan satu aggregate call ke
- * GET /api/dashboard/admin.
- *
- * fetchData didefinisikan dengan useCallback agar komponen bisa memanggil
- * ulang (retry) tanpa menyebabkan re-render loop.
- */
 export function useAdminDashboard() {
   const [stats, setStats] = useState({ today_letters: 0, pending_gaps: 0, active_users: 0, total_letters: 0 });
   const [allRecentLetters, setAllRecentLetters] = useState([]);
@@ -20,10 +10,23 @@ export function useAdminDashboard() {
   const [sequence, setSequence] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const [trendLoading, setTrendLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchAll = useCallback(async (params = {}) => {
-    setLoading(true);
+  const isInitialLoad = useRef(true);
+  const lastParamsRef = useRef({});
+
+  const fetchAll = useCallback(async (params = {}, silent = false) => {
+    const isPeriodChange = params.trend_period && params.trend_period !== lastParamsRef.current.trend_period;
+    lastParamsRef.current = params;
+
+    if (!silent) {
+      if (isInitialLoad.current) {
+        setLoading(true);
+      } else if (isPeriodChange) {
+        setTrendLoading(true);
+      }
+    }
     setError(null);
     try {
       const res = await getAdminDashboardData(params);
@@ -34,12 +37,37 @@ export function useAdminDashboard() {
       setTrends(d.trends || []);
       setDistributions(d.distributions || []);
       setSequence(d.sequence);
+      isInitialLoad.current = false;
     } catch (err) {
       setError(err.response?.data?.message || 'Gagal memuat data dashboard admin.');
     } finally {
       setLoading(false);
+      setTrendLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    const handlePoll = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAll(lastParamsRef.current, true);
+      }
+    };
+
+    const intervalId = setInterval(handlePoll, 3000);
+
+    const handleFocus = () => {
+      fetchAll(lastParamsRef.current, true);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handlePoll);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handlePoll);
+    };
+  }, [fetchAll]);
 
   return {
     stats,
@@ -49,6 +77,7 @@ export function useAdminDashboard() {
     distributions,
     sequence,
     loading,
+    trendLoading,
     error,
     fetchAll,
   };

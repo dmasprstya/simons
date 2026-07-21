@@ -59,7 +59,7 @@ export default function Navbar({ onToggleSidebar, sidebarCollapsed }) {
   useEffect(() => {
     if (isAdmin) {
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 10000);
+      const interval = setInterval(fetchNotifications, 3000);
       return () => clearInterval(interval);
     }
   }, [isAdmin, fetchNotifications]);

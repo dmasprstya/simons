@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequence Diagrams – SIMONS</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(135deg, #34d399, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .nav a {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+    .nav a:hover { border-color: #38bdf8; color: #38bdf8; }
+    .diagram-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 1100px;
+      margin: 0 auto 2.5rem auto;
+      overflow-x: auto;
+    }
+    .diagram-card h2 {
+      font-size: 1.1rem;
+      color: #34d399;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #334155;
+    }
+    .diagram-card p.desc {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .mermaid { width: 100%; }
+  </style>
+</head>
+<body>
+
+<h1>Sequence Diagrams – SIMONS</h1>
+<p class="subtitle">Sistem Informasi Manajemen Penomoran Surat</p>
+
+<nav class="nav">
+  <a href="#sd1">1. Login</a>
+  <a href="#sd2">2. Ambil Nomor Surat</a>
+  <a href="#sd3">3. Rollover Harian</a>
+  <a href="#sd4">4. Ajukan Gap Request</a>
+  <a href="#sd5">5. Approve Gap Request</a>
+  <a href="#sd6">6. Reject Gap Request</a>
+  <a href="#sd7">7. Void Surat</a>
+  <a href="#sd8">8. Kelola User (Admin)</a>
+  <a href="#sd9">9. Kelola Klasifikasi</a>
+  <a href="#sd10">10. Ekspor Laporan</a>
+</nav>
+
+<!-- ─── SD-1 Login ────────────────────────────────────── -->
+<div class="diagram-card" id="sd1">
+  <h2>📌 SD-1: Login</h2>
+  <p class="desc">User/Admin melakukan autentikasi dengan email dan password. Bearer token Sanctum dikembalikan.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor U as User / Admin
+    participant FE as Frontend (React)
+    participant BE as AuthController
+    participant DB as Database
+
+    U->>FE: Isi email & password, klik Login
+    FE->>BE: POST /api/auth/login {email, password}
+    BE->>DB: SELECT user WHERE email = ?
+    DB-->>BE: User record
+    alt Password cocok & is_active = true
+        BE->>DB: INSERT personal_access_tokens
+        DB-->>BE: Token string
+        BE-->>FE: 200 {data: {user, token}}
+        FE->>FE: Simpan token ke Zustand store
+        FE-->>U: Redirect ke Dashboard
+    else Password salah
+        BE-->>FE: 401 {message: "Kredensial tidak valid"}
+        FE-->>U: Tampilkan pesan error
+    else User nonaktif
+        BE-->>FE: 403 {message: "Akun tidak aktif"}
+        FE-->>U: Tampilkan pesan error
+    end
+  </div>
+</div>
+
+<!-- ─── SD-2 Ambil Nomor Surat ───────────────────────── -->
+<div class="diagram-card" id="sd2">
+  <h2>📌 SD-2: Ambil Nomor Surat (Normal Flow)</h2>
+  <p class="desc">User mengambil nomor surat baru. NumberingService menggunakan pessimistic locking untuk thread-safety.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor U as User (Staf)
+    participant FE as Frontend
+    participant LC as LetterNumberController
+    participant NS as NumberingService
+    participant GS as GlobalSequence
+    participant DB as Database
+
+    U->>FE: Pilih Klasifikasi, isi Perihal & Tujuan, klik "Ambil Nomor"
+    FE->>LC: POST /api/letters {classification_id, subject, destination, sifat_surat}
+    LC->>NS: acquireNumber()
+    NS->>DB: BEGIN TRANSACTION
+    NS->>GS: SELECT FOR UPDATE WHERE id=1
+    GS-->>NS: {last_number, gap_size, last_issued_date}
+
+    alt last_issued_date = NULL (pertama kali)
+        NS->>NS: candidate = config.default_start (1000)
+    else Hari sama (last_issued_date = today)
+        NS->>NS: candidate = last_number + 1
+    else Ganti hari → performRollover()
+        NS->>DB: INSERT daily_gaps {date=kemarin, gap_start, gap_end}
+        NS->>NS: candidate = last_number + gap_size + 1
+    end
+
+    NS->>DB: CHECK LetterNumber.number = candidate (tahun ini)
+    alt Nomor sudah dipakai
+        NS-->>LC: throw NumberingLockException
+        LC-->>FE: 409 Conflict
+        FE-->>U: Pesan error retry
+    else Nomor tersedia
+        NS->>GS: UPDATE last_number=candidate, last_issued_date=today
+        NS->>DB: COMMIT
+        NS-->>LC: candidate (int)
+        LC->>DB: INSERT letter_numbers {number, formatted_number, ...}
+        LC-->>FE: 201 {data: LetterNumber}
+        FE-->>U: Tampilkan nomor surat yang diterbitkan
+    end
+  </div>
+</div>
+
+<!-- ─── SD-3 Rollover Harian ─────────────────────────── -->
+<div class="diagram-card" id="sd3">
+  <h2>📌 SD-3: Proses Rollover Harian (ensureDayIsCurrent)</h2>
+  <p class="desc">Dipanggil controller saat halaman dibuka tanpa menerbitkan nomor baru. Memastikan gap tercatat meski tidak ada nomor yang diambil pada hari sebelumnya.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor U as User / Admin
+    participant FE as Frontend
+    participant DC as DailySequenceController
+    participant NS as NumberingService
+    participant GS as GlobalSequence
+    participant DG as DailyGaps Table
+
+    U->>FE: Buka halaman (Dashboard / Ambil Nomor)
+    FE->>DC: GET /api/sequences/today
+    DC->>NS: ensureDayIsCurrent()
+    NS->>GS: SELECT FOR UPDATE WHERE id=1
+    GS-->>NS: {last_issued_date, last_number, gap_size}
+
+    alt last_issued_date = NULL atau sudah hari ini
+        NS-->>DC: return (tidak ada rollover)
+    else Hari sudah berbeda (tertinggal N hari)
+        loop Setiap hari yang terlewat (cursor s/d yesterday)
+            alt Hari kerja (bukan Sabtu/Minggu)
+                NS->>DG: INSERT daily_gaps {date, gap_start, gap_end}
+                NS->>GS: last_number += gap_size
+            end
+            alt Tahun baru terdeteksi
+                NS->>GS: last_number = 0 (reset tahunan)
+            end
+        end
+        NS->>GS: UPDATE last_issued_date = today
+        NS->>GS: COMMIT
+    end
+
+    DC-->>FE: 200 {data: sequence_info}
+    FE-->>U: Tampilkan info sequence terkini
+  </div>
+</div>
+
+<!-- ─── SD-4 Ajukan Gap Request ──────────────────────── -->
+<div class="diagram-card" id="sd4">
+  <h2>📌 SD-4: Ajukan Gap Request</h2>
+  <p class="desc">User mengajukan permintaan untuk menggunakan nomor dari zona gap (nomor yang ter-skip saat rollover harian).</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor U as User (Staf)
+    participant FE as Frontend
+    participant GRC as GapRequestController
+    participant DG as DailyGaps Table
+    participant GR as GapRequests Table
+    participant AS as AuditService
+
+    U->>FE: Buka halaman Gap Request
+    FE->>GRC: GET /api/gap-numbers
+    GRC-->>FE: Daftar nomor gap tersedia (vacancy list)
+    FE-->>U: Tampilkan nomor gap yang bisa dipilih
+
+    U->>FE: Pilih nomor gap, isi perihal, tujuan, alasan
+    FE->>GRC: POST /api/gap-requests {items[], classification_id, subject, ...}
+    GRC->>GRC: Validasi StoreGapRequestRequest
+
+    loop Setiap nomor yang dipilih
+        GRC->>DG: CHECK gap_start <= number <= gap_end
+        alt Bukan zona gap valid
+            GRC-->>FE: 422 {message: "Bukan nomor gap valid"}
+            FE-->>U: Error validasi
+        end
+        GRC->>GR: CHECK status IN(pending, approved) WHERE number=?
+        alt Nomor sudah dikunci
+            GRC-->>FE: 422 {message: "Nomor sudah direquest"}
+            FE-->>U: Error validasi
+        end
+    end
+
+    GRC->>GRC: Validasi urutan (harus ambil nomor terkecil berurutan)
+    alt Melompati nomor
+        GRC-->>FE: 422 {message: "Harus ambil nomor terkecil: X, Y, Z"}
+        FE-->>U: Error validasi
+    else Valid
+        GRC->>GR: BEGIN TRANSACTION
+        loop Setiap item
+            GRC->>GR: INSERT gap_requests {number, gap_date, status=pending, ...}
+            GRC->>AS: log('gap_request.created', ...)
+        end
+        GRC->>GR: COMMIT
+        GRC-->>FE: 201 {data: [GapRequest]}
+        FE-->>U: Konfirmasi pengajuan berhasil
+    end
+  </div>
+</div>
+
+<!-- ─── SD-5 Approve Gap Request ─────────────────────── -->
+<div class="diagram-card" id="sd5">
+  <h2>📌 SD-5: Approve Gap Request (Admin)</h2>
+  <p class="desc">Admin menyetujui gap request. NumberingService memvalidasi zona gap dan menerbitkan LetterNumber baru dari nomor gap tersebut.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor A as Admin
+    participant FE as Frontend
+    participant GRC as GapRequestController
+    participant GRS as GapRequestService
+    participant NS as NumberingService
+    participant DG as DailyGaps Table
+    participant LN as LetterNumbers Table
+    participant GR as GapRequests Table
+    participant AS as AuditService
+
+    A->>FE: Klik tombol "Setujui" pada gap request
+    FE->>GRC: PATCH /api/gap-requests/{id}/approve
+    GRC->>GRS: approve(gapRequest, reviewer)
+    GRS->>GRS: Cek status = 'pending'
+    alt Status bukan pending
+        GRS-->>GRC: throw InvalidArgumentException
+        GRC-->>FE: 422 {message}
+        FE-->>A: Pesan error
+    else Status = pending
+        GRS->>NS: releaseGapNumber(gapRequest)
+        NS->>NS: BEGIN TRANSACTION
+        NS->>DG: CHECK gap_start <= number <= gap_end WHERE date = gap_date
+        alt Nomor tidak valid (bukan zona gap)
+            NS-->>GRS: throw GapAlreadyUsedException
+            GRS-->>GRC: propagate exception
+            GRC-->>FE: 422 {message}
+            FE-->>A: Pesan error
+        else Nomor valid
+            NS->>LN: CHECK nomor sudah ada di letter_numbers
+            alt Nomor sudah dipakai
+                NS-->>GRS: throw GapAlreadyUsedException
+                GRS-->>GRC: propagate exception
+                GRC-->>FE: 422 {message}
+                FE-->>A: Pesan error
+            else Nomor tersedia
+                NS->>LN: INSERT letter_numbers {source='gap', issued_date=gap_date, ...}
+                NS-->>GRS: LetterNumber baru
+                GRS->>GR: UPDATE status='approved', reviewed_by, reviewed_at, number
+                GRS->>AS: log('gap.approved', old={pending}, new={approved, number})
+                GRS->>NS: COMMIT
+                GRC-->>FE: 200 {data: GapRequestResource}
+                FE-->>A: Konfirmasi approval berhasil
+            end
+        end
+    end
+  </div>
+</div>
+
+<!-- ─── SD-6 Reject Gap Request ──────────────────────── -->
+<div class="diagram-card" id="sd6">
+  <h2>📌 SD-6: Reject Gap Request (Admin)</h2>
+  <p class="desc">Admin menolak gap request dengan menyertakan alasan penolakan. Tidak ada operasi pada tabel sequence.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor A as Admin
+    participant FE as Frontend
+    participant GRC as GapRequestController
+    participant GRS as GapRequestService
+    participant GR as GapRequests Table
+    participant AS as AuditService
+
+    A->>FE: Klik "Tolak", isi alasan penolakan
+    FE->>GRC: PATCH /api/gap-requests/{id}/reject {reason}
+    GRC->>GRC: Validasi reason (required, max:500)
+    GRC->>GRS: reject(gapRequest, reviewer, reason)
+    GRS->>GRS: Cek status = 'pending'
+    alt Status bukan pending
+        GRS-->>GRC: throw InvalidArgumentException
+        GRC-->>FE: 422 {message}
+        FE-->>A: Pesan error
+    else Status = pending
+        GRS->>GR: UPDATE status='rejected', reviewed_by, reviewed_at, rejection_reason
+        GRS->>AS: log('gap.rejected', old={pending}, new={rejected, reason})
+        GRS-->>GRC: GapRequest (fresh)
+        GRC-->>FE: 200 {data: GapRequestResource}
+        FE-->>A: Konfirmasi penolakan berhasil
+    end
+  </div>
+</div>
+
+<!-- ─── SD-7 Void Surat ──────────────────────────────── -->
+<div class="diagram-card" id="sd7">
+  <h2>📌 SD-7: Void / Batalkan Surat</h2>
+  <p class="desc">User membatalkan nomor surat. Hanya bisa dilakukan oleh pemilik surat pada hari yang sama dengan penerbitan.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor U as User (Staf)
+    participant FE as Frontend
+    participant LC as LetterNumberController
+    participant LN as LetterNumbers Table
+
+    U->>FE: Klik "Batalkan Surat" pada daftar surat saya
+    FE->>LC: PATCH /api/letters/{id}/void
+    LC->>LN: SELECT * WHERE id = ?
+    LN-->>LC: LetterNumber record
+
+    alt User bukan pemilik surat
+        LC-->>FE: 403 {message: "Tidak punya akses"}
+        FE-->>U: Pesan error
+    else issued_date bukan hari ini
+        LC-->>FE: 422 {message: "Hanya boleh void hari penerbitan"}
+        FE-->>U: Pesan error
+    else Status sudah 'voided'
+        LC-->>FE: 422 {message: "Sudah dalam status voided"}
+        FE-->>U: Pesan error
+    else Semua validasi lolos
+        LC->>LN: UPDATE status='voided', voided_at=now(), voided_by=user_id
+        LN-->>LC: Updated record
+        LC-->>FE: 200 {data: LetterNumber}
+        FE-->>U: Konfirmasi surat berhasil dibatalkan
+    end
+  </div>
+</div>
+
+<!-- ─── SD-8 Kelola User ─────────────────────────────── -->
+<div class="diagram-card" id="sd8">
+  <h2>📌 SD-8: Kelola User (Admin)</h2>
+  <p class="desc">Admin mengelola data user termasuk membuat, memperbarui, mengaktifkan/menonaktifkan, dan import CSV massal.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor A as Admin
+    participant FE as Frontend
+    participant UC as UserController
+    participant DB as Users Table
+
+    rect rgb(20, 40, 60)
+      Note over A,DB: Buat User Baru
+      A->>FE: Isi form tambah user
+      FE->>UC: POST /api/users {name, nip, email, role, work_unit, ...}
+      UC->>UC: Validasi (email unik, NIP unik)
+      UC->>DB: INSERT users {hashed_password, ...}
+      DB-->>UC: User baru
+      UC-->>FE: 201 {data: UserResource}
+      FE-->>A: Konfirmasi user berhasil dibuat
+    end
+
+    rect rgb(20, 50, 40)
+      Note over A,DB: Import CSV Massal
+      A->>FE: Upload file CSV
+      FE->>UC: POST /api/users/import (multipart)
+      UC->>UC: Parse CSV, validasi setiap baris
+      loop Setiap baris valid
+          UC->>DB: INSERT atau UPDATE user
+      end
+      UC-->>FE: 200 {message: "X user berhasil diimpor, Y error"}
+      FE-->>A: Ringkasan hasil import
+    end
+
+    rect rgb(50, 20, 40)
+      Note over A,DB: Aktif / Nonaktif User
+      A->>FE: Toggle switch aktif/nonaktif
+      FE->>UC: PATCH /api/users/{id}/toggle-active
+      UC->>DB: UPDATE is_active = !is_active
+      DB-->>UC: Updated user
+      UC-->>FE: 200 {data: UserResource}
+      FE-->>A: Status user berhasil diubah
+    end
+  </div>
+</div>
+
+<!-- ─── SD-9 Kelola Klasifikasi ──────────────────────── -->
+<div class="diagram-card" id="sd9">
+  <h2>📌 SD-9: Kelola Klasifikasi Surat (Admin)</h2>
+  <p class="desc">Admin mengelola hierarki klasifikasi surat (3 level: pokok, sub, detail). Hanya node leaf (is_leaf=true) yang dapat dipilih saat mengambil nomor.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor A as Admin
+    participant FE as Frontend
+    participant CC as LetterClassificationController
+    participant DB as Classifications Table
+
+    A->>FE: Buka halaman Manajemen Klasifikasi
+    FE->>CC: GET /api/classifications/all
+    CC->>DB: SELECT all classifications (tree)
+    DB-->>CC: Data hierarki
+    CC-->>FE: 200 {data: [Classification tree]}
+    FE-->>A: Tampilkan pohon klasifikasi
+
+    rect rgb(20, 40, 60)
+      Note over A,DB: Tambah Klasifikasi Baru
+      A->>FE: Isi form (kode, nama, level, parent_id)
+      FE->>CC: POST /api/classifications {code, name, level, parent_id}
+      CC->>CC: Validasi (kode unik, parent valid)
+      CC->>DB: INSERT letter_classifications
+      DB-->>CC: Record baru
+      CC-->>FE: 201 {data: Classification}
+      FE-->>A: Konfirmasi berhasil ditambah
+    end
+
+    rect rgb(50, 20, 40)
+      Note over A,DB: Toggle Aktif Klasifikasi
+      A->>FE: Toggle switch on/off
+      FE->>CC: PATCH /api/classifications/{id}/toggle-active
+      CC->>DB: UPDATE is_active = !is_active
+      DB-->>CC: Updated record
+      CC-->>FE: 200 {data: Classification}
+      FE-->>A: Status berhasil diubah
+    end
+  </div>
+</div>
+
+<!-- ─── SD-10 Ekspor Laporan ─────────────────────────── -->
+<div class="diagram-card" id="sd10">
+  <h2>📌 SD-10: Laporan & Export (Admin)</h2>
+  <p class="desc">Admin melihat ringkasan statistik dan mengekspor data surat ke format CSV/Excel/PDF berdasarkan filter periode dan klasifikasi.</p>
+  <div class="mermaid">
+sequenceDiagram
+    actor A as Admin
+    participant FE as Frontend
+    participant RC as ReportController
+    participant ES as ExportService
+    participant DB as Database
+
+    A->>FE: Buka halaman Laporan
+    FE->>RC: GET /api/reports/summary?year=&month=
+    RC->>DB: Agregasi data (COUNT, GROUP BY)
+    DB-->>RC: Summary stats
+    RC-->>FE: 200 {data: {total, by_classification, by_unit, trend}}
+    FE-->>A: Tampilkan grafik dan tabel ringkasan
+
+    A->>FE: Pilih filter & klik Export
+    FE->>RC: GET /api/reports/export?format=xlsx&...
+    RC->>ES: export(filters, format)
+    ES->>DB: SELECT letters WHERE filters
+    DB-->>ES: Data rows
+    ES->>ES: Generate file (xlsx/csv/pdf)
+    ES-->>RC: File binary
+    RC-->>FE: 200 application/octet-stream (file download)
+    FE-->>A: Browser download file laporan
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    sequence: {
+      diagramMarginX: 20,
+      diagramMarginY: 20,
+      actorMargin: 60,
+      width: 150,
+      height: 65,
+      boxMargin: 10,
+      useMaxWidth: true,
+    },
+    themeVariables: {
+      darkMode: true,
+      background: '#1e293b',
+      primaryColor: '#1e3a5f',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      lineColor: '#64748b',
+      secondaryColor: '#1a3a2a',
+      activationBorderColor: '#34d399',
+      activationBkgColor: '#1a3a2a',
+      noteBkgColor: '#2a2a1a',
+      noteTextColor: '#facc15',
+    }
+  });
+</script>
+</body>
+</html>

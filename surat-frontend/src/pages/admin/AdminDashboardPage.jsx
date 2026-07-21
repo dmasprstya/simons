@@ -3,17 +3,13 @@ import { displayLetterNumber } from '../../utils/formatNumber';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { ShieldCheckIcon, DocumentTextIcon, ClockIcon, HashtagIcon, UsersIcon } from '@heroicons/react/24/outline';
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
 } from 'recharts';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -63,6 +59,84 @@ function SummaryCard({ icon: Icon, label, value, subtext, iconClass }) {
 }
 
 const COLORS = ['#1B2F6E', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B'];
+
+function DonutChart({ data, colors }) {
+  if (!data || data.length === 0) return null;
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  if (total === 0) return null;
+
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const outerR = 85;
+  const innerR = 55;
+  const labelR = outerR + 18;
+  const gap = 4;
+
+  const slices = [];
+  let currentAngle = -90;
+
+  data.forEach((item, i) => {
+    const pct = item.value / total;
+    const sliceAngle = pct * 360 - gap;
+    if (sliceAngle <= 0) return;
+
+    const startAngle = currentAngle + gap / 2;
+    const endAngle = startAngle + sliceAngle;
+    const midAngle = startAngle + sliceAngle / 2;
+
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const largeArc = sliceAngle > 180 ? 1 : 0;
+
+    const x1o = cx + outerR * Math.cos(toRad(startAngle));
+    const y1o = cy + outerR * Math.sin(toRad(startAngle));
+    const x2o = cx + outerR * Math.cos(toRad(endAngle));
+    const y2o = cy + outerR * Math.sin(toRad(endAngle));
+    const x1i = cx + innerR * Math.cos(toRad(endAngle));
+    const y1i = cy + innerR * Math.sin(toRad(endAngle));
+    const x2i = cx + innerR * Math.cos(toRad(startAngle));
+    const y2i = cy + innerR * Math.sin(toRad(startAngle));
+
+    const path = [
+      `M ${x1o} ${y1o}`,
+      `A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2o} ${y2o}`,
+      `L ${x1i} ${y1i}`,
+      `A ${innerR} ${innerR} 0 ${largeArc} 0 ${x2i} ${y2i}`,
+      'Z',
+    ].join(' ');
+
+    const labelX = cx + labelR * Math.cos(toRad(midAngle));
+    const labelY = cy + labelR * Math.sin(toRad(midAngle));
+    const pctText = `${Math.round(pct * 100)}%`;
+
+    slices.push(
+      <g key={i}>
+        <path d={path} fill={colors[i % colors.length]} />
+        {pct >= 0.03 && (
+          <text
+            x={labelX}
+            y={labelY}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="#1e293b"
+            fontSize="12"
+            fontWeight="700"
+          >
+            {pctText}
+          </text>
+        )}
+      </g>
+    );
+
+    currentAngle += pct * 360;
+  });
+
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full">
+      {slices}
+    </svg>
+  );
+}
 
 export default function AdminDashboardPage() {
   const {
@@ -340,30 +414,35 @@ export default function AdminDashboardPage() {
             </div>
             <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
               {[
-                { id: 'weekly', label: 'Mingguan' },
+                { id: 'weekly', label: 'Harian' },
                 { id: 'monthly', label: 'Bulanan' },
                 { id: 'yearly', label: 'Tahunan' },
               ].map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setTrendPeriod(p.id)}
-                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${
-                    trendPeriod === p.id
+                  className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${trendPeriod === p.id
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
-                  }`}
+                    }`}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-52 w-full">
             {loading ? (
               <div className="w-full h-full bg-slate-50 animate-pulse rounded-xl" />
             ) : chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="trendColor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1B2F6E" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#1B2F6E" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                   <XAxis
                     dataKey="date"
@@ -378,11 +457,20 @@ export default function AdminDashboardPage() {
                     tick={{ fill: '#64748B', fontSize: 10 }}
                   />
                   <Tooltip
-                    cursor={{ fill: '#F1F5F9' }}
+                    cursor={{ stroke: '#94A3B8', strokeDasharray: '3 3' }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
-                  <Bar dataKey="count" fill="#1B2F6E" radius={[4, 4, 0, 0]} barSize={32} />
-                </BarChart>
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#1B2F6E"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#trendColor)"
+                    dot={{ r: 4, fill: '#1B2F6E', strokeWidth: 2, stroke: '#FFFFFF' }}
+                    activeDot={{ r: 6, fill: '#1B2F6E' }}
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-xs text-muted">
@@ -390,6 +478,20 @@ export default function AdminDashboardPage() {
               </div>
             )}
           </div>
+
+          {!loading && chartData.length > 0 && (
+            <div className="pt-2 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {chartData.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-slate-50 hover:bg-slate-100 transition-colors p-2 rounded-xl text-center flex flex-col justify-center border border-slate-100"
+                >
+                  <span className="text-[11px] font-medium text-slate-500 truncate">{item.date}</span>
+                  <span className="text-sm font-bold text-navy mt-0.5">{item.count} <span className="text-[10px] font-normal text-slate-400">surat</span></span>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* Distribution Chart */}
@@ -398,30 +500,11 @@ export default function AdminDashboardPage() {
             <h2 className="text-base font-bold text-navy">Distribusi Divisi</h2>
             <p className="text-xs text-muted">Sebaran nomor surat berdasarkan divisi.</p>
           </div>
-          <div className="h-48 w-full">
+          <div className="flex justify-center" style={{ height: '220px' }}>
             {loading ? (
-              <div className="w-full h-full bg-slate-50 animate-pulse rounded-xl" />
+              <div className="w-48 h-48 bg-slate-50 animate-pulse rounded-full" />
             ) : pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={60}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <DonutChart data={pieData} colors={COLORS} />
             ) : (
               <div className="flex items-center justify-center h-full text-xs text-muted">
                 Tidak ada data klasifikasi.
@@ -430,26 +513,20 @@ export default function AdminDashboardPage() {
           </div>
           {!loading && pieData.length > 0 && (
             <div className="mt-4 space-y-2 max-h-48 overflow-y-auto pr-1">
-              {pieData.map((entry, index) => {
-                const totalDistributions = pieData.reduce((sum, d) => sum + d.value, 0);
-                const percentage = totalDistributions > 0
-                  ? Math.round((entry.value / totalDistributions) * 100)
-                  : 0;
-                return (
-                  <div key={entry.name} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 min-w-0 mr-4">
-                      <span
-                        className="h-3 w-3 rounded-full shrink-0"
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      />
-                      <span className="text-slate-600 font-medium truncate" title={entry.name}>
-                        {entry.name}
-                      </span>
-                    </div>
-                    <span className="font-bold text-navy shrink-0">{percentage}%</span>
+              {pieData.map((entry, index) => (
+                <div key={entry.name} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 min-w-0 mr-4">
+                    <span
+                      className="h-3 w-3 rounded-full shrink-0"
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                    <span className="text-slate-600 font-medium truncate" title={entry.name}>
+                      {entry.name}
+                    </span>
                   </div>
-                );
-              })}
+                  <span className="font-bold text-navy shrink-0">{entry.value} surat</span>
+                </div>
+              ))}
             </div>
           )}
         </Card>

@@ -17,7 +17,7 @@ use App\Http\Controllers\{
 
 // === AUTH ===
 Route::prefix('auth')->group(function (): void {
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->name('login');
 
     Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::post('logout', [AuthController::class, 'logout']);

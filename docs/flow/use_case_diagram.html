@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Use Case Diagram – SIMONS</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .diagram-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto 2rem auto;
+      overflow-x: auto;
+    }
+    .diagram-card h2 {
+      font-size: 1.1rem;
+      color: #38bdf8;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #334155;
+    }
+    .mermaid { width: 100%; }
+    .legend {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .legend h3 { color: #818cf8; margin-bottom: 1rem; }
+    .legend ul { list-style: none; display: flex; flex-wrap: wrap; gap: 1rem; }
+    .legend li { 
+      background: #0f172a; 
+      border: 1px solid #334155; 
+      border-radius: 8px; 
+      padding: 0.4rem 0.9rem; 
+      font-size: 0.85rem; 
+      color: #cbd5e1;
+    }
+    .legend li span { font-weight: 600; color: #38bdf8; }
+  </style>
+</head>
+<body>
+
+<h1>Use Case Diagram – SIMONS</h1>
+<p class="subtitle">Sistem Informasi Manajemen Penomoran Surat</p>
+
+<div class="diagram-card">
+  <h2>📊 Use Case Diagram – Keseluruhan Sistem</h2>
+  <div class="mermaid">
+flowchart LR
+    %% Actors
+    User(["👤 User\n(Staf)"])
+    Admin(["👑 Admin"])
+    System(["⚙️ System\n(Otomatis)"])
+
+    %% ── Auth Boundary ──────────────────────────────
+    subgraph AUTH ["🔐 Autentikasi"]
+        UC_LOGIN["Login dengan Email & Password"]
+        UC_LOGOUT["Logout"]
+        UC_CHPW["Ganti Password"]
+        UC_PROFILE["Kelola Profil (foto, data diri)"]
+    end
+
+    %% ── User Features Boundary ─────────────────────
+    subgraph USER_FEAT ["📄 Fitur User"]
+        UC_TAKE["Ambil Nomor Surat"]
+        UC_VIEW_MY["Lihat Surat Saya"]
+        UC_EDIT_LETTER["Edit Detail Surat (2 hari)"]
+        UC_VOID["Batalkan Surat (hari yg sama)"]
+        UC_GAP_REQ["Ajukan Gap Request"]
+        UC_VIEW_MYGAP["Lihat Status Gap Request Saya"]
+        UC_DASHBOARD_U["Lihat Dashboard User"]
+    end
+
+    %% ── Admin Features Boundary ────────────────────
+    subgraph ADMIN_FEAT ["🛡️ Fitur Admin"]
+        UC_DASHBOARD_A["Lihat Dashboard Admin"]
+        UC_MANAGE_USER["Kelola User (CRUD + Import CSV)"]
+        UC_TOGGLE_USER["Aktif/Nonaktifkan User"]
+        UC_MANAGE_CLASS["Kelola Klasifikasi Surat (CRUD)"]
+        UC_VIEW_ALL["Lihat Semua Surat (filter lengkap)"]
+        UC_GAP_REVIEW["Review Gap Request (Approve/Reject)"]
+        UC_SEQ_SETTING["Atur Gap Size Penomoran"]
+        UC_AUDIT["Lihat Audit Log"]
+        UC_REPORT["Lihat Laporan & Export"]
+    end
+
+    %% ── System Auto ────────────────────────────────
+    subgraph SYSTEM_FEAT ["⚙️ Proses Otomatis"]
+        UC_ROLLOVER["Daily Rollover & Gap Archive"]
+        UC_GAP_NOTIFY["Catat ke Audit Log"]
+        UC_YEARLY["Reset Nomor Tahunan"]
+    end
+
+    %% ── User relations ─────────────────────────────
+    User --> UC_LOGIN
+    User --> UC_LOGOUT
+    User --> UC_CHPW
+    User --> UC_PROFILE
+    User --> UC_TAKE
+    User --> UC_VIEW_MY
+    User --> UC_EDIT_LETTER
+    User --> UC_VOID
+    User --> UC_GAP_REQ
+    User --> UC_VIEW_MYGAP
+    User --> UC_DASHBOARD_U
+
+    %% ── Admin relations ────────────────────────────
+    Admin --> UC_LOGIN
+    Admin --> UC_LOGOUT
+    Admin --> UC_CHPW
+    Admin --> UC_PROFILE
+    Admin --> UC_DASHBOARD_A
+    Admin --> UC_MANAGE_USER
+    Admin --> UC_TOGGLE_USER
+    Admin --> UC_MANAGE_CLASS
+    Admin --> UC_VIEW_ALL
+    Admin --> UC_GAP_REVIEW
+    Admin --> UC_SEQ_SETTING
+    Admin --> UC_AUDIT
+    Admin --> UC_REPORT
+
+    %% ── System relations ───────────────────────────
+    UC_TAKE -.->|triggers| System
+    System --> UC_ROLLOVER
+    System --> UC_GAP_NOTIFY
+    System --> UC_YEARLY
+    UC_GAP_REVIEW -.->|triggers| UC_GAP_NOTIFY
+
+    %% ── Include / Extend ────────────────────────────
+    UC_TAKE -.->|«include»| UC_ROLLOVER
+    UC_GAP_REQ -.->|«include»| UC_GAP_NOTIFY
+    UC_MANAGE_USER -.->|«include»| UC_TOGGLE_USER
+
+    %% Style
+    style AUTH fill:#1e3a5f,stroke:#38bdf8,color:#e2e8f0
+    style USER_FEAT fill:#1a3a2a,stroke:#4ade80,color:#e2e8f0
+    style ADMIN_FEAT fill:#3a1a2a,stroke:#f472b6,color:#e2e8f0
+    style SYSTEM_FEAT fill:#2a2a1a,stroke:#facc15,color:#e2e8f0
+  </div>
+</div>
+
+<div class="legend">
+  <h3>📖 Keterangan Actor</h3>
+  <ul>
+    <li><span>👤 User (Staf)</span> – Pegawai yang berhak mengambil nomor surat, mengajukan gap request, dan mengelola surat miliknya sendiri.</li>
+    <li><span>👑 Admin</span> – Administrator sistem dengan hak penuh: kelola user, klasifikasi, review gap, laporan, dan audit log.</li>
+    <li><span>⚙️ System</span> – Proses otomatis yang terpicu saat pengambilan nomor: rollover harian, arsip gap, reset tahunan.</li>
+    <li><span>«include»</span> – Use case yang selalu dipanggil saat use case induk dieksekusi.</li>
+    <li><span>«extend»</span> – Use case opsional yang dipanggil dalam kondisi tertentu.</li>
+  </ul>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    flowchart: { curve: 'basis', useMaxWidth: true },
+    themeVariables: {
+      darkMode: true,
+      background: '#1e293b',
+      primaryColor: '#1e3a5f',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      lineColor: '#64748b',
+      secondaryColor: '#1a3a2a',
+      tertiaryColor: '#3a1a2a',
+    }
+  });
+</script>
+</body>
+</html>

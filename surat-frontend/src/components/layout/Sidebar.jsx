@@ -123,7 +123,7 @@ export default function Sidebar({ isOpen, onClose, collapsed = false, onToggleCo
   useEffect(() => {
     if (isAdmin) {
       fetchPendingCount();
-      const interval = setInterval(fetchPendingCount, 10000);
+      const interval = setInterval(fetchPendingCount, 3000);
       return () => clearInterval(interval);
     }
   }, [isAdmin, fetchPendingCount]);

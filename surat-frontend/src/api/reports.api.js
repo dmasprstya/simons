@@ -18,6 +18,9 @@ export async function exportReport(params = {}) {
   try {
     response = await api.get('/reports/export', {
       params: { ...params, format: params.format || 'csv' },
+      headers: {
+        Accept: 'application/json, application/pdf, */*',
+      },
       ...(params.format !== 'json' && { responseType: 'blob' }),
     });
   } catch (err) {

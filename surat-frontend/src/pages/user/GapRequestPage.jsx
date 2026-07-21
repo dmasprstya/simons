@@ -129,7 +129,6 @@ export default function GapRequestPage() {
     const isAlreadySelected = selectedItems.some(item => item.number === row.number);
     
     if (isAlreadySelected) {
-      // Hanya izinkan deselect nomor terakhir (paling besar) dalam pilihan
       const maxSelected = Math.max(...selectedItems.map(i => i.number));
       if (row.number === maxSelected) {
         setSelectedItems(prev => prev.filter(item => item.number !== row.number));
@@ -137,13 +136,21 @@ export default function GapRequestPage() {
         toast.info('Hanya nomor terakhir yang dapat dibatalkan untuk menjaga urutan.');
       }
     } else {
-      // Pastikan memilih nomor berikutnya sesuai urutan di vacantNumbers
-      const nextIndex = selectedItems.length;
-      const nextExpected = vacantNumbers[nextIndex];
-      
-      if (nextExpected && row.number === nextExpected.number) {
-        setSelectedItems(prev => [...prev, { number: row.number, gap_date: row.date }]);
-        setValidationErrors(prev => ({ ...prev, numbers: undefined }));
+      if (selectedItems.length === 0) {
+        const dateNumbers = vacantNumbers.filter(v => v.date === row.date);
+        if (dateNumbers.length > 0 && dateNumbers[0].number === row.number) {
+          setSelectedItems([{ number: row.number, gap_date: row.date }]);
+          setValidationErrors(prev => ({ ...prev, numbers: undefined }));
+        }
+      } else {
+        const lastSelected = selectedItems[selectedItems.length - 1];
+        const lastIndex = vacantNumbers.findIndex(v => v.number === lastSelected.number);
+        const nextExpected = lastIndex !== -1 ? vacantNumbers[lastIndex + 1] : null;
+        
+        if (nextExpected && row.number === nextExpected.number) {
+          setSelectedItems(prev => [...prev, { number: row.number, gap_date: row.date }]);
+          setValidationErrors(prev => ({ ...prev, numbers: undefined }));
+        }
       }
     }
   };
@@ -486,8 +493,11 @@ export default function GapRequestPage() {
                                 <div className="px-4 pb-2 pt-1 flex flex-wrap gap-1.5">
                                     {dateData.numbers.map((item) => {
                                       const isSelected = selectedItems.some(i => i.number === item.number);
-                                      const nextIndex = selectedItems.length;
-                                      const isNext = vacantNumbers[nextIndex]?.number === item.number;
+                                      const isFirstOfDate = dateData.numbers[0]?.number === item.number;
+                                      const lastSelectedItem = selectedItems[selectedItems.length - 1];
+                                      const lastIndex = lastSelectedItem ? vacantNumbers.findIndex(v => v.number === lastSelectedItem.number) : -1;
+                                      const nextExpected = lastIndex !== -1 ? vacantNumbers[lastIndex + 1] : null;
+                                      const isNext = selectedItems.length === 0 ? isFirstOfDate : nextExpected?.number === item.number;
                                       const isSelectable = isSelected || isNext;
 
                                       return (

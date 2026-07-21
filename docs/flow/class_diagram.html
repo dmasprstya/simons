@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Diagram – SIMONS</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(135deg, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .diagram-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto 2.5rem auto;
+      overflow-x: auto;
+    }
+    .diagram-card h2 {
+      font-size: 1.1rem;
+      color: #a78bfa;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #334155;
+    }
+    .mermaid { width: 100%; }
+  </style>
+</head>
+<body>
+
+<h1>Class Diagram – SIMONS</h1>
+<p class="subtitle">Sistem Informasi Manajemen Penomoran Surat</p>
+
+<div class="diagram-card">
+  <h2>🎯 Class Diagram – Struktur Arsitektur Backend (Service & Model Layer)</h2>
+  <div class="mermaid">
+classDiagram
+    %% ─── Controllers ──────────────────────────────────────────
+    class LetterNumberController {
+        -NumberingService numberingService
+        +index(Request request) JsonResponse
+        +store(StoreLetterNumberRequest request) JsonResponse
+        +show(int id) JsonResponse
+        +update(UpdateLetterNumberRequest request, int id) JsonResponse
+        +void(Request request, int id) JsonResponse
+        +recentAll(Request request) JsonResponse
+        +all(Request request) JsonResponse
+    }
+
+    class GapRequestController {
+        -GapRequestService gapRequestService
+        -AuditService auditService
+        +index() JsonResponse
+        +store(StoreGapRequestRequest request) JsonResponse
+        +all(Request request) JsonResponse
+        +approve(Request request, int id) JsonResponse
+        +reject(Request request, int id) JsonResponse
+    }
+
+    class DailySequenceController {
+        -NumberingService numberingService
+        +today() JsonResponse
+        +updateGap(Request request) JsonResponse
+        +index() JsonResponse
+    }
+
+    %% ─── Services ─────────────────────────────────────────────
+    class NumberingService {
+        +acquireNumber() int
+        +releaseGapNumber(GapRequest gapRequest) LetterNumber
+        +getSequenceInfo() array
+        +ensureDayIsCurrent() void
+        +updateGapSize(int newGapSize) void
+        -withLock(Builder query) Builder
+        -archiveGapZone(Carbon date, int gapStart, int gapEnd) void
+        -performRollover(GlobalSequence seq) void
+    }
+
+    class GapRequestService {
+        -NumberingService numberingService
+        -AuditService auditService
+        +approve(GapRequest gapRequest, User reviewer) LetterNumber
+        +reject(GapRequest gapRequest, User reviewer, string reason) GapRequest
+    }
+
+    class AuditService {
+        +log(string action, string tableName, int recordId, array|null oldData, array|null newData, int|null userId) void
+    }
+
+    %% ─── Models ───────────────────────────────────────────────
+    class User {
+        +int id
+        +string name
+        +string nip
+        +string work_unit
+        +string email
+        +string role
+        +bool is_active
+        +string photo_path
+        +getPhotoUrlAttribute() string|null
+        +letterNumbers() HasMany
+        +gapRequests() HasMany
+        +auditLogs() HasMany
+    }
+
+    class LetterNumber {
+        +int id
+        +int user_id
+        +int classification_id
+        +int number
+        +string formatted_number
+        +Carbon issued_date
+        +string subject
+        +string destination
+        +string source
+        +string sifat_surat
+        +string status
+        +Carbon voided_at
+        +int voided_by
+        +buildFormattedNumber(string code, int number) string
+        +user() BelongsTo
+        +classification() BelongsTo
+        +voidedBy() BelongsTo
+    }
+
+    class GapRequest {
+        +int id
+        +int requested_by
+        +int reviewed_by
+        +int classification_id
+        +int number
+        +Carbon gap_date
+        +string status
+        +string subject
+        +string destination
+        +string sifat_surat
+        +string reason
+        +string rejection_reason
+        +Carbon reviewed_at
+        +requestedBy() BelongsTo
+        +reviewedBy() BelongsTo
+        +classification() BelongsTo
+    }
+
+    class LetterClassification {
+        +int id
+        +int parent_id
+        +string code
+        +int level
+        +string name
+        +string type
+        +bool is_leaf
+        +bool is_active
+        +parent() BelongsTo
+        +children() HasMany
+        +letterNumbers() HasMany
+        +gapRequests() HasMany
+    }
+
+    class GlobalSequence {
+        +int id
+        +int last_number
+        +int gap_size
+        +Carbon last_issued_date
+        +getInstance() GlobalSequence
+    }
+
+    class DailyGap {
+        +int id
+        +Carbon date
+        +int gap_start
+        +int gap_end
+    }
+
+    class AuditLog {
+        +int id
+        +int user_id
+        +string action
+        +string table_name
+        +int record_id
+        +array old_data
+        +array new_data
+        +string ip_address
+        +user() BelongsTo
+        +prunable() Builder
+    }
+
+    %% ─── Relationships ────────────────────────────────────────
+    %% Controllers depenency on Services
+    LetterNumberController ..> NumberingService : uses
+    GapRequestController ..> GapRequestService : uses
+    GapRequestController ..> AuditService : uses
+    DailySequenceController ..> NumberingService : uses
+
+    %% Services dependency on other Services & Models
+    GapRequestService --> NumberingService : relies on
+    GapRequestService --> AuditService : relies on
+    NumberingService ..> GlobalSequence : manages
+    NumberingService ..> DailyGap : archives to
+    NumberingService ..> LetterNumber : verifies usage
+
+    %% Model Relationships (Associations)
+    User "1" --> "0..*" LetterNumber : owns
+    User "1" --> "0..*" GapRequest : requests
+    User "1" --> "0..*" AuditLog : performs
+    LetterNumber "0..*" --> "1" User : created_by
+    LetterNumber "0..*" --> "1" LetterClassification : categorized_by
+    GapRequest "0..*" --> "1" User : requested_by
+    GapRequest "0..*" --> "0..1" User : reviewed_by
+    GapRequest "0..*" --> "1" LetterClassification : classification
+    LetterClassification "1" --> "0..*" LetterClassification : sub_classifications
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#1e293b',
+      primaryColor: '#1e3a5f',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      lineColor: '#64748b',
+      secondaryColor: '#1a3a2a',
+      tertiaryColor: '#3a1a2a',
+    }
+  });
+</script>
+</body>
+</html>

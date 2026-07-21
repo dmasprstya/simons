@@ -89,7 +89,6 @@ class GapRequestController extends Controller
                 }
             }
 
-            // Guard 3: Harus mengambil nomor terkecil yang tersedia secara berurutan
             $count = count($numbers);
             $usedInLetters = LetterNumber::pluck('number')->all();
             $usedInRequests = GapRequest::whereIn('status', ['pending', 'approved'])
@@ -99,21 +98,42 @@ class GapRequestController extends Controller
             $excluded = array_flip(array_merge($usedInLetters, $usedInRequests));
 
             $vacantNumbers = [];
+            $vacantByDate = [];
             $dailyGaps = DailyGap::orderBy('date')->get();
             foreach ($dailyGaps as $gap) {
+                $dateStr = Carbon::parse($gap->date)->format('Y-m-d');
                 for ($n = $gap->gap_start; $n <= $gap->gap_end; $n++) {
                     if (!isset($excluded[$n])) {
                         $vacantNumbers[] = $n;
-                        if (count($vacantNumbers) >= $count) break 2;
+                        $vacantByDate[$dateStr][] = $n;
                     }
                 }
             }
 
             sort($numbers);
-            if ($numbers !== array_slice($vacantNumbers, 0, $count)) {
-                $expected = implode(', ', array_slice($vacantNumbers, 0, $count));
+            $firstNum = $numbers[0];
+            $firstItem = collect($items)->firstWhere('number', $firstNum);
+            $startDate = $firstItem ? Carbon::parse($firstItem['gap_date'])->format('Y-m-d') : null;
+
+            if ($startDate && isset($vacantByDate[$startDate]) && count($vacantByDate[$startDate]) > 0) {
+                $firstVacantForDate = $vacantByDate[$startDate][0];
+                if ($firstNum !== $firstVacantForDate) {
+                    return response()->json([
+                        'message' => "Anda harus mengambil nomor dari yang terkecil pada tanggal tersebut ({$firstVacantForDate}).",
+                    ], 422);
+                }
+            }
+
+            $startIndex = array_search($firstNum, $vacantNumbers, true);
+            if ($startIndex === false) {
+                return response()->json(['message' => "Nomor {$firstNum} tidak tersedia."], 422);
+            }
+
+            $expectedSequence = array_slice($vacantNumbers, $startIndex, $count);
+            if ($numbers !== $expectedSequence) {
+                $expectedStr = implode(', ', $expectedSequence);
                 return response()->json([
-                    'message' => "Anda harus mengambil nomor terkecil yang tersedia secara berurutan ({$expected}). Tidak diperbolehkan melompati nomor.",
+                    'message' => "Anda harus mengambil nomor secara berurutan ({$expectedStr}). Tidak diperbolehkan melompati nomor.",
                 ], 422);
             }
 

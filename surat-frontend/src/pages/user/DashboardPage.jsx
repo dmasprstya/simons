@@ -9,6 +9,7 @@ import {
   CheckCircleIcon,
   FolderIcon,
   ChevronRightIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -132,16 +133,31 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 relative">
+        <div className="flex flex-col sm:flex-row items-stretch gap-4 relative">
           {!loading && (
-            <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl px-5 py-3 border border-slate-700/50 flex flex-col items-center justify-center min-w-[140px]">
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
-                Nomor Terakhir
-              </p>
-              <p className="text-white text-3xl font-bold font-mono leading-none">
-                {latestTakenNumber}
-              </p>
-            </div>
+            <>
+              <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl px-5 py-3 border border-slate-700/50 flex flex-col items-center justify-center min-w-[140px]">
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+                  Nomor Terakhir
+                </p>
+                <p className="text-white text-3xl font-bold font-mono leading-none">
+                  {latestTakenNumber}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/letters/take')}
+                className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-2xl px-5 py-3 border border-emerald-500/30 flex flex-col items-center justify-center min-w-[140px] transition-all duration-200 shadow-lg shadow-emerald-900/30 hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              >
+                <p className="text-emerald-100/90 text-[10px] font-bold uppercase tracking-[0.2em] mb-1 flex items-center gap-1">
+                  <PlusIcon className="h-3 w-3 stroke-[3]" />
+                  <span>Aksi Cepat</span>
+                </p>
+                <p className="text-white text-base font-bold leading-none py-1">
+                  Ambil Nomor
+                </p>
+              </button>
+            </>
           )}
         </div>
       </div>

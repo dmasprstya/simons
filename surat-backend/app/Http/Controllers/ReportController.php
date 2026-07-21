@@ -240,38 +240,50 @@ class ReportController extends Controller
             'day',
         ]);
         $format = $request->input('format', 'csv');
-        $rows = $this->exportService->getReportRows($filters);
+        try {
+            $rows = $this->exportService->getReportRows($filters);
 
-        $this->auditService->log(
-            action: 'report.exported',
-            tableName: 'letter_numbers',
-            recordId: 0,
-            oldData: null,
-            newData: [
-                'format' => $format,
-                'filters' => $filters,
-                'total_rows' => $rows->count(),
-            ]
-        );
+            if ($format === 'pdf' && $rows->count() > 5000) {
+                return response()->json([
+                    'message' => 'Rentang data terlalu besar, persempit filter tanggal.',
+                ], 422);
+            }
 
-        if ($format === 'json') {
+            $this->auditService->log(
+                action: 'report.exported',
+                tableName: 'letter_numbers',
+                recordId: 0,
+                oldData: null,
+                newData: [
+                    'format' => $format,
+                    'filters' => $filters,
+                    'total_rows' => $rows->count(),
+                ]
+            );
+
+            if ($format === 'json') {
+                return response()->json([
+                    'data' => $rows,
+                    'message' => 'Export laporan (JSON) berhasil dibuat.',
+                ]);
+            }
+
+            if ($format === 'pdf') {
+                $filename = $this->exportService->buildFilename('pdf');
+                $pdfContent = $this->exportService->buildPdfContent($rows, $filters);
+
+                return response($pdfContent, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                    'Content-Length' => (string) strlen($pdfContent),
+                    'Cache-Control' => 'no-store, no-cache',
+                    'Pragma' => 'public',
+                ]);
+            }
+        } catch (\Throwable $e) {
             return response()->json([
-                'data' => $rows,
-                'message' => 'Export laporan (JSON) berhasil dibuat.',
-            ]);
-        }
-
-        if ($format === 'pdf') {
-            $filename = $this->exportService->buildFilename('pdf');
-            $pdfContent = $this->exportService->buildPdfContent($rows, $filters);
-
-            return response($pdfContent, 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-                'Content-Length' => (string) strlen($pdfContent),
-                'Cache-Control' => 'no-store, no-cache',
-                'Pragma' => 'public',
-            ]);
+                'message' => 'Gagal mengekspor PDF/laporan: ' . $e->getMessage(),
+            ], 500);
         }
 
         $filename = $this->exportService->buildFilename('csv');

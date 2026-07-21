@@ -131,11 +131,10 @@ class ExportService
     public function buildPdfContent(Collection $rows, array $filters = []): string
     {
         $pdf = Pdf::loadView('exports.report-pdf', [
-            'rows' => $rows,
+            'rows'    => $rows,
             'filters' => $filters,
-        ]);
+        ])->setPaper('a4', 'landscape');
 
-        // A4 Landscape agar tabel muat lega
-        return $pdf->setPaper('a4', 'landscape')->output();
+        return $pdf->output();
     }
 }

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activity Diagrams – SIMONS</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(135deg, #facc15, #f87171);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .nav a {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+    .nav a:hover { border-color: #facc15; color: #facc15; }
+    .diagram-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto 2.5rem auto;
+      overflow-x: auto;
+    }
+    .diagram-card h2 {
+      font-size: 1.1rem;
+      color: #facc15;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #334155;
+    }
+    .diagram-card p.desc {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .mermaid { width: 100%; }
+  </style>
+</head>
+<body>
+
+<h1>Activity Diagrams – SIMONS</h1>
+<p class="subtitle">Sistem Informasi Manajemen Penomoran Surat</p>
+
+<nav class="nav">
+  <a href="#act1">1. Alur Pengambilan Nomor & Rollover</a>
+  <a href="#act2">2. Alur Pengajuan & Review Gap Request</a>
+  <a href="#act3">3. Alur Edit & Void Nomor Surat</a>
+</nav>
+
+<!-- ─── ACT-1 Ambil Nomor & Rollover ────────────────────── -->
+<div class="diagram-card" id="act1">
+  <h2>📌 ACT-1: Alur Pengambilan Nomor & Rollover Harian</h2>
+  <p class="desc">Menggambarkan alur pengambilan nomor surat beserta proses otomatis rollover dan deteksi ganti tahun di NumberingService.</p>
+  <div class="mermaid">
+flowchart TD
+    Start([Mulai]) --> SelectClass[User memilih Klasifikasi & mengisi data surat]
+    SelectClass --> ClickTake[User klik "Ambil Nomor"]
+    ClickTake --> LockSeq[Sistem melakukan Pessimistic Lock pada GlobalSequence]
+    
+    LockSeq --> CheckDate{Apakah last_issued_date = null?}
+    
+    CheckDate -- Ya --> InitDefault[candidate = default_start \n default: 1000] --> CheckDuplicate
+    CheckDate -- Tidak --> CheckToday{Apakah last_issued_date = hari ini?}
+    
+    CheckToday -- Ya --> InSameDay[candidate = last_number + 1] --> CheckDuplicate
+    
+    CheckToday -- Tidak (Ganti Hari) --> RolloverLoop[Tentukan cursorDate = last_issued_date]
+    RolloverLoop --> CheckCursor{Apakah cursorDate < hari ini?}
+    
+    CheckCursor -- Ya --> CheckWeekend{Apakah cursorDate Sabtu / Minggu?}
+    CheckWeekend -- Ya --> SkipWeekend[Abaikan pencatatan gap] --> AdvanceCursor[cursorDate + 1 hari]
+    CheckWeekend -- Tidak --> CalcGap[gap_start = last_number + 1 \n gap_end = last_number + gap_size]
+    CalcGap --> ArchiveGap[Arsip ke daily_gaps dengan date = cursorDate]
+    ArchiveGap --> ShiftLastNumber[last_number = gap_end] --> CheckYearChange{Apakah tahun berganti?}
+    
+    CheckYearChange -- Ya --> ResetYearly[last_number = 0] --> AdvanceCursor
+    CheckYearChange -- Tidak --> AdvanceCursor
+    
+    AdvanceCursor --> CheckCursor
+    
+    CheckCursor -- Tidak (Selesai loop) --> SetDateToday[last_issued_date = hari ini]
+    SetDateToday --> CalcNext[candidate = last_number + 1] --> CheckDuplicate
+    
+    CheckDuplicate --> IsDuplicate{Apakah candidate sudah ada di letter_numbers \npada tahun yang sama?}
+    IsDuplicate -- Ya --> LockException[Throw NumberingLockException \n status: 409 Conflict] --> Rollback([Rollback & Selesai])
+    IsDuplicate -- Tidak --> UpdateSeq[Update GlobalSequence: \n last_number = candidate \n last_issued_date = hari ini]
+    UpdateSeq --> CommitDB[Commit Transaksi]
+    CommitDB --> CreateLetter[Simpan ke letter_numbers \n status = active, source = regular]
+    CreateLetter --> EndSuccess([Tampilkan nomor ke User \n Selesai])
+  </div>
+</div>
+
+<!-- ─── ACT-2 Pengajuan & Review Gap ───────────────────── -->
+<div class="diagram-card" id="act2">
+  <h2>📌 ACT-2: Alur Pengajuan & Review Gap Request</h2>
+  <p class="desc">Menggambarkan proses bagaimana User memilih nomor gap yang kosong dan mengajukannya, hingga direview oleh Admin.</p>
+  <div class="mermaid">
+flowchart TD
+    Start([Mulai]) --> OpenPage[User membuka Halaman Gap Request]
+    OpenPage --> FetchGapNumbers[Sistem memuat daftar nomor gap kosong \ndari daily_gaps yang belum dipakai]
+    FetchGapNumbers --> SelectNumber[User memilih nomor gap, klasifikasi, perihal, & tujuan]
+    SelectNumber --> SubmitRequest[User klik "Ajukan Request"]
+    
+    SubmitRequest --> CheckGapZone{Apakah nomor berada di \nrentang daily_gaps?}
+    CheckGapZone -- Tidak --> ErrorZone[Kembalikan Error 422: \nBukan nomor gap valid] --> EndRequest([Selesai])
+    CheckGapZone -- Ya --> CheckLocked{Apakah nomor sedang diproses \n status: pending / approved?}
+    
+    CheckLocked -- Ya --> ErrorLocked[Kembalikan Error 422: \nNomor sudah direquest] --> EndRequest
+    CheckLocked -- Tidak --> CheckSequence{Apakah pengambilan nomor terkecil \nsecara berurutan / tidak melompati?}
+    
+    CheckSequence -- Tidak --> ErrorSequence[Kembalikan Error 422: \nHarus mengambil berurutan] --> EndRequest
+    CheckSequence -- Ya --> SavePending[Simpan ke gap_requests \n status = pending]
+    SavePending --> LogAuditCreate[Audit Log: gap_request.created]
+    
+    LogAuditCreate --> AdminReview[Admin melihat daftar Gap Request]
+    AdminReview --> AdminDecision{Keputusan Admin?}
+    
+    AdminDecision -- Tolak (Reject) --> InputReason[Admin input alasan penolakan]
+    InputReason --> SaveReject[Update gap_requests \n status = rejected, rejection_reason]
+    SaveReject --> LogAuditReject[Audit Log: gap.rejected] --> EndRequest
+    
+    AdminDecision -- Setujui (Approve) --> LockGap[Sistem Lock proses releaseGapNumber]
+    LockGap --> CheckAlreadyUsed{Apakah nomor gap sudah terbit \ndi letter_numbers?}
+    
+    CheckAlreadyUsed -- Ya --> ErrorUsed[Kembalikan Error 422: \nNomor gap sudah diterbitkan] --> EndRequest
+    CheckAlreadyUsed -- Tidak --> CreateLetter[Simpan ke letter_numbers \n source = gap, issued_date = gap_date]
+    CreateLetter --> UpdateApproved[Update gap_requests \n status = approved, reviewed_by]
+    UpdateApproved --> LogAuditApprove[Audit Log: gap.approved]
+    LogAuditApprove --> EndSuccess([Nomor diterbitkan ke User \n Selesai])
+  </div>
+</div>
+
+<!-- ─── ACT-3 Edit & Void ──────────────────────────────── -->
+<div class="diagram-card" id="act3">
+  <h2>📌 ACT-3: Alur Edit & Void Nomor Surat</h2>
+  <p class="desc">Menggambarkan aturan validasi bisnis ketat ketika user ingin mengedit data surat atau membatalkan (void) nomor surat.</p>
+  <div class="mermaid">
+flowchart TD
+    Start([Mulai]) --> UserAction{Pilihan Aksi User?}
+    
+    %% Alur Edit
+    UserAction -- Edit Surat --> CheckEditOwner{Apakah User adalah \npemilik surat?}
+    CheckEditOwner -- Tidak --> ErrorEditAuth[Kembalikan Error 403: \nTidak punya akses] --> EndAct([Selesai])
+    CheckEditOwner -- Ya --> CheckEditStatus{Apakah status surat active?}
+    CheckEditStatus -- Tidak (Voided) --> ErrorEditStatus[Kembalikan Error 422: \nSurat voided tidak bisa diedit] --> EndAct
+    CheckEditStatus -- Ya --> CheckEditTime{Apakah selisih tanggal terbit \n<= 1 hari (2 hari kerja)?}
+    CheckEditTime -- Tidak --> ErrorEditTime[Kembalikan Error 422: \nBatas edit maksimal 2 hari] --> EndAct
+    CheckEditTime -- Ya --> UpdateData[Simpan klasifikasi / perihal / tujuan baru]
+    UpdateData --> CheckClassChange{Apakah klasifikasi berubah?}
+    CheckClassChange -- Ya --> RebuildFormatted[Bangun ulang formatted_number] --> SaveEdit[Simpan perubahan ke Database]
+    CheckClassChange -- Tidak --> SaveEdit
+    SaveEdit --> EndSuccessEdit([Detail surat terupdate \n Selesai])
+
+    %% Alur Void
+    UserAction -- Batalkan (Void) Surat --> CheckVoidOwner{Apakah User adalah \npemilik surat?}
+    CheckVoidOwner -- Tidak --> ErrorVoidAuth[Kembalikan Error 403: \nTidak punya akses] --> EndAct
+    CheckVoidOwner -- Ya --> CheckVoidTime{Apakah issued_date = hari ini?}
+    CheckVoidTime -- Tidak --> ErrorVoidTime[Kembalikan Error 422: \nHanya boleh void hari penerbitan] --> EndAct
+    CheckVoidTime -- Ya --> CheckVoidStatus{Apakah status sudah voided?}
+    CheckVoidStatus -- Ya --> ErrorVoidStatus[Kembalikan Error 422: \nSurat sudah dalam status voided] --> EndAct
+    CheckVoidStatus -- Tidak --> UpdateVoid[Update status = voided, \n voided_at = now, voided_by = user_id]
+    UpdateVoid --> LogAuditVoid[Audit Log: letter.voided] --> EndSuccessVoid([Surat berhasil dibatalkan \n Selesai])
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    flowchart: { curve: 'basis', useMaxWidth: true },
+    themeVariables: {
+      darkMode: true,
+      background: '#1e293b',
+      primaryColor: '#1e3a5f',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      lineColor: '#64748b',
+      secondaryColor: '#1a3a2a',
+      tertiaryColor: '#3a1a2a',
+    }
+  });
+</script>
+</body>
+</html>

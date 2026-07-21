@@ -230,11 +230,13 @@
     string name
     string email
     string password
+    string plain_password
     string nip
     string work_unit
     enum role
     string photo_path
     boolean is_active
+    string remember_token
     timestamp created_at
     timestamp updated_at
   }
@@ -242,12 +244,13 @@
   letter_classifications {
     bigint id PK
     bigint parent_id FK
-    string name
     string code
-    boolean is_selectable
+    tinyint level
+    string name
+    enum type
+    boolean is_leaf
     boolean is_active
     timestamp created_at
-    timestamp updated_at
   }
 
   global_sequence {
@@ -264,6 +267,7 @@
     int gap_start
     int gap_end
     timestamp created_at
+    timestamp updated_at
   }
 
   letter_numbers {
@@ -275,7 +279,7 @@
     date issued_date
     string subject
     string destination
-    string source
+    enum source
     enum sifat_surat
     enum status
     timestamp voided_at
@@ -290,10 +294,11 @@
     bigint reviewed_by FK
     int number
     date gap_date
+    enum status
+    string reason
     string subject
     string destination
     enum sifat_surat
-    enum status
     string rejection_reason
     timestamp reviewed_at
     timestamp created_at
